@@ -5,7 +5,8 @@ sem_run_mplus <- function() {
 
 sem_mplus_command <- function() {
   cmd <- Sys.getenv("MPLUS_COMMAND", unset = "")
-  if (nzchar(cmd)) cmd else MplusAutomation::detectMplus()
+  if (nzchar(cmd)) return(cmd)
+  tryCatch(MplusAutomation::detectMplus(), error = function(e) "mplus")
 }
 
 fit_mplus_example <- function(object, modelout) {
@@ -38,5 +39,16 @@ load_or_fit_mplus_model <- function(syntax = NULL, data = NULL, dir, file_stem,
   }
   out_file <- file.path(dir, paste0(file_stem, ".out"))
   if (!file.exists(out_file)) stop("Missing saved teaching output: ", out_file)
-  MplusAutomation::mplusModel(dir = dir, file_stem = file_stem)
+  withCallingHandlers(
+    MplusAutomation::mplusModel(
+      dir = dir,
+      file_stem = file_stem,
+      Mplus_command = sem_mplus_command()
+    ),
+    warning = function(w) {
+      if (grepl("Mplus_command does not point to a valid location", conditionMessage(w), fixed = TRUE)) {
+        invokeRestart("muffleWarning")
+      }
+    }
+  )
 }
