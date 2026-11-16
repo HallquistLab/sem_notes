@@ -18,6 +18,7 @@ project:
 
 website:
   title: "Structural Equation Modeling Notes"
+  site-url: https://hallquistlab.github.io/sem_notes/
   repo-url: https://github.com/HallquistLab/sem_notes
   repo-actions: [edit, issue]
   page-navigation: true

@@ -40,5 +40,9 @@ packages <- c(
   "viridis",
   "yaml"
 )
+if ("--list" %in% commandArgs(trailingOnly = TRUE)) {
+  cat(paste(paste0("any::", packages), collapse = ","), "\n", sep = "")
+  quit(save = "no")
+}
 missing <- setdiff(packages, rownames(installed.packages()))
 if (length(missing)) install.packages(missing, repos = "https://cloud.r-project.org")

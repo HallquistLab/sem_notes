@@ -1,0 +1,58 @@
+name: Publish course notes
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: github-pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    env:
+      SEM_RUN_MPLUS: "false"
+      SEM_SIM_REPS: "5"
+    steps:
+      - uses: actions/checkout@v6
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: "4.5.2"
+          use-public-rspm: true
+      - uses: quarto-dev/quarto-actions/setup@v2
+        with:
+          version: "1.11.9"
+      - name: Read R package requirements
+        id: packages
+        run: echo "packages=$(Rscript scripts/install_packages.R --list)" >> "$GITHUB_OUTPUT"
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          packages: ${{ steps.packages.outputs.packages }}
+          dependencies: 'NA'
+          install-quarto: false
+      - name: Validate sources, render, and check links
+        run: make render
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

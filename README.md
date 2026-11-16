@@ -20,6 +20,20 @@ Open `_site/index.html` after rendering. The repository stores editable sources 
 
 Mplus is optional: the multilevel chapter reads archived outputs unless `SEM_RUN_MPLUS=true`. Set `MPLUS_COMMAND` when its executable is outside your PATH. The factor-score simulation defaults to five replications per scenario; set `SEM_SIM_REPS` for a longer simulation. Each source file runs with its own directory as the working directory.
 
+## Website deployment
+
+The notes are published at <https://hallquistlab.github.io/sem_notes/>.
+The `Publish course notes` GitHub Actions workflow renders and validates the
+collection on every push to `main`, then deploys `_site` to GitHub Pages.
+It can also be run manually from the repository's Actions tab. Pages uses
+GitHub Actions as its publishing source (Settings → Pages → Source).
+
+The workflow uses R 4.5.2, Quarto 1.11.9, and the package list in
+`scripts/install_packages.R`. R dependencies are cached between builds.
+Mplus examples use archived results, and simulations use five replications
+per scenario, matching the local defaults. A failed build or validation
+prevents deployment.
+
 ## Contributing
 
 - Edit `.qmd` sources and render the collection before committing.
