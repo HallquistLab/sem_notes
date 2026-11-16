@@ -1,0 +1,24 @@
+TITLE:
+Bench Binary Probit Random Effects d=2 ML Quad;
+VARIABLE:
+CLUSTER = id;
+USEVARIABLES = y_bin x1-x1;
+CATEGORICAL = y_bin;
+WITHIN = x1-x1;
+NAMES = y_bin x1 id;
+MISSING = .;
+ANALYSIS:
+TYPE = TWOLEVEL RANDOM;
+ESTIMATOR = MLR;
+LINK = PROBIT;
+ALGORITHM = INTEGRATION;
+INTEGRATION = STANDARD(15);
+PROCESSORS = 4;
+MODEL:
+%WITHIN%
+s1 | y_bin ON x1;
+%BETWEEN%
+y_bin s1-s1;
+y_bin s1-s1 WITH y_bin s1-s1;
+DATA:
+FILE = "bench_ml_d2.dat";

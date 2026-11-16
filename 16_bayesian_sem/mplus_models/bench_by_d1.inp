@@ -1,0 +1,21 @@
+TITLE:
+Bench Binary Probit Random Effects d=1 BAYES;
+VARIABLE:
+CLUSTER = id;
+USEVARIABLES = y_bin;
+CATEGORICAL = y_bin;
+NAMES = y_bin id;
+MISSING = .;
+ANALYSIS:
+TYPE = TWOLEVEL RANDOM;
+ESTIMATOR = BAYES;
+LINK = PROBIT;
+BITERATIONS = 5000 (2000);
+PROCESSORS = 4;
+BSEED = 2026;
+MODEL:
+%WITHIN%
+%BETWEEN%
+y_bin;
+DATA:
+FILE = "bench_by_d1.dat";

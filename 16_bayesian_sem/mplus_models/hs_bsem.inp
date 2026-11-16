@@ -1,0 +1,26 @@
+TITLE:
+BSEM CFA with N(0, 0.01) Cross-Loading Priors;
+ANALYSIS:
+ESTIMATOR = BAYES;
+CHAINS = 2;
+PROCESSORS = 2;
+BITERATIONS = 20000 (5000);
+BSEED = 2026;
+MODEL:
+visual BY x1-x3*;
+textual BY x4-x6*;
+speed BY x7-x9*;
+visual@1 textual@1 speed@1;
+! All 18 cross-loadings freed with parameter labels:
+visual BY x4-x9*0 (cl1-cl6);
+textual BY x1-x3*0 x7-x9*0 (cl7-cl12);
+speed BY x1-x6*0 (cl13-cl18);
+MODEL PRIORS:
+cl1-cl18 ~ N(0, 0.01);
+OUTPUT:
+STDYX TECH8;
+VARIABLE:
+NAMES = x1 x2 x3 x4 x5 x6 x7 x8 x9;
+MISSING = .;
+DATA:
+FILE = "hs_bsem.dat";

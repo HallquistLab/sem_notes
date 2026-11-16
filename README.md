@@ -2,7 +2,7 @@
 
 Michael Hallquist's structural equation modeling notes and worked examples, maintained in Quarto.
 
-The collection includes 27 lecture and tutorial documents spanning regression, matrix algebra, path analysis, psychometrics, EFA/CFA, full SEM, model fit and comparison, best practices, missing/categorical data, measurement invariance, MIMIC models, mediation/moderation, causal graphs, growth curves, and multilevel SEM.
+The collection includes 28 lecture and tutorial documents spanning regression, matrix algebra, path analysis, psychometrics, EFA/CFA, full SEM, model fit and comparison, best practices, missing/categorical data, measurement invariance, MIMIC models, mediation/moderation, causal graphs, growth curves, multilevel SEM, and Bayesian SEM.
 
 ## Use
 
@@ -19,6 +19,12 @@ quarto preview
 Open `_site/index.html` after rendering. The repository stores editable sources and teaching assets; generated HTML, caches, and local environment files are ignored.
 
 Mplus is optional: the multilevel chapter reads archived outputs unless `SEM_RUN_MPLUS=true`. Set `MPLUS_COMMAND` when its executable is outside your PATH. The factor-score simulation defaults to five replications per scenario; set `SEM_SIM_REPS` for a longer simulation. Each source file runs with its own directory as the working directory.
+
+The [Bayesian SEM lecture](16_bayesian_sem/bayesian_sem.qmd) also reads archived
+Mplus results by default and requires `MplusAutomation >= 1.3`. Its saved
+posterior draws support the diagnostic plots without licensed software.
+See its [archive notes](16_bayesian_sem/mplus_models/README.md) for provenance
+and limitations of the timing illustration.
 
 ## Website deployment
 

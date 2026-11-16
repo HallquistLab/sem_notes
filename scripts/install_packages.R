@@ -29,13 +29,16 @@ packages <- c(
   "ppcor",
   "psych",
   "psychTools",
+  "patchwork",
   "readr",
   "relaimpo",
   "rmarkdown",
+  "scales",
   "semPlot",
   "semTools",
   "texreg",
   "tidyr",
+  "tibble",
   "tidyverse",
   "viridis",
   "yaml"
@@ -46,3 +49,6 @@ if ("--list" %in% commandArgs(trailingOnly = TRUE)) {
 }
 missing <- setdiff(packages, rownames(installed.packages()))
 if (length(missing)) install.packages(missing, repos = "https://cloud.r-project.org")
+if (packageVersion("MplusAutomation") < "1.3") {
+  install.packages("MplusAutomation", repos = "https://cloud.r-project.org")
+}

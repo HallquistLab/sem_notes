@@ -31,6 +31,7 @@ The collection develops the statistical ideas alongside R examples, primarily us
 - [Causality and graphical models](13_causality/causality_in_sem.qmd)
 - [Latent growth curves](14_longitudinal/growth_modeling.qmd)
 - [Multilevel SEM](15_multilevel/multilevel_sem.qmd)
+- [Bayesian SEM](16_bayesian_sem/bayesian_sem.qmd)
 
 Use the sidebar for all lectures and tutorials, or search for a concept. Each page provides its source code through the **Code** menu. The [repository](https://github.com/HallquistLab/sem_notes) contains all Quarto sources, teaching data, and diagrams.
 

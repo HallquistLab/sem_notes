@@ -1,0 +1,20 @@
+TITLE:
+Bayesian Strict ICM-CFA (Exact Zeros);
+ANALYSIS:
+ESTIMATOR = BAYES;
+CHAINS = 2;
+PROCESSORS = 2;
+BITERATIONS = 20000 (5000);
+BSEED = 2026;
+MODEL:
+visual BY x1-x3*;
+textual BY x4-x6*;
+speed BY x7-x9*;
+visual@1 textual@1 speed@1;
+OUTPUT:
+STDYX TECH8;
+VARIABLE:
+NAMES = x1 x2 x3 x4 x5 x6 x7 x8 x9;
+MISSING = .;
+DATA:
+FILE = "hs_b_icm.dat";

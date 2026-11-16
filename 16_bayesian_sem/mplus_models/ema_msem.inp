@@ -1,0 +1,35 @@
+TITLE:
+2-Level EMA MSEM: Latent Random Slopes Predicting Burnout;
+VARIABLE:
+CLUSTER = id;
+USEVARIABLES = exhaust burnout na1-na3 st1-st3;
+WITHIN = na1-na3 st1-st3;
+BETWEEN = burnout;
+NAMES = exhaust burnout na1 na2 na3 st1 st2 st3 id;
+MISSING = .;
+ANALYSIS:
+TYPE = TWOLEVEL RANDOM;
+ESTIMATOR = BAYES;
+CHAINS = 2;
+PROCESSORS = 4;
+BITERATIONS = 6000 (2500);
+BSEED = 2026;
+MODEL:
+%WITHIN%
+eta_na BY na1@1 na2 na3;
+eta_st BY st1@1 st2 st3;
+s_na | exhaust ON eta_na;
+s_st | exhaust ON eta_st;
+%BETWEEN%
+exhaust s_na s_st;
+exhaust s_na s_st WITH exhaust s_na s_st;
+burnout ON exhaust (b_int)
+s_na (b_sna)
+s_st (b_sst);
+SAVEDATA:
+FILE = ema_fscores.dat;
+SAVE = FSCORES (50 10);
+OUTPUT:
+TECH8;
+DATA:
+FILE = "ema_msem.dat";

@@ -20,6 +20,7 @@
 **/*.gh5
 **/*.gph
 **/*_MplusWarnings.txt
+**/hs_bparams.dat
 
 **/*.quarto_ipynb
 
@@ -28,3 +29,6 @@
 
 # Local editorial review, provenance, and excluded historical assets
 /maintenance/
+
+# Documents for cross-reference
+/sources/

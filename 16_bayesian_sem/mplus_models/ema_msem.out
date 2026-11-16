@@ -1,0 +1,747 @@
+Mplus VERSION 9.1 (Mac)
+MUTHEN & MUTHEN
+11/15/2026   9:30 PM
+
+INPUT INSTRUCTIONS
+
+  TITLE:
+  2-Level EMA MSEM: Latent Random Slopes Predicting Burnout;
+  VARIABLE:
+  CLUSTER = id;
+  USEVARIABLES = exhaust burnout na1-na3 st1-st3;
+  WITHIN = na1-na3 st1-st3;
+  BETWEEN = burnout;
+  NAMES = exhaust burnout na1 na2 na3 st1 st2 st3 id;
+  MISSING = .;
+  ANALYSIS:
+  TYPE = TWOLEVEL RANDOM;
+  ESTIMATOR = BAYES;
+  CHAINS = 2;
+  PROCESSORS = 4;
+  BITERATIONS = 6000 (2500);
+  BSEED = 2026;
+  MODEL:
+  %WITHIN%
+  eta_na BY na1@1 na2 na3;
+  eta_st BY st1@1 st2 st3;
+  s_na | exhaust ON eta_na;
+  s_st | exhaust ON eta_st;
+  %BETWEEN%
+  exhaust s_na s_st;
+  exhaust s_na s_st WITH exhaust s_na s_st;
+  burnout ON exhaust (b_int)
+  s_na (b_sna)
+  s_st (b_sst);
+  SAVEDATA:
+  FILE = ema_fscores.dat;
+  SAVE = FSCORES (50 10);
+  OUTPUT:
+  TECH8;
+  DATA:
+  FILE = "ema_msem.dat";
+
+
+
+*** WARNING in MODEL command
+  In the MODEL command, the following variable is an x-variable on the BETWEEN
+  level and a y-variable on the WITHIN level.  This variable will be treated
+  as a y-variable on both levels:  EXHAUST
+   1 WARNING(S) FOUND IN THE INPUT INSTRUCTIONS
+
+
+
+
+2-Level EMA MSEM: Latent Random Slopes Predicting Burnout;
+
+SUMMARY OF ANALYSIS
+
+Number of groups                                                 1
+Number of observations                                        1800
+
+Number of dependent variables                                    8
+Number of independent variables                                  0
+Number of continuous latent variables                            4
+
+Observed dependent variables
+
+  Continuous
+   BURNOUT     EXHAUST     NA1         NA2         NA3         ST1
+   ST2         ST3
+
+Continuous latent variables
+   ETA_NA      ETA_ST      S_NA        S_ST
+
+Variables with special functions
+
+  Cluster variable      ID
+
+  Within variables
+   NA1         NA2         NA3         ST1         ST2         ST3
+
+  Between variables
+   BURNOUT
+
+
+Estimator                                                    BAYES
+Specifications for Bayesian Estimation
+  Point estimate                                            MEDIAN
+  Number of Markov chain Monte Carlo (MCMC) chains               2
+  Random seed for the first chain                             2026
+  Starting value information                           UNPERTURBED
+  Algorithm used for Markov chain Monte Carlo           GIBBS(PX1)
+  Convergence criterion                                  0.500D-01
+  Maximum number of iterations                                6000
+  K-th iteration used for thinning                               1
+Specifications for Bayes Factor Score Estimation
+  Number of imputed data sets                                   50
+  Iteration intervals for thinning                              10
+
+Input data file(s)
+  ema_msem.dat
+Input data format  FREE
+
+
+SUMMARY OF DATA
+
+     Number of clusters                         90
+
+       Size (s)    Cluster ID with Size s
+
+         20        1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21
+                   22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39
+                   40 41 42 43 44 45 46 47 48 49 50 51 52 53 54 55 56 57
+                   58 59 60 61 62 63 64 65 66 67 68 69 70 71 72 73 74 75
+                   76 77 78 79 80 81 82 83 84 85 86 87 88 89 90
+
+
+
+SUMMARY OF MISSING DATA PATTERNS
+
+     Number of missing data patterns             1
+
+
+     MISSING DATA PATTERNS (x = not missing)
+
+           1
+ BURNOUT   x
+ EXHAUST   x
+ NA1       x
+ NA2       x
+ NA3       x
+ ST1       x
+ ST2       x
+ ST3       x
+
+
+     MISSING DATA PATTERN FREQUENCIES
+
+    Pattern   Frequency
+          1        1800
+
+
+COVARIANCE COVERAGE OF DATA
+
+Minimum covariance coverage value   0.100
+
+
+     PROPORTION OF DATA PRESENT
+
+
+           Covariance Coverage
+              BURNOUT       EXHAUST       NA1           NA2           NA3
+              ________      ________      ________      ________      ________
+ BURNOUT        1.000
+ EXHAUST        1.000         1.000
+ NA1            1.000         1.000         1.000
+ NA2            1.000         1.000         1.000         1.000
+ NA3            1.000         1.000         1.000         1.000         1.000
+ ST1            1.000         1.000         1.000         1.000         1.000
+ ST2            1.000         1.000         1.000         1.000         1.000
+ ST3            1.000         1.000         1.000         1.000         1.000
+
+
+           Covariance Coverage
+              ST1           ST2           ST3
+              ________      ________      ________
+ ST1            1.000
+ ST2            1.000         1.000
+ ST3            1.000         1.000         1.000
+
+
+
+UNIVARIATE SAMPLE STATISTICS
+
+
+     UNIVARIATE HIGHER-ORDER MOMENT DESCRIPTIVE STATISTICS
+
+         Variable/         Mean/     Skewness/   Minimum/ % with                Percentiles
+        Sample Size      Variance    Kurtosis    Maximum  Min/Max      20%/60%    40%/80%    Median
+
+     BURNOUT              -0.028      -0.357      -1.692    1.11%      -0.447     -0.197      0.008
+              90.000       0.362       0.145       1.236    1.11%       0.129      0.489
+     EXHAUST              -0.014       0.024      -6.060    0.06%      -0.893     -0.304     -0.035
+            1800.000       1.261       0.791       4.400    0.06%       0.218      0.891
+     NA1                  -0.010       0.081      -3.779    0.06%      -1.062     -0.318     -0.015
+            1800.000       1.538      -0.073       4.332    0.06%       0.294      1.022
+     NA2                  -0.026       0.058      -4.007    0.06%      -1.046     -0.318     -0.034
+            1800.000       1.342      -0.136       4.060    0.06%       0.289      0.952
+     NA3                  -0.011       0.013      -3.656    0.06%      -0.949     -0.295     -0.005
+            1800.000       1.238      -0.032       3.535    0.06%       0.254      0.885
+     ST1                  -0.008      -0.027      -5.608    0.06%      -0.991     -0.319      0.000
+            1800.000       1.445       0.267       3.923    0.06%       0.286      0.993
+     ST2                  -0.036      -0.039      -4.119    0.06%      -0.992     -0.315     -0.032
+            1800.000       1.275      -0.010       3.862    0.06%       0.254      0.919
+     ST3                  -0.041       0.017      -4.746    0.06%      -0.980     -0.351     -0.050
+            1800.000       1.211      -0.045       3.277    0.06%       0.243      0.876
+
+
+THE MODEL ESTIMATION TERMINATED NORMALLY
+
+     USE THE FBITERATIONS OPTION TO INCREASE THE NUMBER OF ITERATIONS BY A FACTOR
+     OF AT LEAST TWO TO CHECK CONVERGENCE AND THAT THE PSR VALUE DOES NOT INCREASE.
+
+
+
+MODEL FIT INFORMATION
+
+Number of Free Parameters                              34
+
+Information Criteria
+
+          Deviance (DIC)                        33640.634
+          Estimated Number of Parameters (pD)     248.941
+
+
+
+MODEL RESULTS
+
+                                Posterior  One-Tailed         95% C.I.
+                    Estimate       S.D.      P-Value   Lower 2.5%  Upper 2.5%  Significance
+
+Within Level
+
+ ETA_NA   BY
+    NA1                1.000       0.000      0.000       1.000       1.000
+    NA2                0.919       0.027      0.000       0.868       0.973      *
+    NA3                0.847       0.026      0.000       0.798       0.900      *
+
+ ETA_ST   BY
+    ST1                1.000       0.000      0.000       1.000       1.000
+    ST2                0.889       0.027      0.000       0.838       0.943      *
+    ST3                0.843       0.026      0.000       0.794       0.897      *
+
+ ETA_ST   WITH
+    ETA_NA             0.018       0.028      0.270      -0.036       0.071
+
+ Intercepts
+    NA1               -0.009       0.029      0.367      -0.064       0.050
+    NA2               -0.025       0.027      0.185      -0.076       0.032
+    NA3               -0.010       0.027      0.355      -0.061       0.045
+    ST1               -0.006       0.028      0.422      -0.062       0.051
+    ST2               -0.035       0.027      0.100      -0.089       0.018
+    ST3               -0.040       0.026      0.062      -0.091       0.012
+
+ Variances
+    ETA_NA             1.019       0.052      0.000       0.921       1.125      *
+    ETA_ST             0.984       0.050      0.000       0.892       1.084      *
+
+ Residual Variances
+    EXHAUST            0.375       0.018      0.000       0.342       0.412      *
+    NA1                0.522       0.025      0.000       0.475       0.576      *
+    NA2                0.484       0.025      0.000       0.435       0.533      *
+    NA3                0.510       0.024      0.000       0.466       0.558      *
+    ST1                0.462       0.027      0.000       0.411       0.517      *
+    ST2                0.501       0.024      0.000       0.454       0.551      *
+    ST3                0.515       0.024      0.000       0.473       0.564      *
+
+Between Level
+
+ BURNOUT    ON
+    S_NA               1.249       0.187      0.000       0.898       1.615      *
+    S_ST               0.831       0.234      0.000       0.421       1.339      *
+
+ BURNOUT    ON
+    EXHAUST            0.257       0.079      0.001       0.101       0.408      *
+
+ EXHAUST  WITH
+    S_NA               0.024       0.026      0.158      -0.023       0.081
+    S_ST               0.025       0.025      0.156      -0.025       0.076
+
+ S_NA     WITH
+    S_ST               0.005       0.013      0.346      -0.021       0.031
+
+ Means
+    EXHAUST           -0.006       0.071      0.465      -0.151       0.133
+    S_NA               0.485       0.038      0.000       0.411       0.564      *
+    S_ST               0.350       0.036      0.000       0.281       0.422      *
+
+ Intercepts
+    BURNOUT           -0.923       0.123      0.000      -1.175      -0.696      *
+
+ Variances
+    EXHAUST            0.415       0.072      0.000       0.303       0.582      *
+    S_NA               0.097       0.020      0.000       0.065       0.143      *
+    S_ST               0.076       0.019      0.000       0.047       0.119      *
+
+ Residual Variances
+    BURNOUT            0.125       0.030      0.000       0.072       0.191      *
+
+
+TECHNICAL 1 OUTPUT
+
+
+     PARAMETER SPECIFICATION FOR WITHIN
+
+
+           NU
+              EXHAUST       NA1           NA2           NA3           ST1
+              ________      ________      ________      ________      ________
+                    0             1             2             3             4
+
+
+           NU
+              ST2           ST3
+              ________      ________
+                    5             6
+
+
+           LAMBDA
+              ETA_NA        ETA_ST        EXHAUST
+              ________      ________      ________
+ EXHAUST            0             0             0
+ NA1                0             0             0
+ NA2                7             0             0
+ NA3                8             0             0
+ ST1                0             0             0
+ ST2                0             9             0
+ ST3                0            10             0
+
+
+           THETA
+              EXHAUST       NA1           NA2           NA3           ST1
+              ________      ________      ________      ________      ________
+ EXHAUST            0
+ NA1                0            11
+ NA2                0             0            12
+ NA3                0             0             0            13
+ ST1                0             0             0             0            14
+ ST2                0             0             0             0             0
+ ST3                0             0             0             0             0
+
+
+           THETA
+              ST2           ST3
+              ________      ________
+ ST2               15
+ ST3                0            16
+
+
+           ALPHA
+              ETA_NA        ETA_ST        EXHAUST
+              ________      ________      ________
+                    0             0             0
+
+
+           BETA
+              ETA_NA        ETA_ST        EXHAUST
+              ________      ________      ________
+ ETA_NA             0             0             0
+ ETA_ST             0             0             0
+ EXHAUST            0             0             0
+
+
+           PSI
+              ETA_NA        ETA_ST        EXHAUST
+              ________      ________      ________
+ ETA_NA            17
+ ETA_ST            18            19
+ EXHAUST            0             0            20
+
+
+     PARAMETER SPECIFICATION FOR BETWEEN
+
+
+           NU
+              BURNOUT       EXHAUST
+              ________      ________
+                    0             0
+
+
+           LAMBDA
+              S_NA          S_ST          BURNOUT       EXHAUST
+              ________      ________      ________      ________
+ BURNOUT            0             0             0             0
+ EXHAUST            0             0             0             0
+
+
+           THETA
+              BURNOUT       EXHAUST
+              ________      ________
+ BURNOUT            0
+ EXHAUST            0             0
+
+
+           ALPHA
+              S_NA          S_ST          BURNOUT       EXHAUST
+              ________      ________      ________      ________
+                   21            22            23            24
+
+
+           BETA
+              S_NA          S_ST          BURNOUT       EXHAUST
+              ________      ________      ________      ________
+ S_NA               0             0             0             0
+ S_ST               0             0             0             0
+ BURNOUT           25            26             0            27
+ EXHAUST            0             0             0             0
+
+
+           PSI
+              S_NA          S_ST          BURNOUT       EXHAUST
+              ________      ________      ________      ________
+ S_NA              28
+ S_ST              29            30
+ BURNOUT            0             0            31
+ EXHAUST           32            33             0            34
+
+
+     STARTING VALUES FOR WITHIN
+
+
+           NU
+              EXHAUST       NA1           NA2           NA3           ST1
+              ________      ________      ________      ________      ________
+                0.000        -0.010        -0.026        -0.011        -0.008
+
+
+           NU
+              ST2           ST3
+              ________      ________
+               -0.036        -0.041
+
+
+           LAMBDA
+              ETA_NA        ETA_ST        EXHAUST
+              ________      ________      ________
+ EXHAUST        0.000         0.000         1.000
+ NA1            1.000         0.000         0.000
+ NA2            1.000         0.000         0.000
+ NA3            1.000         0.000         0.000
+ ST1            0.000         1.000         0.000
+ ST2            0.000         1.000         0.000
+ ST3            0.000         1.000         0.000
+
+
+           THETA
+              EXHAUST       NA1           NA2           NA3           ST1
+              ________      ________      ________      ________      ________
+ EXHAUST        0.000
+ NA1            0.000         0.769
+ NA2            0.000         0.000         0.671
+ NA3            0.000         0.000         0.000         0.619
+ ST1            0.000         0.000         0.000         0.000         0.722
+ ST2            0.000         0.000         0.000         0.000         0.000
+ ST3            0.000         0.000         0.000         0.000         0.000
+
+
+           THETA
+              ST2           ST3
+              ________      ________
+ ST2            0.638
+ ST3            0.000         0.605
+
+
+           ALPHA
+              ETA_NA        ETA_ST        EXHAUST
+              ________      ________      ________
+                0.000         0.000         0.000
+
+
+           BETA
+              ETA_NA        ETA_ST        EXHAUST
+              ________      ________      ________
+ ETA_NA         0.000         0.000         0.000
+ ETA_ST         0.000         0.000         0.000
+ EXHAUST        0.000         0.000         0.000
+
+
+           PSI
+              ETA_NA        ETA_ST        EXHAUST
+              ________      ________      ________
+ ETA_NA         1.000
+ ETA_ST         0.000         1.000
+ EXHAUST        0.000         0.000         0.631
+
+
+     STARTING VALUES FOR BETWEEN
+
+
+           NU
+              BURNOUT       EXHAUST
+              ________      ________
+                0.000         0.000
+
+
+           LAMBDA
+              S_NA          S_ST          BURNOUT       EXHAUST
+              ________      ________      ________      ________
+ BURNOUT        0.000         0.000         1.000         0.000
+ EXHAUST        0.000         0.000         0.000         1.000
+
+
+           THETA
+              BURNOUT       EXHAUST
+              ________      ________
+ BURNOUT        0.000
+ EXHAUST        0.000         0.000
+
+
+           ALPHA
+              S_NA          S_ST          BURNOUT       EXHAUST
+              ________      ________      ________      ________
+                0.000         0.000        -0.028        -0.014
+
+
+           BETA
+              S_NA          S_ST          BURNOUT       EXHAUST
+              ________      ________      ________      ________
+ S_NA           0.000         0.000         0.000         0.000
+ S_ST           0.000         0.000         0.000         0.000
+ BURNOUT        0.000         0.000         0.000         0.000
+ EXHAUST        0.000         0.000         0.000         0.000
+
+
+           PSI
+              S_NA          S_ST          BURNOUT       EXHAUST
+              ________      ________      ________      ________
+ S_NA           1.000
+ S_ST           0.000         1.000
+ BURNOUT        0.000         0.000         0.181
+ EXHAUST        0.000         0.000         0.000         0.631
+
+
+
+     PRIORS FOR ALL PARAMETERS            PRIOR MEAN      PRIOR VARIANCE     PRIOR STD. DEV.
+
+     Parameter 1~N(0.000,infinity)           0.0000            infinity            infinity
+     Parameter 2~N(0.000,infinity)           0.0000            infinity            infinity
+     Parameter 3~N(0.000,infinity)           0.0000            infinity            infinity
+     Parameter 4~N(0.000,infinity)           0.0000            infinity            infinity
+     Parameter 5~N(0.000,infinity)           0.0000            infinity            infinity
+     Parameter 6~N(0.000,infinity)           0.0000            infinity            infinity
+     Parameter 7~N(0.000,infinity)           0.0000            infinity            infinity
+     Parameter 8~N(0.000,infinity)           0.0000            infinity            infinity
+     Parameter 9~N(0.000,infinity)           0.0000            infinity            infinity
+     Parameter 10~N(0.000,infinity)          0.0000            infinity            infinity
+     Parameter 11~IG(-1.000,0.000)         infinity            infinity            infinity
+     Parameter 12~IG(-1.000,0.000)         infinity            infinity            infinity
+     Parameter 13~IG(-1.000,0.000)         infinity            infinity            infinity
+     Parameter 14~IG(-1.000,0.000)         infinity            infinity            infinity
+     Parameter 15~IG(-1.000,0.000)         infinity            infinity            infinity
+     Parameter 16~IG(-1.000,0.000)         infinity            infinity            infinity
+     Parameter 17~IW(0.000,-3)             infinity            infinity            infinity
+     Parameter 18~IW(0.000,-3)             infinity            infinity            infinity
+     Parameter 19~IW(0.000,-3)             infinity            infinity            infinity
+     Parameter 20~IG(-1.000,0.000)         infinity            infinity            infinity
+     Parameter 21~N(0.000,infinity)          0.0000            infinity            infinity
+     Parameter 22~N(0.000,infinity)          0.0000            infinity            infinity
+     Parameter 23~N(0.000,infinity)          0.0000            infinity            infinity
+     Parameter 24~N(0.000,infinity)          0.0000            infinity            infinity
+     Parameter 25~N(0.000,infinity)          0.0000            infinity            infinity
+     Parameter 26~N(0.000,infinity)          0.0000            infinity            infinity
+     Parameter 27~N(0.000,infinity)          0.0000            infinity            infinity
+     Parameter 28~IW(0.000,-4)             infinity            infinity            infinity
+     Parameter 29~IW(0.000,-4)             infinity            infinity            infinity
+     Parameter 30~IW(0.000,-4)             infinity            infinity            infinity
+     Parameter 31~IG(-1.000,0.000)         infinity            infinity            infinity
+     Parameter 32~IW(0.000,-4)             infinity            infinity            infinity
+     Parameter 33~IW(0.000,-4)             infinity            infinity            infinity
+     Parameter 34~IW(0.000,-4)             infinity            infinity            infinity
+
+
+TECHNICAL 8 OUTPUT
+
+
+   TECHNICAL 8 OUTPUT FOR BAYES ESTIMATION
+
+     PROCESSOR    BSEED
+     1            2026
+     2            383513
+     3            691463
+     4            451027
+
+                     POTENTIAL       PARAMETER WITH
+     ITERATION    SCALE REDUCTION      HIGHEST PSR
+     100              1.251               1
+     200              1.104               3
+     300              1.095               29
+     400              1.120               4
+     500              1.067               4
+     600              1.061               12
+     700              1.045               12
+     800              1.036               12
+     900              1.041               9
+     1000             1.028               14
+     1100             1.019               8
+     1200             1.034               8
+     1300             1.018               8
+     1400             1.030               8
+     1500             1.018               8
+     1600             1.021               8
+     1700             1.012               8
+     1800             1.008               16
+     1900             1.012               31
+     2000             1.009               5
+     2100             1.009               14
+     2200             1.007               10
+     2300             1.006               25
+     2400             1.010               17
+     2500             1.009               17
+
+
+     MCMC EFFECTIVE SAMPLE SIZE (ESS) IN ASCENDING ORDER
+        LOWEST 10 PARAMETERS
+        PARAMETER    ESS
+             2       224
+             1       236
+             4       246
+             7       251
+             3       260
+             5       264
+             8       266
+             6       279
+            17       290
+            14       305
+
+
+SUMMARIES OF PLAUSIBLE VALUES (N = NUMBER OF OBSERVATIONS * NUMBER OF IMPUTATIONS)
+
+
+     SAMPLE STATISTICS
+
+
+           Means
+              ETA_NA        ETA_ST        S_NA          S_ST          B_EXHAUS
+              ________      ________      ________      ________      ________
+                0.002         0.009         0.483         0.347        -0.011
+
+
+           Covariances
+              ETA_NA        ETA_ST        S_NA          S_ST          B_EXHAUS
+              ________      ________      ________      ________      ________
+ ETA_NA         1.018
+ ETA_ST         0.017         0.985
+ S_NA          -0.006        -0.001         0.089
+ S_ST          -0.001         0.000         0.004         0.073
+ B_EXHAUS      -0.013        -0.005         0.019         0.023         0.379
+
+
+           Correlations
+              ETA_NA        ETA_ST        S_NA          S_ST          B_EXHAUS
+              ________      ________      ________      ________      ________
+ ETA_NA         1.000
+ ETA_ST         0.017         1.000
+ S_NA          -0.019        -0.004         1.000
+ S_ST          -0.004         0.001         0.044         1.000
+ B_EXHAUS      -0.022        -0.008         0.101         0.138         1.000
+
+
+SUMMARY OF PLAUSIBLE STANDARD DEVIATION (N = NUMBER OF OBSERVATIONS)
+
+
+     SAMPLE STATISTICS
+
+
+           Means
+              ETA_NA_S      ETA_ST_S      S_NA_SD       S_ST_SD       B_EXHAUS
+              ________      ________      ________      ________      ________
+                0.385         0.393         0.135         0.147         0.150
+
+
+           Covariances
+              ETA_NA_S      ETA_ST_S      S_NA_SD       S_ST_SD       B_EXHAUS
+              ________      ________      ________      ________      ________
+ ETA_NA_S       0.002
+ ETA_ST_S       0.000         0.002
+ S_NA_SD        0.000         0.000         0.000
+ S_ST_SD        0.000         0.000         0.000         0.000
+ B_EXHAUS       0.000         0.000         0.000         0.000         0.000
+
+
+           Correlations
+              ETA_NA_S      ETA_ST_S      S_NA_SD       S_ST_SD       B_EXHAUS
+              ________      ________      ________      ________      ________
+ ETA_NA_S       1.000
+ ETA_ST_S       0.004         1.000
+ S_NA_SD        0.030        -0.051         1.000
+ S_ST_SD       -0.090        -0.046         0.071         1.000
+ B_EXHAUS      -0.059        -0.096        -0.075         0.088         1.000
+
+
+SAVEDATA INFORMATION
+
+
+  Save file
+    ema_fscores.dat
+
+  Order and format of variables
+
+    BURNOUT                          F10.3
+    EXHAUST                          F10.3
+    NA1                              F10.3
+    NA2                              F10.3
+    NA3                              F10.3
+    ST1                              F10.3
+    ST2                              F10.3
+    ST3                              F10.3
+    ETA_NA Mean                      F10.3
+    ETA_NA Median                    F10.3
+    ETA_NA Standard Deviation        F10.3
+    ETA_NA 2.5% Value                F10.3
+    ETA_NA 97.5% Value               F10.3
+    ETA_ST Mean                      F10.3
+    ETA_ST Median                    F10.3
+    ETA_ST Standard Deviation        F10.3
+    ETA_ST 2.5% Value                F10.3
+    ETA_ST 97.5% Value               F10.3
+    S_NA Mean                        F10.3
+    S_NA Median                      F10.3
+    S_NA Standard Deviation          F10.3
+    S_NA 2.5% Value                  F10.3
+    S_NA 97.5% Value                 F10.3
+    S_ST Mean                        F10.3
+    S_ST Median                      F10.3
+    S_ST Standard Deviation          F10.3
+    S_ST 2.5% Value                  F10.3
+    S_ST 97.5% Value                 F10.3
+    B_EXHAUST Mean                   F10.3
+    B_EXHAUST Median                 F10.3
+    B_EXHAUST Standard Deviation     F10.3
+    B_EXHAUST 2.5% Value             F10.3
+    B_EXHAUST 97.5% Value            F10.3
+    ID                               I3
+
+  Save file format
+    33F10.3 I3
+
+  Save file record length    10000
+
+  Save missing symbol        *
+
+
+     Beginning Time:  21:30:56
+        Ending Time:  21:31:02
+       Elapsed Time:  00:00:06
+
+
+
+MUTHEN & MUTHEN
+3463 Stoner Ave.
+Los Angeles, CA  90066
+
+Tel: (310) 391-9971
+Fax: (310) 391-8971
+Web: www.StatModel.com
+Support: Support@StatModel.com
+
+Copyright (c) 1998-2026 Muthen & Muthen

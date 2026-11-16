@@ -1,0 +1,726 @@
+Mplus VERSION 9.1 (Mac)
+MUTHEN & MUTHEN
+11/15/2026   9:30 PM
+
+INPUT INSTRUCTIONS
+
+  TITLE:
+  Sensitivity v0 = 0.010;
+  ANALYSIS:
+  ESTIMATOR = BAYES;
+  CHAINS = 2;
+  PROCESSORS = 2;
+  BITERATIONS = 25000 (6000);
+  BSEED = 2026;
+  MODEL:
+  visual BY x1-x3*;
+  textual BY x4-x6*;
+  speed BY x7-x9*;
+  visual@1 textual@1 speed@1;
+  ! All 18 cross-loadings freed with parameter labels:
+  visual BY x4-x9*0 (cl1-cl6);
+  textual BY x1-x3*0 x7-x9*0 (cl7-cl12);
+  speed BY x1-x6*0 (cl13-cl18);
+  MODEL PRIORS:
+  cl1-cl18 ~ N(0, 0.0100);
+  OUTPUT:
+  STDYX TECH8;
+  VARIABLE:
+  NAMES = x1 x2 x3 x4 x5 x6 x7 x8 x9;
+  MISSING = .;
+  DATA:
+  FILE = "sens_0p010.dat";
+
+
+
+INPUT READING TERMINATED NORMALLY
+
+
+
+
+Sensitivity v0 = 0.010;
+
+SUMMARY OF ANALYSIS
+
+Number of groups                                                 1
+Number of observations                                         145
+
+Number of dependent variables                                    9
+Number of independent variables                                  0
+Number of continuous latent variables                            3
+
+Observed dependent variables
+
+  Continuous
+   X1          X2          X3          X4          X5          X6
+   X7          X8          X9
+
+Continuous latent variables
+   VISUAL      TEXTUAL     SPEED
+
+
+Estimator                                                    BAYES
+Specifications for Bayesian Estimation
+  Point estimate                                            MEDIAN
+  Number of Markov chain Monte Carlo (MCMC) chains               2
+  Random seed for the first chain                             2026
+  Starting value information                           UNPERTURBED
+  Algorithm used for Markov chain Monte Carlo           GIBBS(PX1)
+  Convergence criterion                                  0.500D-01
+  Maximum number of iterations                               25000
+  K-th iteration used for thinning                               1
+
+Input data file(s)
+  sens_0p010.dat
+Input data format  FREE
+
+
+SUMMARY OF DATA
+
+
+
+COVARIANCE COVERAGE OF DATA
+
+Minimum covariance coverage value   0.100
+
+     Number of missing data patterns             1
+
+
+     PROPORTION OF DATA PRESENT
+
+
+           Covariance Coverage
+              X1            X2            X3            X4            X5
+              ________      ________      ________      ________      ________
+ X1             1.000
+ X2             1.000         1.000
+ X3             1.000         1.000         1.000
+ X4             1.000         1.000         1.000         1.000
+ X5             1.000         1.000         1.000         1.000         1.000
+ X6             1.000         1.000         1.000         1.000         1.000
+ X7             1.000         1.000         1.000         1.000         1.000
+ X8             1.000         1.000         1.000         1.000         1.000
+ X9             1.000         1.000         1.000         1.000         1.000
+
+
+           Covariance Coverage
+              X6            X7            X8            X9
+              ________      ________      ________      ________
+ X6             1.000
+ X7             1.000         1.000
+ X8             1.000         1.000         1.000
+ X9             1.000         1.000         1.000         1.000
+
+
+
+UNIVARIATE SAMPLE STATISTICS
+
+
+     UNIVARIATE HIGHER-ORDER MOMENT DESCRIPTIVE STATISTICS
+
+         Variable/         Mean/     Skewness/   Minimum/ % with                Percentiles
+        Sample Size      Variance    Kurtosis    Maximum  Min/Max      20%/60%    40%/80%    Median
+
+     X1                    0.000      -0.118      -2.687    0.69%      -0.807     -0.228      0.061
+             145.000       0.993      -0.085       3.098    0.69%       0.205      0.929
+     X2                    0.000       0.237      -3.555    0.69%      -0.855     -0.405      0.045
+             145.000       0.993       0.801       2.745    1.38%       0.045      0.720
+     X3                    0.000       0.617      -1.559    1.38%      -0.958     -0.357     -0.116
+             145.000       0.993      -0.480       2.409    0.69%       0.004      0.966
+     X4                    0.000       0.401      -2.652    0.69%      -0.874     -0.282     -0.282
+             145.000       0.993       0.203       2.681    0.69%       0.014      0.903
+     X5                    0.000      -0.544      -3.194    0.69%      -0.613     -0.182      0.033
+             145.000       0.993       0.172       1.968    0.69%       0.248      0.893
+     X6                    0.000       0.721      -1.923    0.69%      -0.791     -0.413     -0.161
+             145.000       0.993       0.184       2.984    0.69%       0.090      0.719
+     X7                    0.000       0.161      -2.530    0.69%      -0.933     -0.344     -0.050
+             145.000       0.993      -0.385       2.473    0.69%       0.203      0.833
+     X8                    0.000       0.691      -2.323    0.69%      -0.799     -0.227      0.011
+             145.000       0.993       2.164       4.298    0.69%       0.202      0.726
+     X9                    0.000       0.198      -2.154    0.69%      -0.885     -0.264     -0.021
+             145.000       0.993       0.457       3.813    0.69%       0.249      0.870
+
+
+THE MODEL ESTIMATION TERMINATED NORMALLY
+
+     USE THE FBITERATIONS OPTION TO INCREASE THE NUMBER OF ITERATIONS BY A FACTOR
+     OF AT LEAST TWO TO CHECK CONVERGENCE AND THAT THE PSR VALUE DOES NOT INCREASE.
+
+
+
+MODEL FIT INFORMATION
+
+Number of Free Parameters                              48
+
+Bayesian Posterior Predictive Checking using Chi-Square
+
+          95% Confidence Interval for the Difference Between
+          the Observed and the Replicated Chi-Square Values
+
+                                -25.267            29.455
+
+          Posterior Predictive P-Value              0.435
+
+          Prior Posterior Predictive P-Value        0.360
+
+Information Criteria
+
+          Deviance (DIC)                         3282.896
+          Estimated Number of Parameters (pD)      36.831
+          Bayesian (BIC)                         3447.616
+
+RMSEA (Root Mean Square Error Of Approximation)
+
+          Estimate                           0.030
+          90 Percent C.I.                    0.000  0.092
+          Probability RMSEA <= .05           0.646
+
+CFI/TLI
+
+          CFI                                0.995
+          90 Percent C.I.                    0.954  1.000
+
+          TLI                                0.990
+          90 Percent C.I.                    0.904  1.000
+
+
+
+MODEL RESULTS
+
+                                Posterior  One-Tailed         95% C.I.
+                    Estimate       S.D.      P-Value   Lower 2.5%  Upper 2.5%  Significance
+
+ VISUAL   BY
+    X1                 0.633       0.123      0.000       0.402       0.886      *
+    X2                 0.545       0.122      0.000       0.307       0.779      *
+    X3                 0.711       0.128      0.000       0.463       0.969      *
+    X4                 0.009       0.079      0.451      -0.145       0.159
+    X5                -0.043       0.080      0.294      -0.204       0.113
+    X6                 0.021       0.079      0.397      -0.137       0.174
+    X7                -0.144       0.083      0.037      -0.308       0.012
+    X8                 0.012       0.089      0.451      -0.176       0.175
+    X9                 0.177       0.080      0.016       0.016       0.330      *
+
+ TEXTUAL  BY
+    X4                 0.901       0.088      0.000       0.740       1.084      *
+    X5                 0.852       0.089      0.000       0.683       1.034      *
+    X6                 0.840       0.089      0.000       0.679       1.025      *
+    X1                 0.033       0.082      0.342      -0.139       0.192
+    X2                -0.022       0.081      0.389      -0.181       0.134
+    X3                 0.019       0.083      0.397      -0.150       0.178
+    X7                 0.051       0.079      0.262      -0.103       0.202
+    X8                -0.103       0.082      0.102      -0.268       0.058
+    X9                 0.071       0.074      0.166      -0.073       0.214
+
+ SPEED    BY
+    X7                 0.754       0.103      0.000       0.563       0.970      *
+    X8                 0.880       0.104      0.000       0.685       1.092      *
+    X9                 0.582       0.097      0.000       0.392       0.781      *
+    X1                 0.064       0.083      0.223      -0.103       0.218
+    X2                -0.015       0.078      0.424      -0.172       0.131
+    X3                -0.015       0.085      0.425      -0.188       0.145
+    X4                -0.034       0.074      0.322      -0.183       0.107
+    X5                 0.067       0.073      0.185      -0.083       0.205
+    X6                -0.030       0.074      0.339      -0.179       0.113
+
+ TEXTUAL  WITH
+    VISUAL             0.520       0.128      0.000       0.241       0.741      *
+
+ SPEED    WITH
+    VISUAL             0.451       0.146      0.002       0.140       0.713      *
+    TEXTUAL            0.341       0.138      0.013       0.045       0.587      *
+
+ Intercepts
+    X1                 0.000       0.087      0.500      -0.175       0.166
+    X2                 0.000       0.085      0.498      -0.170       0.166
+    X3                 0.002       0.085      0.490      -0.166       0.168
+    X4                -0.005       0.089      0.476      -0.184       0.170
+    X5                -0.004       0.088      0.482      -0.181       0.167
+    X6                -0.004       0.088      0.481      -0.183       0.163
+    X7                -0.002       0.084      0.491      -0.170       0.162
+    X8                -0.002       0.085      0.489      -0.172       0.162
+    X9                -0.001       0.085      0.493      -0.169       0.164
+
+ Variances
+    VISUAL             1.000       0.000      0.000       1.000       1.000
+    TEXTUAL            1.000       0.000      0.000       1.000       1.000
+    SPEED              1.000       0.000      0.000       1.000       1.000
+
+ Residual Variances
+    X1                 0.562       0.109      0.000       0.348       0.788      *
+    X2                 0.753       0.111      0.000       0.562       0.995      *
+    X3                 0.520       0.120      0.000       0.283       0.757      *
+    X4                 0.251       0.060      0.000       0.142       0.376      *
+    X5                 0.319       0.062      0.000       0.209       0.455      *
+    X6                 0.339       0.061      0.000       0.232       0.470      *
+    X7                 0.512       0.096      0.000       0.337       0.719      *
+    X8                 0.318       0.096      0.000       0.131       0.515      *
+    X9                 0.507       0.080      0.000       0.367       0.680      *
+
+
+STANDARDIZED MODEL RESULTS
+
+
+STDYX Standardization
+
+                                Posterior  One-Tailed         95% C.I.
+                    Estimate       S.D.      P-Value   Lower 2.5%  Upper 2.5%  Significance
+ VISUAL   BY
+    X1                 0.623       0.109      0.000       0.409       0.844      *
+    X2                 0.536       0.109      0.000       0.309       0.739      *
+    X3                 0.701       0.112      0.000       0.475       0.918      *
+    X4                 0.009       0.077      0.451      -0.142       0.155
+    X5                -0.042       0.079      0.294      -0.201       0.108
+    X6                 0.021       0.077      0.397      -0.133       0.169
+    X7                -0.142       0.082      0.037      -0.307       0.012
+    X8                 0.012       0.088      0.451      -0.173       0.172
+    X9                 0.175       0.080      0.016       0.016       0.332      *
+
+ TEXTUAL  BY
+    X4                 0.879       0.062      0.000       0.761       1.004      *
+    X5                 0.832       0.063      0.000       0.704       0.958      *
+    X6                 0.820       0.062      0.000       0.700       0.946      *
+    X1                 0.033       0.081      0.342      -0.136       0.189
+    X2                -0.022       0.079      0.389      -0.180       0.131
+    X3                 0.019       0.082      0.397      -0.147       0.175
+    X7                 0.050       0.078      0.262      -0.102       0.202
+    X8                -0.101       0.081      0.102      -0.264       0.056
+    X9                 0.071       0.073      0.166      -0.074       0.211
+
+ SPEED    BY
+    X7                 0.744       0.082      0.000       0.578       0.905      *
+    X8                 0.862       0.079      0.000       0.704       1.016      *
+    X9                 0.577       0.080      0.000       0.410       0.730      *
+    X1                 0.063       0.081      0.223      -0.101       0.215
+    X2                -0.015       0.077      0.424      -0.169       0.129
+    X3                -0.015       0.083      0.425      -0.185       0.143
+    X4                -0.033       0.072      0.322      -0.179       0.104
+    X5                 0.065       0.071      0.185      -0.079       0.200
+    X6                -0.029       0.072      0.339      -0.175       0.110
+
+ TEXTUAL  WITH
+    VISUAL             0.520       0.128      0.000       0.241       0.741      *
+
+ SPEED    WITH
+    VISUAL             0.451       0.146      0.002       0.140       0.713      *
+    TEXTUAL            0.341       0.138      0.013       0.045       0.587      *
+
+ Intercepts
+    X1                 0.000       0.085      0.500      -0.173       0.164
+    X2                 0.000       0.083      0.498      -0.164       0.160
+    X3                 0.003       0.083      0.490      -0.163       0.163
+    X4                -0.005       0.086      0.476      -0.180       0.164
+    X5                -0.004       0.086      0.482      -0.177       0.162
+    X6                -0.004       0.086      0.481      -0.180       0.159
+    X7                -0.002       0.082      0.491      -0.163       0.159
+    X8                -0.002       0.083      0.489      -0.167       0.160
+    X9                -0.001       0.084      0.493      -0.165       0.160
+
+ Variances
+    VISUAL             1.000       0.000      0.000       1.000       1.000
+    TEXTUAL            1.000       0.000      0.000       1.000       1.000
+    SPEED              1.000       0.000      0.000       1.000       1.000
+
+ Residual Variances
+    X1                 0.549       0.098      0.000       0.339       0.724      *
+    X2                 0.729       0.086      0.000       0.550       0.884      *
+    X3                 0.507       0.114      0.000       0.262       0.713      *
+    X4                 0.238       0.060      0.000       0.132       0.369      *
+    X5                 0.305       0.062      0.000       0.192       0.436      *
+    X6                 0.325       0.062      0.000       0.208       0.458      *
+    X7                 0.500       0.092      0.000       0.317       0.678      *
+    X8                 0.305       0.094      0.000       0.120       0.496      *
+    X9                 0.501       0.076      0.000       0.356       0.650      *
+
+
+R-SQUARE
+
+                                Posterior  One-Tailed         95% C.I.
+    Variable        Estimate       S.D.      P-Value   Lower 2.5%  Upper 2.5%
+
+    X1                 0.451       0.098      0.000       0.276       0.661
+    X2                 0.271       0.086      0.000       0.115       0.450
+    X3                 0.493       0.114      0.000       0.287       0.737
+    X4                 0.762       0.060      0.000       0.631       0.868
+    X5                 0.695       0.062      0.000       0.564       0.808
+    X6                 0.675       0.062      0.000       0.542       0.791
+    X7                 0.500       0.092      0.000       0.322       0.682
+    X8                 0.695       0.094      0.000       0.504       0.880
+    X9                 0.499       0.076      0.000       0.349       0.644
+
+
+TECHNICAL 1 OUTPUT
+
+
+     PARAMETER SPECIFICATION
+
+
+           NU
+              X1            X2            X3            X4            X5
+              ________      ________      ________      ________      ________
+                    1             2             3             4             5
+
+
+           NU
+              X6            X7            X8            X9
+              ________      ________      ________      ________
+                    6             7             8             9
+
+
+           LAMBDA
+              VISUAL        TEXTUAL       SPEED
+              ________      ________      ________
+ X1                10            11            12
+ X2                13            14            15
+ X3                16            17            18
+ X4                19            20            21
+ X5                22            23            24
+ X6                25            26            27
+ X7                28            29            30
+ X8                31            32            33
+ X9                34            35            36
+
+
+           THETA
+              X1            X2            X3            X4            X5
+              ________      ________      ________      ________      ________
+ X1                37
+ X2                 0            38
+ X3                 0             0            39
+ X4                 0             0             0            40
+ X5                 0             0             0             0            41
+ X6                 0             0             0             0             0
+ X7                 0             0             0             0             0
+ X8                 0             0             0             0             0
+ X9                 0             0             0             0             0
+
+
+           THETA
+              X6            X7            X8            X9
+              ________      ________      ________      ________
+ X6                42
+ X7                 0            43
+ X8                 0             0            44
+ X9                 0             0             0            45
+
+
+           ALPHA
+              VISUAL        TEXTUAL       SPEED
+              ________      ________      ________
+                    0             0             0
+
+
+           BETA
+              VISUAL        TEXTUAL       SPEED
+              ________      ________      ________
+ VISUAL             0             0             0
+ TEXTUAL            0             0             0
+ SPEED              0             0             0
+
+
+           PSI
+              VISUAL        TEXTUAL       SPEED
+              ________      ________      ________
+ VISUAL             0
+ TEXTUAL           46             0
+ SPEED             47            48             0
+
+
+     STARTING VALUES
+
+
+           NU
+              X1            X2            X3            X4            X5
+              ________      ________      ________      ________      ________
+                0.000         0.000         0.000         0.000         0.000
+
+
+           NU
+              X6            X7            X8            X9
+              ________      ________      ________      ________
+                0.000         0.000         0.000         0.000
+
+
+           LAMBDA
+              VISUAL        TEXTUAL       SPEED
+              ________      ________      ________
+ X1             1.000         0.000         0.000
+ X2             1.000         0.000         0.000
+ X3             1.000         0.000         0.000
+ X4             0.000         1.000         0.000
+ X5             0.000         1.000         0.000
+ X6             0.000         1.000         0.000
+ X7             0.000         0.000         1.000
+ X8             0.000         0.000         1.000
+ X9             0.000         0.000         1.000
+
+
+           THETA
+              X1            X2            X3            X4            X5
+              ________      ________      ________      ________      ________
+ X1             0.497
+ X2             0.000         0.497
+ X3             0.000         0.000         0.497
+ X4             0.000         0.000         0.000         0.497
+ X5             0.000         0.000         0.000         0.000         0.497
+ X6             0.000         0.000         0.000         0.000         0.000
+ X7             0.000         0.000         0.000         0.000         0.000
+ X8             0.000         0.000         0.000         0.000         0.000
+ X9             0.000         0.000         0.000         0.000         0.000
+
+
+           THETA
+              X6            X7            X8            X9
+              ________      ________      ________      ________
+ X6             0.497
+ X7             0.000         0.497
+ X8             0.000         0.000         0.497
+ X9             0.000         0.000         0.000         0.497
+
+
+           ALPHA
+              VISUAL        TEXTUAL       SPEED
+              ________      ________      ________
+                0.000         0.000         0.000
+
+
+           BETA
+              VISUAL        TEXTUAL       SPEED
+              ________      ________      ________
+ VISUAL         0.000         0.000         0.000
+ TEXTUAL        0.000         0.000         0.000
+ SPEED          0.000         0.000         0.000
+
+
+           PSI
+              VISUAL        TEXTUAL       SPEED
+              ________      ________      ________
+ VISUAL         1.000
+ TEXTUAL        0.000         1.000
+ SPEED          0.000         0.000         1.000
+
+
+
+     PRIORS FOR ALL PARAMETERS            PRIOR MEAN      PRIOR VARIANCE     PRIOR STD. DEV.
+
+     Parameter 1~N(0.000,infinity)           0.0000            infinity            infinity
+     Parameter 2~N(0.000,infinity)           0.0000            infinity            infinity
+     Parameter 3~N(0.000,infinity)           0.0000            infinity            infinity
+     Parameter 4~N(0.000,infinity)           0.0000            infinity            infinity
+     Parameter 5~N(0.000,infinity)           0.0000            infinity            infinity
+     Parameter 6~N(0.000,infinity)           0.0000            infinity            infinity
+     Parameter 7~N(0.000,infinity)           0.0000            infinity            infinity
+     Parameter 8~N(0.000,infinity)           0.0000            infinity            infinity
+     Parameter 9~N(0.000,infinity)           0.0000            infinity            infinity
+     Parameter 10~N(0.000,infinity)          0.0000            infinity            infinity
+     Parameter 11~N(0.000,0.010)             0.0000              0.0100              0.1000
+     Parameter 12~N(0.000,0.010)             0.0000              0.0100              0.1000
+     Parameter 13~N(0.000,infinity)          0.0000            infinity            infinity
+     Parameter 14~N(0.000,0.010)             0.0000              0.0100              0.1000
+     Parameter 15~N(0.000,0.010)             0.0000              0.0100              0.1000
+     Parameter 16~N(0.000,infinity)          0.0000            infinity            infinity
+     Parameter 17~N(0.000,0.010)             0.0000              0.0100              0.1000
+     Parameter 18~N(0.000,0.010)             0.0000              0.0100              0.1000
+     Parameter 19~N(0.000,0.010)             0.0000              0.0100              0.1000
+     Parameter 20~N(0.000,infinity)          0.0000            infinity            infinity
+     Parameter 21~N(0.000,0.010)             0.0000              0.0100              0.1000
+     Parameter 22~N(0.000,0.010)             0.0000              0.0100              0.1000
+     Parameter 23~N(0.000,infinity)          0.0000            infinity            infinity
+     Parameter 24~N(0.000,0.010)             0.0000              0.0100              0.1000
+     Parameter 25~N(0.000,0.010)             0.0000              0.0100              0.1000
+     Parameter 26~N(0.000,infinity)          0.0000            infinity            infinity
+     Parameter 27~N(0.000,0.010)             0.0000              0.0100              0.1000
+     Parameter 28~N(0.000,0.010)             0.0000              0.0100              0.1000
+     Parameter 29~N(0.000,0.010)             0.0000              0.0100              0.1000
+     Parameter 30~N(0.000,infinity)          0.0000            infinity            infinity
+     Parameter 31~N(0.000,0.010)             0.0000              0.0100              0.1000
+     Parameter 32~N(0.000,0.010)             0.0000              0.0100              0.1000
+     Parameter 33~N(0.000,infinity)          0.0000            infinity            infinity
+     Parameter 34~N(0.000,0.010)             0.0000              0.0100              0.1000
+     Parameter 35~N(0.000,0.010)             0.0000              0.0100              0.1000
+     Parameter 36~N(0.000,infinity)          0.0000            infinity            infinity
+     Parameter 37~IG(-1.000,0.000)         infinity            infinity            infinity
+     Parameter 38~IG(-1.000,0.000)         infinity            infinity            infinity
+     Parameter 39~IG(-1.000,0.000)         infinity            infinity            infinity
+     Parameter 40~IG(-1.000,0.000)         infinity            infinity            infinity
+     Parameter 41~IG(-1.000,0.000)         infinity            infinity            infinity
+     Parameter 42~IG(-1.000,0.000)         infinity            infinity            infinity
+     Parameter 43~IG(-1.000,0.000)         infinity            infinity            infinity
+     Parameter 44~IG(-1.000,0.000)         infinity            infinity            infinity
+     Parameter 45~IG(-1.000,0.000)         infinity            infinity            infinity
+     Parameter 46~IW(0.000,-4)
+     Parameter 47~IW(0.000,-4)
+     Parameter 48~IW(0.000,-4)
+
+
+TECHNICAL 8 OUTPUT
+
+
+   TECHNICAL 8 OUTPUT FOR BAYES ESTIMATION
+
+     CHAIN    BSEED
+     1        2026
+     2        383513
+
+     Iterations for computing PPPP
+
+                     POTENTIAL       PARAMETER WITH
+     ITERATION    SCALE REDUCTION      HIGHEST PSR
+     100              1.129               39
+     200              1.134               5
+     300              1.063               37
+     400              1.043               33
+     500              1.049               45
+     600              1.048               46
+     700              1.038               6
+     800              1.058               6
+     900              1.053               47
+     1000             1.038               47
+     1100             1.032               47
+     1200             1.037               47
+     1300             1.042               47
+     1400             1.081               47
+     1500             1.051               47
+     1600             1.036               47
+     1700             1.027               47
+     1800             1.013               7
+     1900             1.009               37
+     2000             1.009               37
+     2100             1.010               8
+     2200             1.006               8
+     2300             1.005               8
+     2400             1.004               8
+     2500             1.005               8
+     2600             1.005               4
+     2700             1.006               37
+     2800             1.005               37
+     2900             1.006               39
+     3000             1.008               4
+     3100             1.007               37
+     3200             1.007               37
+     3300             1.008               37
+     3400             1.010               37
+     3500             1.006               37
+     3600             1.006               37
+     3700             1.004               20
+     3800             1.004               20
+     3900             1.005               20
+     4000             1.004               20
+     4100             1.004               8
+     4200             1.004               20
+     4300             1.005               20
+     4400             1.005               40
+     4500             1.005               40
+     4600             1.005               40
+     4700             1.005               40
+     4800             1.004               40
+     4900             1.003               37
+     5000             1.003               37
+     5100             1.002               9
+     5200             1.003               20
+     5300             1.003               20
+     5400             1.005               20
+     5500             1.005               5
+     5600             1.004               20
+     5700             1.004               20
+     5800             1.006               20
+     5900             1.006               20
+     6000             1.006               5
+
+     Iterations for model estimation
+
+                     POTENTIAL       PARAMETER WITH
+     ITERATION    SCALE REDUCTION      HIGHEST PSR
+     100              1.627               16
+     200              1.409               44
+     300              1.094               37
+     400              1.078               5
+     500              1.106               5
+     600              1.069               5
+     700              1.036               44
+     800              1.026               4
+     900              1.081               47
+     1000             1.057               39
+     1100             1.086               44
+     1200             1.077               44
+     1300             1.049               47
+     1400             1.066               47
+     1500             1.046               47
+     1600             1.032               47
+     1700             1.024               44
+     1800             1.025               44
+     1900             1.028               21
+     2000             1.033               21
+     2100             1.027               27
+     2200             1.020               21
+     2300             1.015               27
+     2400             1.020               26
+     2500             1.018               26
+     2600             1.018               10
+     2700             1.025               37
+     2800             1.029               10
+     2900             1.028               10
+     3000             1.027               10
+     3100             1.031               10
+     3200             1.034               37
+     3300             1.037               37
+     3400             1.036               37
+     3500             1.029               37
+     3600             1.029               37
+     3700             1.022               37
+     3800             1.019               37
+     3900             1.018               37
+     4000             1.017               37
+     4100             1.015               37
+     4200             1.013               37
+     4300             1.016               37
+     4400             1.019               37
+     4500             1.014               37
+     4600             1.014               37
+     4700             1.018               37
+     4800             1.016               37
+     4900             1.015               37
+     5000             1.015               37
+     5100             1.011               37
+     5200             1.008               37
+     5300             1.006               37
+     5400             1.005               37
+     5500             1.005               37
+     5600             1.005               37
+     5700             1.006               47
+     5800             1.007               37
+     5900             1.007               37
+     6000             1.006               37
+
+
+     MCMC EFFECTIVE SAMPLE SIZE (ESS) IN ASCENDING ORDER
+        LOWEST 10 PARAMETERS
+        PARAMETER    ESS
+            44       283
+             4       293
+             5       305
+             6       339
+            39       415
+            46       484
+            48       488
+            47       500
+            16       505
+            33       540
+
+
+     Beginning Time:  21:30:22
+        Ending Time:  21:30:24
+       Elapsed Time:  00:00:02
+
+
+
+MUTHEN & MUTHEN
+3463 Stoner Ave.
+Los Angeles, CA  90066
+
+Tel: (310) 391-9971
+Fax: (310) 391-8971
+Web: www.StatModel.com
+Support: Support@StatModel.com
+
+Copyright (c) 1998-2026 Muthen & Muthen

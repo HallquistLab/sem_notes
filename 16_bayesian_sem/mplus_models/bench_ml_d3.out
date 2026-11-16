@@ -1,0 +1,236 @@
+Mplus VERSION 9.1 (Mac)
+MUTHEN & MUTHEN
+11/16/2026   4:36 PM
+
+INPUT INSTRUCTIONS
+
+  TITLE:
+  Bench Binary Probit Random Effects d=3 ML Quad;
+  VARIABLE:
+  CLUSTER = id;
+  USEVARIABLES = y_bin x1-x2;
+  CATEGORICAL = y_bin;
+  WITHIN = x1-x2;
+  NAMES = y_bin x1 x2 id;
+  MISSING = .;
+  ANALYSIS:
+  TYPE = TWOLEVEL RANDOM;
+  ESTIMATOR = MLR;
+  LINK = PROBIT;
+  ALGORITHM = INTEGRATION;
+  INTEGRATION = STANDARD(15);
+  PROCESSORS = 4;
+  MODEL:
+  %WITHIN%
+  s1 | y_bin ON x1;
+  s2 | y_bin ON x2;
+  %BETWEEN%
+  y_bin s1-s2;
+  y_bin s1-s2 WITH y_bin s1-s2;
+  DATA:
+  FILE = "bench_ml_d3.dat";
+
+
+
+*** WARNING
+  One or more individual-level variables have no variation within a
+  cluster for the following clusters.
+
+     Variable   Cluster IDs with no within-cluster variation
+
+      Y_BIN       57
+
+   1 WARNING(S) FOUND IN THE INPUT INSTRUCTIONS
+
+
+
+
+Bench Binary Probit Random Effects d=3 ML Quad;
+
+SUMMARY OF ANALYSIS
+
+Number of groups                                                 1
+Number of observations                                        2000
+
+Number of dependent variables                                    1
+Number of independent variables                                  2
+Number of continuous latent variables                            2
+
+Observed dependent variables
+
+  Binary and ordered categorical (ordinal)
+   Y_BIN
+
+Observed independent variables
+   X1          X2
+
+Continuous latent variables
+   S1          S2
+
+Variables with special functions
+
+  Cluster variable      ID
+
+  Within variables
+   X1          X2
+
+
+Estimator                                                      MLR
+Information matrix                                        OBSERVED
+Optimization Specifications for the Quasi-Newton Algorithm for
+Continuous Outcomes
+  Maximum number of iterations                                 100
+  Convergence criterion                                  0.100D-05
+Optimization Specifications for the EM Algorithm
+  Maximum number of iterations                                 500
+  Convergence criteria
+    Loglikelihood change                                 0.100D-02
+    Relative loglikelihood change                        0.100D-05
+    Derivative                                           0.100D-02
+Optimization Specifications for the M step of the EM Algorithm for
+Categorical Latent Variables
+  Number of M step iterations                                    1
+  M step convergence criterion                           0.100D-02
+  Basis for M step termination                           ITERATION
+Optimization Specifications for the M step of the EM Algorithm for
+Censored, Binary or Ordered Categorical (Ordinal), Unordered
+Categorical (Nominal) and Count Outcomes
+  Number of M step iterations                                    1
+  M step convergence criterion                           0.100D-02
+  Basis for M step termination                           ITERATION
+  Maximum value for logit thresholds                            10
+  Minimum value for logit thresholds                           -10
+  Minimum expected cell size for chi-square              0.100D-01
+Maximum number of iterations for H1                           2000
+Convergence criterion for H1                             0.100D-03
+Optimization algorithm                                         EMA
+Integration Specifications
+  Type                                                    STANDARD
+  Number of integration points                                  15
+  Dimensions of numerical integration                            3
+  Adaptive quadrature                                           ON
+Link                                                        PROBIT
+Cholesky                                                        ON
+
+Input data file(s)
+  bench_ml_d3.dat
+Input data format  FREE
+
+
+SUMMARY OF DATA
+
+     Number of missing data patterns             1
+     Number of y missing data patterns           0
+     Number of u missing data patterns           1
+     Number of clusters                         80
+
+
+
+COVARIANCE COVERAGE OF DATA
+
+Minimum covariance coverage value   0.100
+
+
+UNIVARIATE PROPORTIONS AND COUNTS FOR CATEGORICAL VARIABLES
+
+    Y_BIN
+      Category 1    0.549         1099.000
+      Category 2    0.451          901.000
+
+
+
+UNIVARIATE SAMPLE STATISTICS
+
+
+     UNIVARIATE HIGHER-ORDER MOMENT DESCRIPTIVE STATISTICS
+
+         Variable/         Mean/     Skewness/   Minimum/ % with                Percentiles
+        Sample Size      Variance    Kurtosis    Maximum  Min/Max      20%/60%    40%/80%    Median
+
+     X1                   -0.001       0.040      -3.048    0.05%      -0.805     -0.256      0.002
+            2000.000       0.957      -0.021       3.416    0.05%       0.230      0.800
+     X2                   -0.017      -0.016      -3.675    0.05%      -0.872     -0.282     -0.027
+            2000.000       1.003      -0.185       3.089    0.05%       0.234      0.842
+
+
+     VIF (VARIANCE INFLATION FACTOR) FOR EXPLORING MULTICOLLINEARITY OF INDEPENDENT VARIABLES
+
+     Variable        VIF       Variable        VIF
+
+     X1             1.001      X2             1.001
+
+
+THE MODEL ESTIMATION TERMINATED NORMALLY
+
+
+
+MODEL FIT INFORMATION
+
+Number of Free Parameters                        9
+
+Loglikelihood
+
+          H0 Value                       -1205.523
+          H0 Scaling Correction Factor      1.0053
+            for MLR
+
+Information Criteria
+
+          Akaike (AIC)                    2429.047
+          Bayesian (BIC)                  2479.455
+          Sample-Size Adjusted BIC        2450.862
+            (n* = (n + 2) / 24)
+
+
+
+MODEL RESULTS
+
+                                                    Two-Tailed
+                    Estimate       S.E.  Est./S.E.    P-Value
+
+Within Level
+
+Between Level
+
+ Y_BIN    WITH
+    S1                -0.041      0.045     -0.905      0.366
+    S2                -0.052      0.041     -1.284      0.199
+
+ S1       WITH
+    S2                -0.013      0.030     -0.451      0.652
+
+ Means
+    S1                 0.247      0.058      4.292      0.000
+    S2                 0.178      0.060      2.984      0.003
+
+ Thresholds
+    Y_BIN$1            0.167      0.078      2.148      0.032
+
+ Variances
+    Y_BIN              0.387      0.086      4.496      0.000
+    S1                 0.154      0.041      3.729      0.000
+    S2                 0.160      0.050      3.203      0.001
+
+
+QUALITY OF NUMERICAL RESULTS
+
+     Condition Number for the Information Matrix              0.146E+00
+       (ratio of smallest to largest eigenvalue)
+
+
+     Beginning Time:  16:36:38
+        Ending Time:  16:37:00
+       Elapsed Time:  00:00:22
+
+
+
+MUTHEN & MUTHEN
+3463 Stoner Ave.
+Los Angeles, CA  90066
+
+Tel: (310) 391-9971
+Fax: (310) 391-8971
+Web: www.StatModel.com
+Support: Support@StatModel.com
+
+Copyright (c) 1998-2026 Muthen & Muthen

@@ -32,6 +32,12 @@ SEM_RUN_MPLUS=true MPLUS_COMMAND=/path/to/mplus quarto render 15_multilevel/mult
 
 The chapter also contains a runnable lavaan example. Consult the [lavaan multilevel documentation](https://lavaan.ugent.be/tutorial/multilevel.html) for capabilities supported by your installed version.
 
+The [Bayesian SEM lecture](16_bayesian_sem/bayesian_sem.qmd) uses the same
+opt-in convention. It requires `MplusAutomation >= 1.3` and includes saved
+posterior draws and synthetic multilevel examples (with matched probit links
+for the quadrature-versus-MCMC timing illustration and $15^d$ projections for
+$d = 4, 5$).
+
 ## Simulation depth
 
 The factor-score tutorial uses a small number of replications for a routine render. Increase the number when investigating Monte Carlo behavior:
