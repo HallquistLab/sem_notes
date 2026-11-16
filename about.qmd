@@ -1,0 +1,43 @@
+---
+title: "About these notes"
+toc: true
+number-sections: false
+---
+
+## Origins and attribution
+
+Michael Hallquist developed these notes for Penn State's graduate structural equation modeling course.
+
+Benjamin Johnson contributed to the full SEM lectures and examples. Nate Hall adapted the Onyx tutorial with permission from Benjamin N. Johnson. Michael Clark's teaching material informed the latent-variable score simulation and growth-modeling chapters. The MIMIC tutorial adapts Angelos Markos's supplemental Brown Chapter 7 code (2012). Other contributions and source links remain credited in their respective chapters, including Aidan Wright's covariance example and Nick Michalak's mediation demonstration.
+
+## Build and preview
+
+Install Quarto and R, then install the required R packages from the repository root:
+
+```bash
+Rscript scripts/install_packages.R
+quarto render
+quarto preview
+```
+
+The rendered collection is written to `_site/`. Source documents execute relative to their own directories, so examples use portable relative paths. Package installation is an explicit setup step and never runs automatically inside a lecture.
+
+## Mplus examples
+
+The multilevel chapter reads saved teaching outputs by default. It can therefore render without Mplus. The `.inp`, `.dat`, and `.out` files are available beside that chapter for inspection and comparison. A license and executable are needed only to re-estimate those models:
+
+```bash
+SEM_RUN_MPLUS=true MPLUS_COMMAND=/path/to/mplus quarto render 15_multilevel/multilevel_sem.qmd
+```
+
+The chapter also contains a runnable lavaan example. Consult the [lavaan multilevel documentation](https://lavaan.ugent.be/tutorial/multilevel.html) for capabilities supported by your installed version.
+
+## Simulation depth
+
+The factor-score tutorial uses a small number of replications for a routine render. Increase the number when investigating Monte Carlo behavior:
+
+```bash
+SEM_SIM_REPS=1000 quarto render 05_psychometrics/lv_sim.qmd
+```
+
+The default simulation illustrates the method; it does not provide precise simulation-study estimates.

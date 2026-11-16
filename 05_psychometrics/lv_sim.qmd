@@ -1,0 +1,174 @@
+---
+title: "Using latent variable scores"
+author: "Michael Hallquist (adapted from Michael Clark)"
+---
+
+This tutorial develops Michael Clark's comparison of single items, composite scores, estimated factor scores, and full SEM. The simulation code is self-contained so every displayed result can be regenerated.
+
+# Why compare scores?
+
+Researchers often want to predict an outcome from a latent construct. A single item or a sum score can be convenient, but both contain measurement error. Factor scores use a measurement model to summarize the indicators, yet they are still estimates of the construct. Treating them as perfectly observed predictors can distort regression coefficients and uncertainty. Full SEM estimates the measurement and structural models jointly.
+
+A factor score is not interchangeable with an observed true score. Its scale, sign, and precision depend on the measurement model and scoring method. In particular, correcting a regression coefficient by dividing by reliability is only justified under the corresponding measurement-error assumptions; it is not a general solution for factor-score regression.
+
+# A single-factor example
+
+We generate six standardized indicators from a standard normal factor $f$:
+
+$$
+x_j = \lambda_j f + \epsilon_j, \qquad
+\operatorname{var}(\epsilon_j) = 1 - \lambda_j^2.
+$$
+
+The outcome is $y = 2 + \beta f + e$, with independent standard normal outcome error. The true slope is $\beta = .5$.
+
+```{r}
+#| label: setup
+#| include: false
+library(lavaan)
+library(psych)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(knitr)
+set.seed(1234)
+```
+
+```{r}
+make_data <- function(n = 1000, nitems = 6, loading = .8, effect = .5) {
+  f <- rnorm(n)
+  errors <- matrix(rnorm(n * nitems), nrow = n)
+  x <- loading * f + sqrt(1 - loading^2) * errors
+  colnames(x) <- paste0("x", seq_len(nitems))
+  data.frame(x, y = 2 + effect * f + rnorm(n), f = f)
+}
+example_data <- make_data()
+summary(lm(y ~ f, data = example_data))
+```
+
+In real data we do not observe `f`; it is available here only because we simulated the data. A one-factor analysis estimates loadings and regression (Thurstone) factor scores:
+
+```{r}
+item_names <- paste0("x", 1:6)
+fa_fit <- psych::fa(example_data[item_names], nfactors = 1, fm = "ml",
+                    scores = "regression")
+fa_fit
+```
+
+The output's `h2` column is communality, the proportion of indicator variance explained by the factors; `u2` is uniqueness. The `com` column measures loading complexity. It is not the sum of communality and uniqueness. For a standardized single-factor indicator, communality is the squared loading.
+
+Regression factor scores can be written as $S = XW$, where $X$ contains standardized observations and $W = R^{-1}\Lambda$ for orthogonal unit-variance factors. Scores should be checked for orientation and scaled consistently before comparing regression slopes.
+
+```{r}
+scores <- as.numeric(fa_fit$scores)
+if (sum(fa_fit$loadings) < 0) scores <- -scores
+example_data$score <- as.numeric(scale(scores))
+cor(example_data$score, example_data$f)
+summary(lm(y ~ score, data = example_data))
+```
+
+```{r}
+#| fig-width: 6
+#| fig-height: 4
+ggplot(example_data, aes(score, f)) +
+  geom_point(alpha = .2, color = "#246b92") +
+  labs(x = "Estimated factor score (standardized)", y = "Simulated true factor") +
+  theme_minimal()
+```
+
+# Comparing four estimation strategies
+
+For a fair comparison, observed score predictors are standardized. The latent factor in the SEM has variance fixed at one, and the outcome remains in its original units. Thus, each slope is expressed per standard deviation of its predictor, although a noisy predictor is still different from the true factor.
+
+```{r}
+compare_scores <- function(dat) {
+  items <- grep("^x[0-9]+$", names(dat), value = TRUE)
+  dat$composite <- as.numeric(scale(rowMeans(dat[items])))
+  dat$single_item <- as.numeric(scale(dat[[items[1]]]))
+  factor_slope <- tryCatch({
+    fit <- psych::fa(dat[items], nfactors = 1, fm = "ml", scores = "regression")
+    sign_factor <- if (sum(fit$loadings) < 0) -1 else 1
+    dat$factor_score <- as.numeric(scale(sign_factor * fit$scores))
+    unname(coef(lm(y ~ factor_score, data = dat))[2])
+  }, error = function(e) NA_real_)
+  sem_slope <- tryCatch({
+    syntax <- paste0("f =~ ", paste(items, collapse = " + "), "\ny ~ f")
+    fit_sem <- lavaan::sem(syntax, data = dat, std.lv = TRUE)
+    if (!lavInspect(fit_sem, "converged") || !lavInspect(fit_sem, "post.check")) {
+      NA_real_
+    } else {
+      pe <- parameterEstimates(fit_sem)
+      pe$est[pe$lhs == "y" & pe$op == "~" & pe$rhs == "f"]
+    }
+  }, error = function(e) NA_real_)
+  c("Single item" = unname(coef(lm(y ~ single_item, data = dat))[2]),
+    "Composite" = unname(coef(lm(y ~ composite, data = dat))[2]),
+    "Factor score" = factor_slope,
+    "Full SEM" = sem_slope)
+}
+comparison <- compare_scores(example_data)
+kable(data.frame(Method = names(comparison), Slope = comparison), digits = 3)
+```
+
+# Varying measurement quality and sample size
+
+The original design crosses three loadings (.25, .5, .8), two indicator counts (3, 6), three effects (.15, .3, .5), and three sample sizes (100, 500, 1000): 54 scenarios. Here all loadings within a scenario are equal, making the composite a particularly favorable benchmark.
+
+The default uses five replications per scenario to keep a routine render practical. This illustrates the workflow; it is insufficient for precise Monte Carlo conclusions. Set the environment variable `SEM_SIM_REPS` to a larger positive integer, such as 1000, for a substantive simulation study. Weak loadings and small samples can produce inadmissible solutions. Failures are counted separately for each method, so an inadmissible SEM does not discard valid regression estimates from the same replication.
+
+```{r}
+replications <- as.integer(Sys.getenv("SEM_SIM_REPS", "5"))
+stopifnot(length(replications) == 1L, !is.na(replications), replications > 0)
+grid <- expand.grid(loading = c(.25, .5, .8), nitems = c(3, 6),
+                    effect = c(.15, .3, .5), n = c(100, 500, 1000))
+set.seed(21523)
+results <- lapply(seq_len(nrow(grid)), function(i) {
+  scenario <- grid[i, ]
+  estimates <- lapply(seq_len(replications), function(r) {
+    dat <- make_data(n = scenario$n, nitems = scenario$nitems,
+                     loading = scenario$loading, effect = scenario$effect)
+    tryCatch(suppressWarnings(compare_scores(dat)),
+             error = function(e) setNames(rep(NA_real_, 4), names(comparison)))
+  })
+  estimates <- do.call(rbind, estimates)
+  data.frame(scenario,
+             Method = colnames(estimates),
+             Mean_slope = colMeans(estimates, na.rm = TRUE),
+             Successful = colSums(is.finite(estimates)),
+             Requested = replications)
+}) |> bind_rows()
+```
+
+```{r}
+#| fig-width: 9
+#| fig-height: 6
+results |>
+  filter(effect == .5) |>
+  ggplot(aes(loading, Mean_slope, color = Method, group = Method)) +
+  geom_hline(yintercept = .5, linetype = 2) +
+  geom_line() + geom_point() +
+  facet_grid(nitems ~ n, labeller = label_both) +
+  scale_x_continuous(breaks = c(.25, .5, .8)) +
+  labs(x = "Common indicator loading", y = "Mean estimated slope",
+       caption = "Dashed line: true effect. Five replications are illustrative only by default.") +
+  theme_minimal() + theme(legend.position = "bottom")
+```
+
+```{r}
+results |>
+  group_by(loading, nitems, n) |>
+  summarise(Successful = sum(Successful), Requested = sum(Requested), .groups = "drop") |>
+  kable(caption = "Successful estimates across effects and methods")
+```
+
+Under the equal-loading population model, the composite's reliability is
+
+$$
+\rho = \frac{k\lambda^2}{k\lambda^2 + 1 - \lambda^2}.
+$$
+
+Higher loadings and more informative indicators reduce measurement error. This does not guarantee that estimated factor scores remove attenuation. Under equal loadings, composite and factor-score methods can be very similar. Joint SEM can account for measurement error, but weak measurement and small samples make estimation unstable. Inspect convergence, admissibility, uncertainty, and the measurement model before interpreting a structural coefficient.
+
+# Further reading
+
+The conceptual comparison is adapted from Michael Clark's teaching material. See also [Revelle's psychometric theory text](https://personality-project.org/r/book/) and Grice (2001), *Computing and evaluating factor scores*, *Psychological Methods*, 6, 430–450.

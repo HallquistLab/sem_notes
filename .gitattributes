@@ -1,0 +1,13 @@
+* text=auto
+*.qmd text eol=lf
+*.md text eol=lf
+*.R text eol=lf
+*.py text eol=lf
+*.yml text eol=lf
+*.csv text eol=lf
+*.tsv text eol=lf
+*.gv text eol=lf
+*.inp text eol=lf
+# Preserve archived teaching results and numerical data byte-for-byte.
+*.out -text -whitespace
+*.dat -text -whitespace

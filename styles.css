@@ -1,0 +1,8 @@
+/* Shared presentation; keep chapters free of semester-specific inline CSS. */
+:root { --bs-body-font-size: 1.05rem; }
+.quarto-title-block .quarto-title-banner { padding-bottom: 1rem; }
+main img { max-width: 100%; height: auto; }
+.cell-output-display { overflow-x: auto; }
+pre { font-size: 0.85rem; }
+.emph { font-weight: 600; }
+.pack, .func { font-family: var(--bs-font-monospace); }

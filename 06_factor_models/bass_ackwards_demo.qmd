@@ -1,0 +1,506 @@
+---
+title: "Exploring personality hierarchies"
+author: "Michael Hallquist"
+---
+
+```{r}
+#| label: "setup"
+#| message: false
+#| warning: false
+library(tidyverse)
+library(psych)
+library(psychTools)
+set.seed(12022024)
+```
+
+## Why "Bass-Ackwards"?
+
+This short document walks through Goldberg's (2006) bass-ackwards approach for
+visualizing personality hierarchies. Instead of assuming a top-down structure, we
+start with a single-factor exploratory solution and keep increasing the number of
+factors. By correlating factor scores from adjacent solutions we can observe how
+higher-order traits differentiate into progressively narrower facets.
+
+## Simulating a hierarchical Extraversion structure
+
+We create 18 items designed to reflect two broad second-order themes of
+Extraversion—Agentic Drive (assertive, driven, energetic) and Interpersonal
+Vitality (warm, sociable, cheerful). Each of those breaks down into three facets,
+and every facet has three items. All latent variables are standardized.
+
+```{r}
+#| label: "simulate"
+n_people <- 1000
+scale_vec <- function(x) as.numeric(scale(x))
+
+orient_factors <- function(model) {
+  load_mat <- unclass(model$loadings)
+  signs <- sign(colSums(load_mat, na.rm = TRUE))
+  signs[signs == 0] <- 1
+  model$loadings[,] <- sweep(load_mat, 2, signs, `*`)
+  if (!is.null(model$scores)) {
+    model$scores <- sweep(model$scores, 2, signs, `*`)
+  }
+  if (!is.null(model$Phi)) {
+    model$Phi <- model$Phi * outer(signs, signs)
+  }
+  model
+}
+
+# General Extraversion that feeds the second-order factors
+extraversion <- scale_vec(rnorm(n_people))
+agentic_noise <- rnorm(n_people)
+interpersonal_noise <- rnorm(n_people)
+
+agentic_drive <- scale_vec(0.7 * extraversion + sqrt(1 - 0.7^2) * agentic_noise)
+interpersonal_vitality <- scale_vec(0.7 * extraversion + sqrt(1 - 0.7^2) * interpersonal_noise)
+
+facet_specs <- tribble(
+  ~facet,              ~second_order,            ~loading,
+  "Assertiveness",     "Agentic Drive",          0.80,
+  "Dominance",         "Agentic Drive",          0.75,
+  "Activity",          "Agentic Drive",          0.70,
+  "Sociability",       "Interpersonal Vitality", 0.80,
+  "Warmth",            "Interpersonal Vitality", 0.75,
+  "Positive Affect",   "Interpersonal Vitality", 0.70
+)
+
+make_facet <- function(parent, loading) {
+  scale_vec(loading * parent + sqrt(1 - loading^2) * rnorm(n_people))
+}
+
+facet_scores <- facet_specs %>%
+  mutate(parent = if_else(second_order == "Agentic Drive", "A", "I"),
+         latent = map2(parent, loading, ~ if (.x == "A") {
+           make_facet(agentic_drive, .y)
+         } else {
+           make_facet(interpersonal_vitality, .y)
+         }))
+
+item_loading <- 0.80
+item_sd <- sqrt(1 - item_loading^2)
+
+make_items <- function(latent, prefix) {
+  map_dfc(1:3, ~ tibble(!!str_glue("{prefix}{.x}") := scale_vec(item_loading * latent + item_sd * rnorm(n_people))))
+}
+
+item_blocks <- facet_scores %>%
+  mutate(prefix = str_c(str_sub(facet, 1, 3) %>% str_to_upper(), "_"),
+         items = map2(latent, prefix, make_items))
+
+item_data <- item_blocks$items %>% bind_cols()
+
+item_data %>%
+  summarise(across(everything(), ~ sd(.) %>% round(2))) %>%
+  pivot_longer(everything(), names_to = "item", values_to = "sd") %>%
+  slice_head(n = 5)
+```
+
+Even with random noise each item is standardized (SD ≈ 1), ensuring that factor
+analysis is driven by latent structure rather than scale differences.
+
+## Progressive exploratory factor analyses
+
+We estimate principal-axis solutions from one through six factors, rotating with
+Promax to allow correlations. The list below shows the salient loadings (>|.30|)
+for the 1-factor solution and the 6-factor solution to highlight how the facets
+emerge.
+
+```{r}
+#| label: "efa"
+max_factors <- 6
+efa_solutions <- map(1:max_factors, ~ fa(item_data, nfactors = .x, fm = "pa", rotate = "promax", scores = "regression"))
+efa_solutions <- map(efa_solutions, orient_factors)
+
+print_loadings <- function(model) {
+  loadings <- fa.sort(model)$loadings
+  #loadings[abs(loadings) < 0.30] <- NA
+  print(loadings, cut=0.3)
+}
+
+cat("\n### 1-Factor solution\n")
+print_loadings(efa_solutions[[1]])
+
+cat("\n### 6-Factor solution\n")
+print_loadings(efa_solutions[[6]])
+```
+
+Loadings and factor scores are re-oriented to keep the "high Extraversion" pole
+positive in every solution, preventing arbitrary sign flips across levels. The
+same reorientation is applied to the empirical analyses below.
+
+With a single factor, every indicator reflects a common Extraversion dimension.
+At six factors the items cleanly cluster back onto their generating facets,
+providing a target to compare intermediate solutions.
+
+## Tracking how factors split across levels
+
+Bass-ackwards comparisons rely on correlating factor scores from consecutive
+solutions. High correlations indicate lineage: a factor at level *k* "splits"
+into whichever factors at level *k + 1* correlate most strongly with it. We call
+the factors from the higher (smaller) solution "higher-order" because they
+represent broader traits, whereas factors from the subsequent, more numerous
+solution are "lower-order" facets.
+We label each factor as `Lx_Fy`, where `Lx` denotes the level (number of
+retained factors) and `Fy` indexes the rotated factors within that level, so
+`L3_F2` is the second factor in the three-factor solution.
+
+```{r}
+#| label: "hierarchy"
+score_list <- map2(efa_solutions, seq_along(efa_solutions), function(model, level) {
+  scores <- as_tibble(model$scores)
+  colnames(scores) <- str_glue("L{level}_F{seq_len(ncol(scores))}")
+  scores
+})
+
+level_links <- map2_df(score_list[1:(max_factors - 1)], score_list[2:max_factors],
+                      function(level_up, level_down) {
+                        cm <- cor(level_up, level_down)
+                        as_tibble(as.data.frame(as.table(cm))) %>%
+                          rename(parent = Var1, child = Var2, r = Freq) %>%
+                          mutate(level_from = str_extract(parent, "^L(\\d+)") %>% parse_number(),
+                                 level_to   = str_extract(child,  "^L(\\d+)") %>% parse_number())
+                      })
+
+top_child_links <- level_links %>%
+  group_by(child) %>%
+  slice_max(order_by = abs(r), n = 1, with_ties = FALSE) %>%
+  ungroup() %>%
+  arrange(level_to, desc(abs(r)))
+
+top_child_links %>%
+  mutate(r = round(r, 2)) %>%
+  select(level_from, parent, level_to, child, r) %>%
+  knitr::kable(caption = "Dominant correlations between adjacent solutions")
+```
+
+Most factors remain intact until the hierarchy reaches four or more dimensions,
+at which point L1_F1 clearly differentiates into two children corresponding to
+Agentic Drive (L2_F1) and Interpersonal Vitality (L2_F2). By the time we fit six
+factors, those broad domains have further split into the six original facets with
+adjacent correlations exceeding |.80|, mirroring the data-generating structure.
+
+## Visualizing the lineage
+
+The heatmap below offers another way to scan how each level connects to the next
+by showing all correlations rather than only the dominant ones. Each rectangle depicts how higher-order factors (i.e., from a solution with fewer factors) divide into lower-order factors when we increase the number of factors by one.
+
+For example, lower left rectangle shows how a one-factor solution for extraversion (L1_F1 on the x axis) divides into two factors (L2_F1 and L2_F2) on the y axis. Likewise, the upper right rectangle shows how a five-factor solution (on the rows, spanning L5_F1 -- L5_F5) maps onto a six-factor solution (columns L6_F1 -- L6_F6).
+
+```{r}
+#| label: "heatmap"
+#| fig-width: 10
+#| fig-height: 8
+#| message: false
+link_heatmap <- level_links %>%
+  mutate(pair = str_c(parent, " → ", child))
+
+ggplot(link_heatmap, aes(x = parent, y = child, fill = r)) +
+  geom_tile(color = "white") +
+  scale_fill_distiller(palette = "BrBG", limits = c(-1, 1)) +
+  labs(x = "Higher-order factor", y = "Lower-order factor",
+       fill = "r",
+       title = "Bass-Ackwards correlations across adjacent solutions") +
+  theme_minimal(base_size = 12) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+For example, the first column (`L1_F1`) shows uniformly strong tiles with both
+`L2_F1` and `L2_F2`, illustrating how the single higher-order Extraversion factor
+splits into the Agentic versus Interpersonal lower-order dimensions at level 2.
+By level 3 you can see `L2_F1` tying most strongly to `L3_F1` and `L3_F2`, which
+correspond to Dominance and Activity facets, while `L2_F2` links to `L3_F3` to
+recover Sociability. Reading down any column reveals the sequence of facets that
+inherit variance from that broader ancestor.
+
+For the upper right rectangle (5 vs. 6), we primarily see that L5_F1 (the first factor from
+the five-factor solution) splits into L6_F3 and L6_F6, while most of the other have a nearly 1:1 correspondence (e.g., L5_F2 [x axis] maps to L6_F1 [y axis] pretty cleanly).
+
+## Takeaways
+
+1. **Begin with the broadest structure.** The single-factor solution captures the
+   highest-order Extraversion trait that underlies all items.
+2. **Increase the dimensionality stepwise.** Moving to two and three factors
+   reveals the first splits (Agentic vs. Interpersonal emphases) before facets
+   emerge.
+3. **Use correlations as breadcrumbs.** By correlating factor scores across
+   levels, we can label lower-order traits according to the higher-order factor
+   they most closely align with, effectively "growing" the hierarchy from the
+   top down.
+4. **Cross-check with theory.** The simulated data intentionally mirrors accepted
+   Extraversion facets, but with real data this workflow provides a transparent
+   way to test whether empirical splits reproduce theoretical expectations.
+
+## Empirical validation with the BFI
+
+The `psychTools::bfi` data contain 2,800 participants who answered 25 Big Five
+items (five per domain). After listwise deletion across those items we retain
+2,436 respondents, reverse-key the negatively worded indicators, and standardize
+each column so the empirical example parallels the simulated workflow.
+
+```{r}
+#| label: "bfi-prep"
+data("bfi", package = "psychTools")
+data("bfi.dictionary", package = "psychTools")
+
+bfi_dict <- bfi.dictionary %>%
+  rownames_to_column("code") %>%
+  select(code, Big6, Little12, Item, Keying)
+
+bfi_items_raw <- bfi %>%
+  select(matches("^[A-Z][1-5]$")) %>%
+  drop_na()
+
+reverse_items <- bfi_dict %>%
+  filter(code %in% names(bfi_items_raw), Keying == -1) %>%
+  pull(code)
+
+bfi_items <- bfi_items_raw %>%
+  mutate(across(any_of(reverse_items), ~ 7 - .)) %>%
+  mutate(across(everything(), scale_vec))
+
+tibble(n_people = nrow(bfi_items), n_items = ncol(bfi_items))
+```
+
+### Mapping items to theoretical facets
+
+To interpret empirical splits we pair each item with its domain and facet labels,
+and flag the reverse-keyed prompts, using `bfi.dictionary`. The `Big6` column in
+that dictionary names the higher-order domain in Goldberg's "Big Six" taxonomy,
+which mirrors the Big Five domains (Agreeableness, Conscientiousness,
+Extraversion, Openness) but replaces Neuroticism with its positive pole,
+Emotional Stability, and optionally adds an Honesty-Humility domain not covered
+by the BFI. The `Little12` column lists the narrower facet (e.g., Compassion vs.
+Politeness within Agreeableness). The Extraversion items mainly tap
+Assertiveness versus Sociability facets (Little12 labels), giving us a
+theoretical benchmark for the empirical bass-ackwards splits.
+
+```{r}
+#| label: "bfi-dictionary"
+bfi_dict %>%
+  select(code, Big6, Little12, Item) %>%
+  filter(str_detect(code, "^E[1-5]$")) %>%
+  knitr::kable(col.names = c("Item", "Big Six", "Facet (Little12)", "Prompt"),
+               caption = "BFI Extraversion items and their theoretical facets")
+```
+
+```{r}
+#| label: "factor-label-helper"
+derive_factor_labels <- function(models, dict, threshold = 0.30) {
+  label_list <- map2(models, seq_along(models), function(model, level) {
+    load_tbl <- unclass(model$loadings) %>%
+      as_tibble(rownames = "code") %>%
+      pivot_longer(-code, names_to = "factor_raw", values_to = "loading") %>%
+      filter(!is.na(loading), abs(loading) >= threshold) %>%
+      left_join(dict, by = "code") %>%
+      mutate(level = level,
+             factor_num = parse_number(factor_raw))
+
+    if (nrow(load_tbl) == 0) {
+      return(tibble())
+    }
+
+    load_tbl %>%
+      group_by(level, factor_num) %>%
+      summarise(
+        domain = {
+          vals <- Big6[!is.na(Big6)]
+          if (length(vals) == 0) "Mixed" else names(sort(table(vals), decreasing = TRUE))[1]
+        },
+        facet = {
+          vals <- Little12[!is.na(Little12)]
+          if (length(vals) == 0) "Mixed" else names(sort(table(vals), decreasing = TRUE))[1]
+        },
+        .groups = "drop"
+      ) %>%
+      mutate(
+        factor_id = str_glue("L{level}_F{factor_num}"),
+        label = str_glue("{factor_id}: {domain} ({facet})")
+      ) %>%
+      select(level, factor_num, factor_id, domain, facet, label)
+  })
+
+  list_rbind(label_list)
+}
+```
+
+### Bass-ackwards splits for Extraversion items
+
+The five Extraversion indicators primarily reflect a single factor but begin to
+differentiate into sociability versus assertiveness emphases once we allow a
+second dimension. Even with only five items the bass-ackwards logic clarifies
+how the general Extraversion factor fragments.
+
+```{r}
+#| label: "bfi-extraversion"
+bfi_extraversion <- bfi_items %>% select(matches("^E[1-5]$"))
+
+ext_max_factors <- 2
+ext_solutions <- map(1:ext_max_factors,
+                     ~ fa(bfi_extraversion, nfactors = .x, fm = "pa",
+                          rotate = "promax", scores = "regression"))
+ext_solutions <- map(ext_solutions, orient_factors)
+
+cat("\n### BFI Extraversion: 1-factor\n")
+print_loadings(ext_solutions[[1]])
+
+cat("\n### BFI Extraversion: 2-factor\n")
+print_loadings(ext_solutions[[2]])
+
+ext_scores <- map2(ext_solutions, seq_along(ext_solutions), function(model, level) {
+  scores <- as_tibble(model$scores)
+  colnames(scores) <- str_glue("L{level}_F{seq_len(ncol(scores))}")
+  scores
+})
+
+ext_links <- map2_df(ext_scores[1:(ext_max_factors - 1)], ext_scores[2:ext_max_factors],
+                     function(level_up, level_down) {
+                       cm <- cor(level_up, level_down)
+                       as_tibble(as.data.frame(as.table(cm))) %>%
+                         rename(parent = Var1, child = Var2, r = Freq)
+                     })
+
+ext_links %>%
+  mutate(r = round(r, 2)) %>%
+  knitr::kable(caption = "BFI Extraversion: correlations between adjacent solutions")
+```
+
+The two-factor solution separates sociability-focused prompts (E1, E2, E4; all
+Little12 = Sociability) from assertiveness prompts (E3, E5; Little12 =
+Assertiveness). E4's positive sociability loading anchors
+the "talkative/friendly" pole, whereas E3 and E5 define the "leadership/forceful"
+pole. The pattern mirrors the dictionary facets, showing how the hierarchy
+recovers theorized nuances even within five observed indicators. Because the
+items were reverse-keyed before standardization, higher factor scores now always
+reflect more of the named trait.
+
+### Building the full Big Five hierarchy
+
+Next we apply the same workflow to all 25 items. We end the sequence at six
+factors so the model can first recover the overall Big Five structure before
+hinting at narrower groupings.
+
+```{r}
+#| label: "bfi-big5"
+big5_max_factors <- 6
+big5_solutions <- map(1:big5_max_factors,
+                      ~ fa(bfi_items, nfactors = .x, fm = "pa",
+                           rotate = "promax", scores = "regression"))
+big5_solutions <- map(big5_solutions, orient_factors)
+
+big5_factor_labels <- derive_factor_labels(big5_solutions, bfi_dict)
+```
+
+The helper summarizes each factor's dominant `Big6` domain and `Little12` facet
+based on the items that load on it. Those labels accompany the lineage table and
+heatmap below so readers can directly connect the empirical factors to their
+theoretical Big Six / Little Twelve interpretations. Because the BFI lacks an
+Honesty-Humility scale, the `Big6` labels for the 5-factor solution align exactly
+with the traditional Big Five domains (with Neuroticism shown as Emotional
+Stability); when we expand to six factors the labels still reference the same
+domains but the `Little12` facets signal which subcomponent (e.g., Orderliness
+vs. Industriousness) has split off.
+
+```{r}
+#| label: "bfi-big5-loadings"
+
+cat("\n### BFI items: 1-factor solution\n")
+print_loadings(big5_solutions[[1]])
+
+cat("\n### BFI items: 5-factor solution\n")
+print_loadings(big5_solutions[[5]])
+
+cat("\n### BFI items: 6-factor solution\n")
+print_loadings(big5_solutions[[6]])
+
+big5_scores <- map2(big5_solutions, seq_along(big5_solutions), function(model, level) {
+  scores <- as_tibble(model$scores)
+  colnames(scores) <- str_glue("L{level}_F{seq_len(ncol(scores))}")
+  scores
+})
+
+big5_links <- map2_df(big5_scores[1:(big5_max_factors - 1)], big5_scores[2:big5_max_factors],
+                      function(level_up, level_down) {
+                        cm <- cor(level_up, level_down)
+                        as_tibble(as.data.frame(as.table(cm))) %>%
+                          rename(parent = Var1, child = Var2, r = Freq) %>%
+                          mutate(level_from = str_extract(parent, "^L(\\d+)") %>% parse_number(),
+                                 level_to   = str_extract(child,  "^L(\\d+)") %>% parse_number()) %>%
+                          mutate(parent = as.character(parent),
+                                 child = as.character(child))
+                      })
+
+big5_top <- big5_links %>%
+  group_by(child) %>%
+  slice_max(order_by = abs(r), n = 1, with_ties = FALSE) %>%
+  ungroup() %>%
+  arrange(level_to, desc(abs(r)))
+
+big5_top_labeled <- big5_top %>%
+  left_join(big5_factor_labels %>%
+              select(parent = factor_id, parent_domain = domain, parent_facet = facet),
+            by = "parent") %>%
+  left_join(big5_factor_labels %>%
+              select(child = factor_id, child_domain = domain, child_facet = facet),
+            by = "child")
+
+big5_top_labeled %>%
+  mutate(r = round(r, 2)) %>%
+  select(level_from, parent, parent_domain, parent_facet,
+         level_to, child, child_domain, child_facet, r) %>%
+  knitr::kable(caption = "Dominant BFI correlations between adjacent solutions")
+```
+
+The lineage table shows the classic path: a single general factor (sometimes
+interpreted as the "General Factor of Personality") splits into the Big Five by
+the time five factors are retained. Moving to six factors introduces subtle
+shifts: the Conscientiousness branch stays anchored on Orderliness indicators
+(C1–C3) while the more work-ethic items (C4–C5) begin to share variance with an
+additional, weaker factor, and the Openness branch splits its Intellect-labeled
+items into two closely related clusters (idea-rich O1–O3 versus reflective O4–O5
+content). Because the BFI Agreeableness scale contains only Compassion prompts,
+no distinct Politeness node emerges in this dataset. The dictionary labels
+provide a quick bridge from the empirical splits back to the facets actually
+represented in the items.
+
+```{r}
+#| label: "bfi-heatmap"
+#| fig-width: 10
+#| fig-height: 8
+#| message: false
+label_lookup <- setNames(big5_factor_labels$label, big5_factor_labels$factor_id)
+lookup_or_id <- function(ids) {
+  labs <- label_lookup[ids]
+  labs[is.na(labs)] <- ids[is.na(labs)]
+  labs
+}
+
+ggplot(big5_links, aes(x = parent, y = child, fill = r)) +
+  geom_tile(color = "white") +
+  scale_fill_distiller(palette = "BrBG", limits = c(-1, 1)) +
+  scale_x_discrete(labels = lookup_or_id) +
+  scale_y_discrete(labels = lookup_or_id) +
+  labs(x = "Higher-order factor (with Big Six / Little12 labels)",
+       y = "Lower-order factor (with Big Six / Little12 labels)",
+       fill = "r",
+       title = "BFI bass-ackwards correlations across adjacent solutions") +
+  theme_minimal(base_size = 12) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+Axis labels now display the dominant Big Six domain and Little12 facet inferred
+from the dictionary lookups, so each tile immediately conveys both the lineage
+and its likely substantive interpretation (e.g., `L5_F4: Openness (Intellect)`
+linking strongly to both `L6_F4: Openness (Intellect)` and `L6_F6: Openness
+(Intellect)`, signaling that the Intellect-focused prompts have begun to split
+into two subclusters).
+
+### Empirical takeaways
+
+- The observed Extraversion indicators mirror the simulated hierarchy: a single
+  dominant factor that splits into sociability and assertiveness nuances when the
+  dimensionality increases.
+- Running all 25 BFI items through the bass-ackwards routine recovers the Big
+  Five domains at five factors and reveals plausible sub-facets when adding a
+  sixth factor, demonstrating how empirical data follow the same lineage logic as
+  the simulated example.

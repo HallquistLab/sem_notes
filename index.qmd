@@ -1,0 +1,37 @@
+---
+title: "Structural Equation Modeling Notes"
+author: "Michael Hallquist"
+toc: false
+number-sections: false
+---
+
+These notes introduce structural equation modeling (SEM) as a framework for testing hypotheses about measurement and relationships among observed and latent variables. They cover foundational methods and extensions including causality, longitudinal models, and multilevel SEM.
+
+The collection develops the statistical ideas alongside R examples, primarily using **lavaan**. Topics build from covariance and regression to measurement models, model assessment, multiple groups, mediation, growth curves, and multilevel models.
+
+## Start here
+
+- [Correlation and regression](01_correlation_regression/correlation_regression.qmd)
+- [Matrix algebra review](02_sem_basics/matrix_algebra_review.qmd)
+- [SEM notation and conceptualization](02_sem_basics/sem_notation.qmd)
+- [Path analysis fundamentals](03_path_models/path_analysis_fundamental.qmd)
+
+## Measurement and model assessment
+
+- [Latent variables](04_latent_variables_estimation/latent_variables.qmd) and [maximum likelihood](04_latent_variables_estimation/maximum_likelihood.qmd)
+- [Psychometrics](05_psychometrics/psychometrics_overview.qmd) and [using factor scores](05_psychometrics/lv_sim.qmd)
+- [Factor models](06_factor_models/factor_models.qmd) and [personality hierarchies](06_factor_models/bass_ackwards_demo.qmd)
+- [Full SEM specification](07_full_sem/full_sem_specification.qmd) and [estimation](07_full_sem/full_sem_demo.qmd)
+- [Fit and modification](08_fit/sem_fit_modification.qmd), [model comparison](09_model_comparison/model_comparison.qmd), and [best practices](10_best_practices/best_practices.qmd)
+
+## Extensions
+
+- [Means, groups, and measurement invariance](11_invariance_groups/invariance_groups_constraints.qmd), with a [MIMIC model tutorial](11_invariance_groups/mimic_models.qmd)
+- [Mediation and moderation](12_mediation_moderation/mediation_moderation.qmd)
+- [Causality and graphical models](13_causality/causality_in_sem.qmd)
+- [Latent growth curves](14_longitudinal/growth_modeling.qmd)
+- [Multilevel SEM](15_multilevel/multilevel_sem.qmd)
+
+Use the sidebar for all lectures and tutorials, or search for a concept. Each page provides its source code through the **Code** menu. The [repository](https://github.com/HallquistLab/sem_notes) contains all Quarto sources, teaching data, and diagrams.
+
+See [About these notes](about.qmd) for attribution and build instructions.

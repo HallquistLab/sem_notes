@@ -1,0 +1,30 @@
+# Generated Quarto and R files
+/.quarto/
+/_site/
+/site_libs/
+/_freeze/
+**/*_files/
+**/*_cache/
+**/*.knit.md
+**/*.utf8.md
+**/.Rhistory
+**/.RData
+.Rproj.user/
+.Renviron
+.Rprofile
+.DS_Store
+*.log
+*.swp
+*~
+# Temporary results from opt-in Mplus reruns
+**/*.gh5
+**/*.gph
+**/*_MplusWarnings.txt
+
+**/*.quarto_ipynb
+
+**/Rplots.pdf
+/diagrams/Forms_Of_Change.pdf
+
+# Local editorial review, provenance, and excluded historical assets
+/maintenance/

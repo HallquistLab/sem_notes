@@ -1,0 +1,83 @@
+---
+title: "MIMIC models and covariate-related item differences"
+author: "Michael Hallquist (code adapted from Angelos Markos)"
+---
+
+A **multiple-indicator multiple-cause (MIMIC)** model combines a measurement model with observed covariates that predict the latent variables. Direct covariate-to-indicator paths can then represent item differences that remain after conditioning on the latent construct. This provides a useful extension to the [multiple-group invariance models](invariance_groups_constraints.qmd).
+
+This example adapts code by Angelos Markos (2012), based on Brown's Chapter 7 examples, pp. 304–316.
+
+# Start with a measurement model
+
+The example has three indicators of social phobia (`S1`–`S3`) and three of agoraphobia (`A1`–`A3`), with a sample size of 730. The published correlation matrix and standard deviations are sufficient for a covariance-based demonstration; individual records are not needed.
+
+```{r}
+#| label: setup
+#| include: false
+library(lavaan)
+library(knitr)
+options(digits = 3)
+```
+
+```{r}
+correlations <- '
+1.000
+0.705   1.000
+0.724   0.646   1.000
+0.213   0.195   0.190   1.000
+0.149   0.142   0.128   0.521   1.000
+0.155   0.162   0.135   0.557   0.479   1.000
+-0.019  -0.024  -0.029  -0.110  -0.074  -0.291   1.000'
+variable_names <- c("S1", "S2", "S3", "A1", "A2", "A3", "sex")
+R <- getCov(correlations, names = variable_names)
+sds <- c(2.26, 2.73, 2.11, 2.32, 2.61, 2.44, .50)
+S <- cor2cov(R, sds)
+
+measurement <- '
+  socialphobia =~ S1 + S2 + S3
+  agoraphobia =~ A1 + A2 + A3
+'
+fit_measurement <- cfa(measurement, sample.cov = S[1:6, 1:6], sample.nobs = 730)
+summary(fit_measurement, standardized = TRUE, fit.measures = TRUE)
+```
+
+# Predict the factors from a covariate
+
+The example names its covariate `sex`. The teaching files do not specify the coding, so the coefficient signs should not be assigned substantive group labels. The model is useful for understanding the parameterization.
+
+```{r}
+mimic_model <- paste(measurement, '
+  socialphobia ~ sex
+  agoraphobia ~ sex
+  A1 ~ 0*sex
+  A2 ~ 0*sex
+  A3 ~ 0*sex
+')
+fit_mimic <- cfa(mimic_model, sample.cov = S, sample.nobs = 730)
+summary(fit_mimic, standardized = TRUE, fit.measures = TRUE)
+```
+
+The factor regressions describe covariate-related differences in the constructs. The fixed-zero direct paths express the assumption that the covariate has no additional association with those indicators once the factor is held constant. The covariance between factors in this model is a residual covariance after accounting for the covariate.
+
+# Examine a direct item effect
+
+Modification indices can flag a direct effect worth investigating. A large index is a diagnostic, not a substantive justification for changing the model.
+
+```{r}
+indices <- modificationIndices(fit_mimic, sort. = TRUE)
+kable(subset(indices, op == "~" & rhs == "sex"), digits = 3)
+```
+
+For illustration, allow the covariate to predict `A3` directly while retaining `A1` and `A2` as anchors without direct covariate effects:
+
+```{r}
+dif_model <- sub("A3 ~ 0*sex", "A3 ~ sex", mimic_model, fixed = TRUE)
+fit_dif <- cfa(dif_model, sample.cov = S, sample.nobs = 730)
+anova(fit_mimic, fit_dif)
+kable(subset(parameterEstimates(fit_dif, standardized = TRUE), op == "~"),
+      digits = 3)
+```
+
+The `A3 ~ sex` coefficient represents a covariate association with that indicator conditional on the factor. Allowing the path can also change the estimated covariate effect on the latent construct. This illustrates why item-level differences and construct-level differences should be distinguished.
+
+An anchor assumption is essential: freeing direct effects to every indicator while also estimating the factor regression can make their contributions indistinguishable. A basic MIMIC model also does not provide all the information in a multiple-group invariance analysis. In particular, this specification assumes common loadings and residual structure; it is not a general test of group differences in loadings, residual variances, or latent variances. Use the richer multiple-group framework when those are the hypotheses of interest.

@@ -1,0 +1,94 @@
+project:
+  type: website
+  output-dir: _site
+  render:
+    - "*.qmd"
+    - "[0-9]*/*.qmd"
+    - "02_sem_basics/onyx_tutorial/Onyx.qmd"
+    - "!maintenance/**"
+  resources:
+    - "**/*.csv"
+    - "**/*.dat"
+    - "**/*.sav"
+    - "**/*.inp"
+    - "**/*.out"
+    - "**/*.RData"
+    - "02_sem_basics/onyx_tutorial/single_predictor_data.R"
+    - "!maintenance/**"
+
+website:
+  title: "Structural Equation Modeling Notes"
+  repo-url: https://github.com/HallquistLab/sem_notes
+  repo-actions: [edit, issue]
+  page-navigation: true
+  search: true
+  sidebar:
+    style: docked
+    collapse-level: 1
+    contents:
+      - index.qmd
+      - section: "Foundations"
+        contents:
+          - 01_correlation_regression/correlation_regression.qmd
+          - 02_sem_basics/matrix_algebra_review.qmd
+          - 02_sem_basics/onyx_tutorial/Onyx.qmd
+          - 02_sem_basics/sem_notation.qmd
+          - 03_path_models/path_analysis_demo.qmd
+          - 03_path_models/path_analysis_fundamental.qmd
+      - section: "Latent variables and measurement"
+        contents:
+          - 04_latent_variables_estimation/latent_variables.qmd
+          - 04_latent_variables_estimation/maximum_likelihood.qmd
+          - 05_psychometrics/lv_sim.qmd
+          - 05_psychometrics/psychometrics_overview.qmd
+          - 06_factor_models/bass_ackwards_demo.qmd
+          - 06_factor_models/factor_models.qmd
+          - 07_full_sem/full_sem_demo.qmd
+          - 07_full_sem/full_sem_specification.qmd
+      - section: "Model assessment"
+        contents:
+          - 08_fit/sem_fit_modification.qmd
+          - 09_model_comparison/model_comparison.qmd
+          - 10_best_practices/best_practices.qmd
+          - 10_best_practices/important_odds_and_ends.qmd
+          - 10_best_practices/pd_example.qmd
+      - section: "Groups and causal effects"
+        contents:
+          - 11_invariance_groups/invariance_groups_constraints.qmd
+          - 11_invariance_groups/mimic_models.qmd
+          - 12_mediation_moderation/mediation_moderation.qmd
+          - 12_mediation_moderation/mediation_moderation_demo.qmd
+          - 13_causality/causality_in_sem.qmd
+          - 13_causality/causality_demo.qmd
+      - section: "Longitudinal and multilevel models"
+        contents:
+          - 14_longitudinal/growth_modeling.qmd
+          - 15_multilevel/multilevel_sem.qmd
+      - about.qmd
+
+format:
+  html:
+    theme: cosmo
+    css: styles.css
+    toc: true
+    toc-depth: 3
+    number-sections: true
+    code-fold: true
+    code-tools: true
+    df-print: kable
+    fig-width: 9
+    fig-height: 6
+    fig-align: center
+    html-math-method: mathjax
+    link-external-newwindow: true
+
+execute:
+  freeze: false
+  error: false
+  warning: false
+  message: false
+
+knitr:
+  opts_chunk:
+    comment: "#>"
+    dpi: 144
