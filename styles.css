@@ -17,3 +17,86 @@ pre { font-size: 0.85rem; }
 .matrix-table thead { border-bottom: 2px solid var(--bs-border-color); }
 .matrix-table tbody tr:nth-child(even) { background: var(--bs-tertiary-bg); }
 .matrix-table tbody td:first-child { font-weight: 600; text-align: left; }
+
+/* Estimation flowcharts: readable text at every width, independent of SVG themes. */
+.estimation-routes { display: block; width: 100%; margin: 1.5rem 0; color: #172b3a; }
+.estimation-routes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr));
+  gap: 1rem;
+}
+.estimation-route {
+  --route-accent: #245a81;
+  --route-tint: #edf5fc;
+  display: flex;
+  flex-direction: column;
+  padding: 1.25rem;
+  border: 1px solid #c8d6df;
+  border-top: 4px solid var(--route-accent);
+  border-radius: 0.75rem;
+  background: #fff;
+}
+.estimation-route-bsem { --route-accent: #14665c; --route-tint: #edf8f4; }
+.estimation-route h3 {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  color: var(--route-accent);
+  font-size: 1.1rem;
+  font-weight: 700;
+  line-height: 1.35;
+}
+.estimation-route-summary { margin: 0.4rem 0 1.25rem; font-size: 0.9rem; }
+.estimation-route-steps {
+  display: grid;
+  gap: 1.75rem;
+  margin: auto 0 0;
+  padding: 0;
+  list-style: none;
+}
+.estimation-route-steps li {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  min-height: 5rem;
+  padding: 0.75rem;
+  border: 1px solid #c8d6df;
+  border-radius: 0.5rem;
+  background: var(--route-tint);
+  font-size: 0.95rem;
+  line-height: 1.45;
+}
+.estimation-route-steps li:not(:last-child)::after {
+  content: "↓";
+  position: absolute;
+  top: 100%;
+  left: calc(50% - 0.5rem);
+  height: 1.75rem;
+  color: var(--route-accent);
+  font-size: 1.35rem;
+  line-height: 1.75rem;
+}
+.estimation-step-number {
+  display: grid;
+  place-items: center;
+  flex: 0 0 1.6rem;
+  height: 1.6rem;
+  border-radius: 50%;
+  background: var(--route-accent);
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+.estimation-route-repeat {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  margin: 1rem 0 0;
+  color: var(--route-accent);
+  font-size: 0.85rem;
+  font-weight: 600;
+  line-height: 1.5;
+}
+.estimation-route-repeat > span { font-size: 1.3rem; }
+.estimation-routes figcaption { margin-top: 0.75rem; color: #465664; font-size: 0.85rem; }

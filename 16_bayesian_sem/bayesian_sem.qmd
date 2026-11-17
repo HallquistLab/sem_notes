@@ -155,21 +155,32 @@ $$
 \end{aligned}
 $$
 
-```{mermaid}
-%%| fig-cap: "Two computational routes for handling unobserved scores. The Bayesian cycle retains uncertainty by drawing new scores and parameters repeatedly."
-flowchart TB
-  subgraph ML["Maximum likelihood"]
-    direction TB
-    M1["Candidate parameters"] --> M2["Integrate over latent scores"]
-    M2 --> M3["Evaluate observed-data likelihood"]
-    M3 -->|"Optimizer updates parameters"| M1
-  end
-  subgraph BSEM["BSEM with augmentation"]
-    direction TB
-    B1["Current parameter draw"] --> B2["Draw latent scores given data + parameters"]
-    B2 --> B3["Draw parameters given data + latent scores"]
-    B3 -->|"Repeat; retain draws after convergence"| B1
-  end
+```{=html}
+<figure class="estimation-routes" aria-labelledby="estimation-routes-caption">
+  <div class="estimation-routes-grid">
+    <section class="estimation-route estimation-route-ml" aria-labelledby="route-ml-title">
+      <h3 id="route-ml-title">Maximum likelihood</h3>
+      <p class="estimation-route-summary">Integrate, then optimize</p>
+      <ol class="estimation-route-steps">
+        <li><span class="estimation-step-number" aria-hidden="true">1</span><span>Candidate parameters</span></li>
+        <li><span class="estimation-step-number" aria-hidden="true">2</span><span>Integrate over latent scores</span></li>
+        <li><span class="estimation-step-number" aria-hidden="true">3</span><span>Evaluate observed-data likelihood</span></li>
+      </ol>
+      <p class="estimation-route-repeat"><span aria-hidden="true">↶</span> Update parameters and return to step 1</p>
+    </section>
+    <section class="estimation-route estimation-route-bsem" aria-labelledby="route-bsem-title">
+      <h3 id="route-bsem-title">BSEM with augmentation</h3>
+      <p class="estimation-route-summary">Draw scores, then draw parameters</p>
+      <ol class="estimation-route-steps">
+        <li><span class="estimation-step-number" aria-hidden="true">1</span><span>Current parameter draw</span></li>
+        <li><span class="estimation-step-number" aria-hidden="true">2</span><span>Draw latent scores given data + parameters</span></li>
+        <li><span class="estimation-step-number" aria-hidden="true">3</span><span>Draw parameters given data + latent scores</span></li>
+      </ol>
+      <p class="estimation-route-repeat"><span aria-hidden="true">↶</span> Return to step 1; retain draws after convergence</p>
+    </section>
+  </div>
+  <figcaption id="estimation-routes-caption">Two computational routes for handling unobserved scores. The Bayesian cycle retains uncertainty by drawing new scores and parameters repeatedly.</figcaption>
+</figure>
 ```
 
 **A concrete score draw.** Suppose $y_{i1}=\eta_i+\varepsilon_{i1}$ and $y_{i2}=\eta_i+\varepsilon_{i2}$, with $\eta_i\sim\mathcal{N}(0,1)$ and independent errors $\varepsilon_{ij}\sim\mathcal{N}(0,0.5)$ (second argument = variance). For a student with both observed scores equal to 1, conditional on these parameter values,
