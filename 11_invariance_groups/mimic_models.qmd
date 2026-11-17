@@ -3,6 +3,8 @@ title: "MIMIC models and covariate-related item differences"
 author: "Michael Hallquist (code adapted from Angelos Markos)"
 ---
 
+{{< include /scripts/matrix-rendering.qmd >}}
+
 A **multiple-indicator multiple-cause (MIMIC)** model combines a measurement model with observed covariates that predict the latent variables. Direct covariate-to-indicator paths can then represent item differences that remain after conditioning on the latent construct. This provides a useful extension to the [multiple-group invariance models](invariance_groups_constraints.qmd).
 
 This example adapts code by Angelos Markos (2012), based on Brown's Chapter 7 examples, pp. 304–316.

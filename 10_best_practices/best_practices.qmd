@@ -3,6 +3,8 @@ title: "Best practices in SEM"
 author: "Michael Hallquist"
 ---
 
+{{< include /scripts/matrix-rendering.qmd >}}
+
 ```{r}
 #| label: "setup"
 #| include: false

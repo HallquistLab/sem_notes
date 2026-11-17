@@ -1,0 +1,36 @@
+TITLE:
+Small Bayesian mediation example;
+ANALYSIS:
+ESTIMATOR = BAYES;
+CHAINS = 2;
+PROCESSORS = 2;
+BITERATIONS = (20000);
+BSEED = 1612;
+MODEL:
+m ON x (a);
+y ON m (b);
+y ON x (cp);
+m WITH y@0;
+[m] (im);
+[y] (iy);
+m (vm);
+y (vy);
+MODEL PRIORS:
+a ~ N(0, 1);
+b ~ N(0, 1);
+cp ~ N(0, 1);
+im ~ N(0, 10);
+iy ~ N(0, 10);
+vm ~ IG(2, 1);
+vy ~ IG(2, 1);
+MODEL CONSTRAINT:
+NEW(ind total);
+ind = a*b;
+total = cp + ind;
+OUTPUT:
+TECH8;
+VARIABLE:
+NAMES = m x y;
+MISSING = .;
+DATA:
+FILE = "med_bayes.dat";

@@ -3,6 +3,8 @@ title: "Onyx tutorial"
 author: "Nate Hall (adapted with permission from Benjamin N. Johnson)"
 ---
 
+{{< include /scripts/matrix-rendering.qmd >}}
+
 ```{r}
 #| label: "setup"
 #| include: false

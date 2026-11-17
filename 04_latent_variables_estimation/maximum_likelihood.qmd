@@ -3,6 +3,8 @@ title: "Maximum Likelihood Estimation"
 author: "Michael Hallquist"
 ---
 
+{{< include /scripts/matrix-rendering.qmd >}}
+
 ```{r}
 #| label: "setup"
 #| include: false
@@ -178,14 +180,14 @@ pdf_norm <- function(x, mu, sigma2, log=FALSE) {
 
 iprobs <- pdf_norm(X, mu=2, sigma2=5)
 #iprobs <- pdf_norm(X, mu=50, sigma2=sqrt(50))
-print(cbind(X=X[1:5], prob=iprobs[1:5]))
+cbind(X=X[1:5], prob=iprobs[1:5])
 ```
 
 Thus, each of these probabilities represents the *likelihood* that a given value from $X$ was drawn from the candidate normal distribution with $\mu = 2$ and $\sigma^2 = 5$. Notice how tiny these individual likelihoods are, suggesting we are very far from approximating the data. In addition, the tiny values undermine our numerical precision in computing the overall likelihood, which is a product of the individual likelihood. This is one motivation for working with log likelihoods, which are numerically more stable. Here are the *log* probabilities for the first five scores `r round(X[1:5], 1)` under the same test of a normal distribution with $\mu = 2$ and $\sigma^2 = 5$:
 
 ```{r}
 iprobs_log <- log(iprobs)
-print(cbind(X=X[1:5], prob=iprobs[1:5], log_prob=iprobs_log[1:5]))
+cbind(X=X[1:5], prob=iprobs[1:5], log_prob=iprobs_log[1:5])
 ```
 
 Each of these values gives us information about likely a single data point, $x$, is to have come from the candidate normal distribution ($\mu = 2, \sigma^2 = 5$). Thus, higher values are more probable than lower values.

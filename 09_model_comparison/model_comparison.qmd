@@ -3,6 +3,8 @@ title: "Model comparison and evidence"
 author: "Michael Hallquist"
 ---
 
+{{< include /scripts/matrix-rendering.qmd >}}
+
 ```{r}
 #| label: "setup"
 #| include: false

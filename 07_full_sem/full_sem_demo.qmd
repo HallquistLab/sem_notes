@@ -3,6 +3,8 @@ title: 'Full SEM Estimation (adapted from Stanford Psych 253)'
 author: ["Benjamin Johnson", "Michael Hallquist"]
 ---
 
+{{< include /scripts/matrix-rendering.qmd >}}
+
 ```{r}
 #| label: "setup"
 #| include: false

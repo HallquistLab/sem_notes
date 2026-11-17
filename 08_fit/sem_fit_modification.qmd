@@ -3,6 +3,8 @@ title: "SEM Fit and Modification"
 author: "Michael Hallquist"
 ---
 
+{{< include /scripts/matrix-rendering.qmd >}}
+
 ```{r}
 #| label: "setup"
 #| include: false
@@ -760,20 +762,20 @@ The model-implied covariance is given by `fitted()`:
 
 ```{r}
 sigma_hat <- fitted(mstruct_saturated)$cov
-print(sigma_hat)
+sigma_hat
 ```
 
 And the sample covariance is given by `cov()`:
 
 ```{r}
 s_xx <- cov(dplyr::select(simData, -CoAWe5))
-print(s_xx)
+s_xx
 ```
 
 Notice how the column order is not necessarily the same between these? This can be an irritation. Here's a bit of code to order the model-implied covariance matrix identically to the sample covariance matrix.
 
 ```{r}
-print(sigma_hat[rownames(s_xx), colnames(s_xx)])
+sigma_hat[rownames(s_xx), colnames(s_xx)]
 ```
 
 ### Standardized residuals

@@ -6,3 +6,14 @@ main img { max-width: 100%; height: auto; }
 pre { font-size: 0.85rem; }
 .emph { font-weight: 600; }
 .pack, .func { font-family: var(--bs-font-monospace); }
+
+/* Matrix output keeps variable names visible and numbers easy to compare. */
+.matrix-table {
+  width: auto;
+  margin: 1rem auto;
+  font-variant-numeric: tabular-nums;
+}
+.matrix-table th, .matrix-table td { padding: 0.4rem 0.75rem; white-space: nowrap; }
+.matrix-table thead { border-bottom: 2px solid var(--bs-border-color); }
+.matrix-table tbody tr:nth-child(even) { background: var(--bs-tertiary-bg); }
+.matrix-table tbody td:first-child { font-weight: 600; text-align: left; }

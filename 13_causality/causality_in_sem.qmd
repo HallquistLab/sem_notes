@@ -3,6 +3,8 @@ title: "Causality in structural equations"
 author: "Michael Hallquist"
 ---
 
+{{< include /scripts/matrix-rendering.qmd >}}
+
 
 ```{r}
 #| label: "setup"

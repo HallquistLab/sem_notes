@@ -3,6 +3,8 @@ title: "Full SEM Specification"
 author: ["Michael Hallquist", "Benjamin Johnson"]
 ---
 
+{{< include /scripts/matrix-rendering.qmd >}}
+
 ```{r}
 #| label: "setup"
 #| include: false

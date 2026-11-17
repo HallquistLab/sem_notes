@@ -3,6 +3,8 @@ title: "Matrix Algebra Overview"
 author: "Michael Hallquist"
 ---
 
+{{< include /scripts/matrix-rendering.qmd >}}
+
 ```{r}
 #| label: "setup"
 #| include: false
@@ -188,7 +190,7 @@ Why would this be useful? Mostly it helps make matrix multiplication work, but f
 Here's a square matrix
 ```{r}
 A <- matrix(rnorm(25), nrow=5, ncol=5)
-print(A)
+A
 ```
 
 And now multiplied by $\mathbf{I}$:
@@ -327,9 +329,9 @@ A=tribble(
   2, 3,
   4, 9
 )
-print(A)
+A
 b=matrix(c(6,15), ncol=1)
-print(b)
+b
 ```
 
 And we can solve for $x$ and $y$ using the `solve()` function in `R`:
@@ -432,7 +434,7 @@ y = as.matrix(select(BostonSmall, cmedv))
 
 #(X'X)-1 * X' y
 bvals <- solve(t(X) %*% X) %*% t(X) %*% y
-print(bvals)
+bvals
 ```
 
 In short, we've identified optimal (OLS) parameters by solving the multiple regression equation for log_2(crime) and nox.
@@ -514,7 +516,7 @@ S_bhat <- sigmaSq * solve(t(X) %*% X)
 se_bhat <- sqrt(diag(S_bhat))
 parmat <- cbind(bvals, se_bhat, bvals/se_bhat)
 colnames(parmat) <- c("b", "se", "t")
-print(parmat) #matches summary(lm)
+parmat #matches summary(lm)
 ```
 Additional details on standard error computation [here](https://stats.stackexchange.com/questions/44838/how-are-the-standard-errors-of-coefficients-calculated-in-a-regression)
 
@@ -595,7 +597,7 @@ Each eigenvector has a corresponding eigenvalue that summarizes how strongly the
 Here's the covariance matrix of four-variable housing data:
 ```{r}
 cmat <- cov(BostonSmall)
-print(cmat)
+cmat
 ```
 
 And thus, the total variation of the covariance matrix is the *sum* of the variances along the diagonal:

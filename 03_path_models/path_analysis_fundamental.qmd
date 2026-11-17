@@ -3,6 +3,8 @@ title: "Path Analysis Fundamentals"
 author: "Michael Hallquist"
 ---
 
+{{< include /scripts/matrix-rendering.qmd >}}
+
 ```{r}
 #| label: "setup"
 #| include: false

@@ -3,6 +3,8 @@ title: "Multilevel SEM"
 author: "Michael Hallquist"
 ---
 
+{{< include /scripts/matrix-rendering.qmd >}}
+
 These notes introduce within- and between-cluster effects, random slopes, and multilevel factor models. The Mplus examples retain the original teaching inputs and saved outputs. The default render reads these outputs; it does not run Mplus. To re-estimate the examples, install Mplus, set `SEM_RUN_MPLUS=true`, and optionally set `MPLUS_COMMAND` to the executable path.
 
 Lavaan now supports two-level SEM; see the [multilevel tutorial](https://lavaan.ugent.be/tutorial/multilevel.html) for current capabilities and version requirements. A runnable lavaan example appears at the end of these notes. The Mplus examples remain useful for comparing observed and latent decompositions and richer multilevel specifications.

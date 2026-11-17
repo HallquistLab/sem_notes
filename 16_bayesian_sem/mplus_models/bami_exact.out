@@ -1,0 +1,833 @@
+Mplus VERSION 9.1 (Mac)
+MUTHEN & MUTHEN
+11/16/2026   9:26 PM
+
+INPUT INSTRUCTIONS
+
+  TITLE:
+  Two-group exact scalar invariance;
+  VARIABLE:
+  USEVARIABLES = y1-y4;
+  CLASSES = c(2);
+  KNOWNCLASS = c(grp = 1-2);
+  NAMES = y1 y2 y3 y4 grp;
+  MISSING = .;
+  ANALYSIS:
+  TYPE = MIXTURE;
+  ESTIMATOR = BAYES;
+  CHAINS = 2;
+  PROCESSORS = 2;
+  BITERATIONS = (30000);
+  BSEED = 1611;
+  MODEL:
+  %OVERALL%
+  eta BY y1-y4*0.8 (l1-l4);
+  [y1-y4] (i1-i4);
+  %c#1%
+  eta@1;
+  [eta@0];
+  %c#2%
+  eta;
+  [eta];
+  y1-y4;
+  OUTPUT:
+  TECH8;
+  DATA:
+  FILE = "bami_exact.dat";
+
+
+
+INPUT READING TERMINATED NORMALLY
+
+
+
+
+Two-group exact scalar invariance;
+
+SUMMARY OF ANALYSIS
+
+Number of groups                                                 1
+Number of observations                                         400
+
+Number of dependent variables                                    4
+Number of independent variables                                  0
+Number of continuous latent variables                            1
+Number of categorical latent variables                           1
+
+Observed dependent variables
+
+  Continuous
+   Y1          Y2          Y3          Y4
+
+Continuous latent variables
+   ETA
+
+Categorical latent variables
+   C
+
+  Knownclass            C
+
+
+Estimator                                                    BAYES
+Specifications for Bayesian Estimation
+  Point estimate                                            MEDIAN
+  Number of Markov chain Monte Carlo (MCMC) chains               2
+  Random seed for the first chain                             1611
+  Starting value information                           UNPERTURBED
+  Algorithm used for Markov chain Monte Carlo           GIBBS(PX1)
+  Convergence criterion                                  0.500D-01
+  Maximum number of iterations                               50000
+  K-th iteration used for thinning                               1
+
+Input data file(s)
+  bami_exact.dat
+Input data format  FREE
+
+
+SUMMARY OF DATA
+
+
+
+COVARIANCE COVERAGE OF DATA
+
+Minimum covariance coverage value   0.100
+
+     Number of missing data patterns             1
+
+
+     PROPORTION OF DATA PRESENT
+
+
+           Covariance Coverage
+              Y1            Y2            Y3            Y4
+              ________      ________      ________      ________
+ Y1             1.000
+ Y2             1.000         1.000
+ Y3             1.000         1.000         1.000
+ Y4             1.000         1.000         1.000         1.000
+
+
+
+UNIVARIATE SAMPLE STATISTICS
+
+
+     UNIVARIATE HIGHER-ORDER MOMENT DESCRIPTIVE STATISTICS
+
+         Variable/         Mean/     Skewness/   Minimum/ % with                Percentiles
+        Sample Size      Variance    Kurtosis    Maximum  Min/Max      20%/60%    40%/80%    Median
+
+     Y1                    0.175       0.219      -2.576    0.25%      -0.762     -0.117      0.123
+             400.000       1.165       0.157       3.460    0.25%       0.415      1.023
+     Y2                    0.112       0.075      -2.749    0.25%      -0.683     -0.108      0.121
+             400.000       0.888      -0.121       2.775    0.25%       0.327      0.932
+     Y3                    0.197       0.139      -2.711    0.25%      -0.768     -0.134      0.191
+             400.000       1.236      -0.228       3.490    0.25%       0.502      1.110
+     Y4                    0.046       0.187      -2.490    0.25%      -0.704     -0.240      0.016
+             400.000       0.947       0.340       3.618    0.25%       0.265      0.881
+
+
+THE MODEL ESTIMATION TERMINATED NORMALLY
+
+     USE THE FBITERATIONS OPTION TO INCREASE THE NUMBER OF ITERATIONS BY A FACTOR
+     OF AT LEAST TWO TO CHECK CONVERGENCE AND THAT THE PSR VALUE DOES NOT INCREASE.
+
+
+
+MODEL FIT INFORMATION
+
+Number of Free Parameters                              18
+
+Bayesian Posterior Predictive Checking using Chi-Square
+
+          95% Confidence Interval for the Difference Between
+          the Observed and the Replicated Chi-Square Values
+
+                                -15.455            23.965
+
+          Posterior Predictive P-Value              0.292
+
+Information Criteria
+
+          Deviance (DIC)                         3978.718
+          Estimated Number of Parameters (pD)      17.688
+          Bayesian (BIC)                         4050.831
+
+Posterior Predictive P-Value (Confidence Limits), Deviance (DIC), and Estimated Number of
+Parameters (pD) From Each Group
+
+     Group 1 (1)             0.504 (-14.957, 14.055)       1978.042         8.768
+     Group 2 (2)             0.241 (-10.344, 19.532)       2000.676         8.920
+
+RMSEA (Root Mean Square Error Of Approximation)
+
+          Estimate                           0.047
+          90 Percent C.I.                    0.000  0.089
+          Probability RMSEA <= .05           0.545
+
+CFI/TLI
+
+          CFI                                0.993
+          90 Percent C.I.                    0.973  1.000
+
+          TLI                                0.992
+          90 Percent C.I.                    0.969  1.000
+
+
+
+FINAL CLASS COUNTS AND PROPORTIONS FOR THE LATENT CLASSES
+BASED ON THE ESTIMATED MODEL
+
+    Latent
+   Classes
+
+       1        200.00000          0.50000
+       2        200.00000          0.50000
+
+
+MODEL RESULTS
+
+                                Posterior  One-Tailed         95% C.I.
+                    Estimate       S.D.      P-Value   Lower 2.5%  Upper 2.5%  Significance
+
+Latent Class 1 (1)
+
+ ETA      BY
+    Y1                 0.786       0.057      0.000       0.680       0.904      *
+    Y2                 0.608       0.050      0.000       0.515       0.712      *
+    Y3                 0.831       0.060      0.000       0.720       0.955      *
+    Y4                 0.659       0.052      0.000       0.562       0.765      *
+
+ Means
+    ETA                0.000       0.000      1.000       0.000       0.000
+
+ Intercepts
+    Y1                -0.022       0.067      0.372      -0.152       0.110
+    Y2                -0.047       0.058      0.202      -0.162       0.067
+    Y3                -0.016       0.071      0.411      -0.154       0.123
+    Y4                -0.123       0.060      0.019      -0.239      -0.006      *
+
+ Variances
+    ETA                1.000       0.000      0.000       1.000       1.000
+
+ Residual Variances
+    Y1                 0.394       0.059      0.000       0.291       0.522      *
+    Y2                 0.528       0.062      0.000       0.421       0.664      *
+    Y3                 0.436       0.066      0.000       0.321       0.581      *
+    Y4                 0.432       0.055      0.000       0.339       0.553      *
+
+Latent Class 2 (2)
+
+ ETA      BY
+    Y1                 0.786       0.057      0.000       0.680       0.904      *
+    Y2                 0.608       0.050      0.000       0.515       0.712      *
+    Y3                 0.831       0.060      0.000       0.720       0.955      *
+    Y4                 0.659       0.052      0.000       0.562       0.765      *
+
+ Means
+    ETA                0.513       0.121      0.000       0.282       0.753      *
+
+ Intercepts
+    Y1                -0.022       0.067      0.372      -0.152       0.110
+    Y2                -0.047       0.058      0.202      -0.162       0.067
+    Y3                -0.016       0.071      0.411      -0.154       0.123
+    Y4                -0.123       0.060      0.019      -0.239      -0.006      *
+
+ Variances
+    ETA                1.266       0.223      0.000       0.905       1.768      *
+
+ Residual Variances
+    Y1                 0.494       0.067      0.000       0.377       0.639      *
+    Y2                 0.388       0.050      0.000       0.303       0.499      *
+    Y3                 0.420       0.066      0.000       0.306       0.564      *
+    Y4                 0.452       0.058      0.000       0.351       0.579      *
+
+Categorical Latent Variables
+
+Class Proportions
+
+    Class 1            0.500       0.000      0.000       0.500       0.500
+    Class 2            0.500       0.000      0.000       0.500       0.500
+
+
+TECHNICAL 1 OUTPUT
+
+
+     PARAMETER SPECIFICATION FOR LATENT CLASS 1 (1)
+
+
+           NU
+              Y1            Y2            Y3            Y4
+              ________      ________      ________      ________
+                    1             2             3             4
+
+
+           LAMBDA
+              ETA
+              ________
+ Y1                 5
+ Y2                 6
+ Y3                 7
+ Y4                 8
+
+
+           THETA
+              Y1            Y2            Y3            Y4
+              ________      ________      ________      ________
+ Y1                 9
+ Y2                 0            10
+ Y3                 0             0            11
+ Y4                 0             0             0            12
+
+
+           ALPHA
+              ETA
+              ________
+                    0
+
+
+           BETA
+              ETA
+              ________
+ ETA                0
+
+
+           PSI
+              ETA
+              ________
+ ETA                0
+
+
+     PARAMETER SPECIFICATION FOR LATENT CLASS 2 (2)
+
+
+           NU
+              Y1            Y2            Y3            Y4
+              ________      ________      ________      ________
+                    1             2             3             4
+
+
+           LAMBDA
+              ETA
+              ________
+ Y1                 5
+ Y2                 6
+ Y3                 7
+ Y4                 8
+
+
+           THETA
+              Y1            Y2            Y3            Y4
+              ________      ________      ________      ________
+ Y1                13
+ Y2                 0            14
+ Y3                 0             0            15
+ Y4                 0             0             0            16
+
+
+           ALPHA
+              ETA
+              ________
+                   17
+
+
+           BETA
+              ETA
+              ________
+ ETA                0
+
+
+           PSI
+              ETA
+              ________
+ ETA               18
+
+
+     PARAMETER SPECIFICATION FOR LATENT CLASS REGRESSION MODEL PART
+
+
+           ALPHA(C)
+              C#1           C#2
+              ________      ________
+                    0             0
+
+
+           GAMMA(C)
+              ETA
+              ________
+ C#1                0
+ C#2                0
+
+
+     STARTING VALUES FOR LATENT CLASS 1 (1)
+
+
+           NU
+              Y1            Y2            Y3            Y4
+              ________      ________      ________      ________
+                0.175         0.112         0.197         0.046
+
+
+           LAMBDA
+              ETA
+              ________
+ Y1             0.800
+ Y2             0.800
+ Y3             0.800
+ Y4             0.800
+
+
+           THETA
+              Y1            Y2            Y3            Y4
+              ________      ________      ________      ________
+ Y1             0.583
+ Y2             0.000         0.444
+ Y3             0.000         0.000         0.618
+ Y4             0.000         0.000         0.000         0.474
+
+
+           ALPHA
+              ETA
+              ________
+                0.000
+
+
+           BETA
+              ETA
+              ________
+ ETA            0.000
+
+
+           PSI
+              ETA
+              ________
+ ETA            1.000
+
+
+     STARTING VALUES FOR LATENT CLASS 2 (2)
+
+
+           NU
+              Y1            Y2            Y3            Y4
+              ________      ________      ________      ________
+                0.175         0.112         0.197         0.046
+
+
+           LAMBDA
+              ETA
+              ________
+ Y1             0.800
+ Y2             0.800
+ Y3             0.800
+ Y4             0.800
+
+
+           THETA
+              Y1            Y2            Y3            Y4
+              ________      ________      ________      ________
+ Y1             0.583
+ Y2             0.000         0.444
+ Y3             0.000         0.000         0.618
+ Y4             0.000         0.000         0.000         0.474
+
+
+           ALPHA
+              ETA
+              ________
+                0.000
+
+
+           BETA
+              ETA
+              ________
+ ETA            0.000
+
+
+           PSI
+              ETA
+              ________
+ ETA            1.000
+
+
+     STARTING VALUES FOR LATENT CLASS REGRESSION MODEL PART
+
+
+           ALPHA(C)
+              C#1           C#2
+              ________      ________
+                0.000         0.000
+
+
+           GAMMA(C)
+              ETA
+              ________
+ C#1            0.000
+ C#2            0.000
+
+
+
+     PRIORS FOR ALL PARAMETERS            PRIOR MEAN      PRIOR VARIANCE     PRIOR STD. DEV.
+
+     Parameter 1~N(0.000,infinity)           0.0000            infinity            infinity
+     Parameter 2~N(0.000,infinity)           0.0000            infinity            infinity
+     Parameter 3~N(0.000,infinity)           0.0000            infinity            infinity
+     Parameter 4~N(0.000,infinity)           0.0000            infinity            infinity
+     Parameter 5~N(0.000,infinity)           0.0000            infinity            infinity
+     Parameter 6~N(0.000,infinity)           0.0000            infinity            infinity
+     Parameter 7~N(0.000,infinity)           0.0000            infinity            infinity
+     Parameter 8~N(0.000,infinity)           0.0000            infinity            infinity
+     Parameter 9~IG(-1.000,0.000)          infinity            infinity            infinity
+     Parameter 10~IG(-1.000,0.000)         infinity            infinity            infinity
+     Parameter 11~IG(-1.000,0.000)         infinity            infinity            infinity
+     Parameter 12~IG(-1.000,0.000)         infinity            infinity            infinity
+     Parameter 13~IG(-1.000,0.000)         infinity            infinity            infinity
+     Parameter 14~IG(-1.000,0.000)         infinity            infinity            infinity
+     Parameter 15~IG(-1.000,0.000)         infinity            infinity            infinity
+     Parameter 16~IG(-1.000,0.000)         infinity            infinity            infinity
+     Parameter 17~N(0.000,infinity)          0.0000            infinity            infinity
+     Parameter 18~IG(-1.000,0.000)         infinity            infinity            infinity
+
+
+TECHNICAL 8 OUTPUT
+
+
+   TECHNICAL 8 OUTPUT FOR BAYES ESTIMATION
+
+     CHAIN    BSEED
+     1        1611
+     2        684921
+
+                     POTENTIAL       PARAMETER WITH
+     ITERATION    SCALE REDUCTION      HIGHEST PSR
+     100              1.433               7
+     200              1.137               3
+     300              1.138               5
+     400              1.198               17
+     500              1.170               3
+     600              1.015               3
+     700              1.010               10
+     800              1.011               10
+     900              1.011               8
+     1000             1.008               8
+     1100             1.003               1
+     1200             1.002               10
+     1300             1.003               4
+     1400             1.002               16
+     1500             1.012               1
+     1600             1.007               1
+     1700             1.002               15
+     1800             1.007               5
+     1900             1.006               5
+     2000             1.007               4
+     2100             1.004               5
+     2200             1.003               11
+     2300             1.004               15
+     2400             1.007               15
+     2500             1.007               15
+     2600             1.007               15
+     2700             1.006               15
+     2800             1.007               1
+     2900             1.007               15
+     3000             1.010               1
+     3100             1.005               5
+     3200             1.008               5
+     3300             1.006               5
+     3400             1.007               6
+     3500             1.008               1
+     3600             1.010               1
+     3700             1.008               1
+     3800             1.005               1
+     3900             1.008               4
+     4000             1.006               4
+     4100             1.003               4
+     4200             1.001               4
+     4300             1.003               6
+     4400             1.003               6
+     4500             1.004               6
+     4600             1.004               6
+     4700             1.006               8
+     4800             1.006               8
+     4900             1.005               6
+     5000             1.004               3
+     5100             1.005               3
+     5200             1.005               3
+     5300             1.005               3
+     5400             1.003               3
+     5500             1.003               3
+     5600             1.002               15
+     5700             1.002               2
+     5800             1.002               15
+     5900             1.002               15
+     6000             1.002               15
+     6100             1.003               1
+     6200             1.002               6
+     6300             1.004               5
+     6400             1.005               5
+     6500             1.003               6
+     6600             1.004               6
+     6700             1.004               6
+     6800             1.004               6
+     6900             1.004               6
+     7000             1.002               6
+     7100             1.001               6
+     7200             1.001               6
+     7300             1.001               6
+     7400             1.001               6
+     7500             1.001               15
+     7600             1.001               15
+     7700             1.002               15
+     7800             1.001               15
+     7900             1.002               15
+     8000             1.002               15
+     8100             1.003               6
+     8200             1.002               6
+     8300             1.002               15
+     8400             1.002               17
+     8500             1.004               3
+     8600             1.005               3
+     8700             1.005               3
+     8800             1.005               4
+     8900             1.005               17
+     9000             1.003               17
+     9100             1.003               6
+     9200             1.003               17
+     9300             1.004               3
+     9400             1.005               17
+     9500             1.006               3
+     9600             1.006               3
+     9700             1.006               3
+     9800             1.008               3
+     9900             1.007               3
+     10000            1.007               3
+     10100            1.005               3
+     10200            1.006               3
+     10300            1.005               3
+     10400            1.004               3
+     10500            1.004               3
+     10600            1.004               3
+     10700            1.004               3
+     10800            1.003               3
+     10900            1.004               3
+     11000            1.004               3
+     11100            1.002               3
+     11200            1.002               3
+     11300            1.002               3
+     11400            1.002               17
+     11500            1.002               3
+     11600            1.003               3
+     11700            1.002               3
+     11800            1.003               3
+     11900            1.003               3
+     12000            1.002               3
+     12100            1.002               3
+     12200            1.002               3
+     12300            1.002               3
+     12400            1.001               3
+     12500            1.001               3
+     12600            1.002               18
+     12700            1.002               18
+     12800            1.002               7
+     12900            1.003               7
+     13000            1.002               7
+     13100            1.002               7
+     13200            1.001               18
+     13300            1.001               18
+     13400            1.001               8
+     13500            1.001               18
+     13600            1.000               14
+     13700            1.000               13
+     13800            1.001               13
+     13900            1.001               13
+     14000            1.000               13
+     14100            1.000               13
+     14200            1.000               14
+     14300            1.000               13
+     14400            1.000               14
+     14500            1.000               13
+     14600            1.000               13
+     14700            1.000               13
+     14800            1.000               13
+     14900            1.000               13
+     15000            1.000               13
+     15100            1.001               13
+     15200            1.001               5
+     15300            1.001               5
+     15400            1.001               5
+     15500            1.001               5
+     15600            1.001               5
+     15700            1.001               13
+     15800            1.001               13
+     15900            1.001               13
+     16000            1.001               13
+     16100            1.001               13
+     16200            1.001               13
+     16300            1.001               13
+     16400            1.001               13
+     16500            1.001               13
+     16600            1.001               13
+     16700            1.001               13
+     16800            1.001               13
+     16900            1.001               13
+     17000            1.001               1
+     17100            1.001               13
+     17200            1.001               1
+     17300            1.001               1
+     17400            1.002               1
+     17500            1.001               1
+     17600            1.001               1
+     17700            1.001               1
+     17800            1.002               1
+     17900            1.001               1
+     18000            1.001               1
+     18100            1.001               13
+     18200            1.001               1
+     18300            1.001               1
+     18400            1.001               1
+     18500            1.001               1
+     18600            1.001               1
+     18700            1.002               1
+     18800            1.002               1
+     18900            1.002               1
+     19000            1.002               1
+     19100            1.002               1
+     19200            1.002               1
+     19300            1.002               1
+     19400            1.002               1
+     19500            1.002               1
+     19600            1.002               1
+     19700            1.003               1
+     19800            1.002               1
+     19900            1.002               1
+     20000            1.002               1
+     20100            1.001               1
+     20200            1.001               1
+     20300            1.001               1
+     20400            1.001               1
+     20500            1.001               5
+     20600            1.001               1
+     20700            1.001               5
+     20800            1.001               5
+     20900            1.001               5
+     21000            1.001               5
+     21100            1.001               5
+     21200            1.001               5
+     21300            1.001               5
+     21400            1.001               8
+     21500            1.001               8
+     21600            1.001               8
+     21700            1.001               8
+     21800            1.001               8
+     21900            1.001               8
+     22000            1.002               5
+     22100            1.002               5
+     22200            1.002               5
+     22300            1.002               5
+     22400            1.002               5
+     22500            1.001               5
+     22600            1.001               5
+     22700            1.001               5
+     22800            1.001               5
+     22900            1.002               5
+     23000            1.002               5
+     23100            1.002               5
+     23200            1.002               5
+     23300            1.002               5
+     23400            1.001               5
+     23500            1.002               5
+     23600            1.002               5
+     23700            1.002               5
+     23800            1.002               5
+     23900            1.001               5
+     24000            1.001               5
+     24100            1.002               5
+     24200            1.002               5
+     24300            1.001               5
+     24400            1.001               5
+     24500            1.001               5
+     24600            1.001               5
+     24700            1.001               5
+     24800            1.001               5
+     24900            1.001               8
+     25000            1.000               15
+     25100            1.000               15
+     25200            1.000               8
+     25300            1.000               15
+     25400            1.001               8
+     25500            1.000               15
+     25600            1.001               8
+     25700            1.001               8
+     25800            1.001               15
+     25900            1.001               15
+     26000            1.001               15
+     26100            1.001               15
+     26200            1.001               15
+     26300            1.001               15
+     26400            1.001               15
+     26500            1.001               15
+     26600            1.001               15
+     26700            1.001               15
+     26800            1.001               15
+     26900            1.001               15
+     27000            1.001               15
+     27100            1.001               15
+     27200            1.001               15
+     27300            1.001               15
+     27400            1.001               15
+     27500            1.001               15
+     27600            1.001               15
+     27700            1.001               15
+     27800            1.001               15
+     27900            1.001               15
+     28000            1.001               15
+     28100            1.001               15
+     28200            1.001               15
+     28300            1.001               15
+     28400            1.001               15
+     28500            1.001               15
+     28600            1.001               15
+     28700            1.001               15
+     28800            1.001               15
+     28900            1.001               15
+     29000            1.001               15
+     29100            1.001               15
+     29200            1.000               15
+     29300            1.000               15
+     29400            1.000               15
+     29500            1.000               15
+     29600            1.000               15
+     29700            1.000               15
+     29800            1.000               15
+     29900            1.000               14
+     30000            1.000               14
+
+
+     MCMC EFFECTIVE SAMPLE SIZE (ESS) IN ASCENDING ORDER
+        LOWEST 10 PARAMETERS
+        PARAMETER    ESS
+             3      1638
+             1      1661
+             4      1873
+             2      1943
+            17      1947
+             7      1986
+             5      2094
+             8      2121
+            18      2209
+             6      2378
+
+
+     Beginning Time:  21:26:48
+        Ending Time:  21:26:56
+       Elapsed Time:  00:00:08
+
+
+
+MUTHEN & MUTHEN
+3463 Stoner Ave.
+Los Angeles, CA  90066
+
+Tel: (310) 391-9971
+Fax: (310) 391-8971
+Web: www.StatModel.com
+Support: Support@StatModel.com
+
+Copyright (c) 1998-2026 Muthen & Muthen

@@ -3,6 +3,8 @@ title: "Factor models"
 author: "Michael Hallquist"
 ---
 
+{{< include /scripts/matrix-rendering.qmd >}}
+
 ```{r}
 #| label: "setup"
 #| include: false
@@ -255,7 +257,7 @@ And the reduced correlation matrix based on the 2-factor solution above:
 ```{r}
 cmat <- cor(data)
 diag(cmat) <- f2$communalities
-print(round(cmat, 2))
+round(cmat, 2)
 ```
 
 As a result, we can also consider the eigenvalues of the *reduced* correlation matrix:
@@ -439,7 +441,7 @@ Sigma <- tribble(
 abc = data.frame(MASS::mvrnorm(1000, mu=mu, Sigma=Sigma, empirical=TRUE))
 colnames(abc) = LETTERS[1:3]
 cat("Analyzing this correlation matrix using PCA:\n\n")
-print(cor(abc))
+cor(abc)
 pc_sol <- prcomp(abc)
 cat("\nThe eigenvalues are:", paste(round(pc_sol$sdev^2, 2), collapse=", "), "\n")
 cat("The summed eigenvalues are:", round(sum(pc_sol$sdev^2)), "\n")
@@ -459,7 +461,7 @@ $$
 f3_toy <- fa(abc, nfactors = 1)
 cat("\nThe item uniquenesses are:", paste(round(f3_toy$uniquenesses, 2), collapse=", "), "\n")
 cat("\nThus, the correlation matrix used for EFA is:\n")
-print(f3_toy$model)
+f3_toy$model
 cat("\nAnd the eigenvalues of the factor solution are: ", paste(round(f3_toy$values, 2), collapse=", "), "\n")
 ```
 

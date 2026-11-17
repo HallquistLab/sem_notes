@@ -3,6 +3,8 @@ title: "Using latent variable scores"
 author: "Michael Hallquist (adapted from Michael Clark)"
 ---
 
+{{< include /scripts/matrix-rendering.qmd >}}
+
 This tutorial develops Michael Clark's comparison of single items, composite scores, estimated factor scores, and full SEM. The simulation code is self-contained so every displayed result can be regenerated.
 
 # Why compare scores?

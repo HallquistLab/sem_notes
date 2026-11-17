@@ -3,6 +3,8 @@ title: "Latent growth curve models"
 author: "Michael Hallquist"
 ---
 
+{{< include /scripts/matrix-rendering.qmd >}}
+
 This document was adapted in part from Michael Clark's SEM course: http://m-clark.github.io/docs/sem/latent-growth-curves.html
 
 The original adaptation and examples are credited to Michael Clark; the explanations and code have been edited for this collection.

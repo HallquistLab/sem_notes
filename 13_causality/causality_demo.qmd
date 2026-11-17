@@ -3,6 +3,8 @@ title: "DAG Demo in SEM"
 author: "Michael Hallquist"
 ---
 
+{{< include /scripts/matrix-rendering.qmd >}}
+
 
 ```{r}
 #| label: "setup"

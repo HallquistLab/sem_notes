@@ -3,6 +3,8 @@ title: "Bayesian Structural Equation Modeling"
 author: "Michael Hallquist"
 ---
 
+{{< include /scripts/matrix-rendering.qmd >}}
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 options(digits = 3, width = 120)
@@ -25,12 +27,13 @@ In real psychological research, however, frequentist SEM routinely runs into **t
 
 ## Overview of these notes
 
-These notes develop both core motivations for Bayesian SEM across four connected sections:
+These notes develop both core motivations for Bayesian SEM across five connected sections:
 
 1. **Bayesian foundations for SEM:** How precision-weighted shrinkage combines prior expectations with the data likelihood, how priors are scaled in Mplus and `blavaan`, and how Posterior Predictive Checking ($\text{PP}p$) and Bayesian approximate fit indices (`BRMSEA`, `BCFI`, `BTLI`, `DIC`, `LOO`) evaluate model adequacy.
 2. **Approximate-zero cross-loading priors:** How placing zero-centered, small-variance priors ($\lambda_{\text{cross}} \sim \mathcal{N}(0, 0.01)$) on non-target loadings in Bayesian CFA captures realistic secondary item influences while preserving confirmatory simple structure — compared directly against strict ML ICM-CFA and exploratory Geomin ESEM on the Holzinger & Swineford (1939) tests, followed by a formal prior sensitivity sweep across $\sigma^2_0$.
-3. **Random slopes and numerical integration:** Why models with multiple random slopes, non-Gaussian outcomes, or latent within-person predictors (`TYPE = TWOLEVEL RANDOM`, [extending our multilevel SEM notes](../15_multilevel/multilevel_sem.qmd)) run into the exponential $Q^d$ Gauss–Hermite quadrature bottleneck under frequentist ML, how MCMC data augmentation sidesteps that grid, and how Bayesian MSEM recovers person-specific latent reactivity slopes without two-stage attenuation.
-4. **Diagnostics and responsible interpretation:** Multi-chain convergence diagnostics ($\hat{R}$ / PSR, effective sample size), why you should never rely on Mplus's default `PSR < 1.05` auto-stop without an iteration floor, and substantive guardrails from the WAMBS workflow.
+3. **Two further uses:** Worked posterior mediation and two-group approximate-invariance examples connect BSEM to earlier lectures, including sensitivity of latent mean comparisons to difference priors.
+4. **Random slopes and numerical integration:** Why models with multiple random slopes, non-Gaussian outcomes, or latent within-person predictors (`TYPE = TWOLEVEL RANDOM`, [extending our multilevel SEM notes](../15_multilevel/multilevel_sem.qmd)) run into the exponential $Q^d$ Gauss–Hermite quadrature bottleneck under frequentist ML, how MCMC data augmentation sidesteps that grid, and how Bayesian MSEM recovers person-specific latent reactivity slopes without two-stage attenuation.
+5. **Diagnostics and responsible interpretation:** Multi-chain convergence diagnostics ($\hat{R}$ / PSR, effective sample size), why you should never rely on Mplus's default `PSR < 1.05` auto-stop without an iteration floor, and substantive guardrails from the WAMBS workflow.
 
 Before starting, you may find it helpful to review [maximum likelihood](../04_latent_variables_estimation/maximum_likelihood.qmd), [factor models](../06_factor_models/factor_models.qmd), [model fit](../08_fit/sem_fit_modification.qmd), and [multilevel SEM](../15_multilevel/multilevel_sem.qmd).
 
@@ -42,7 +45,8 @@ After this lecture and working through the code, you should be able to:
 2. Articulate how Bayesian CFA with zero-centered cross-loading priors relates to frequentist ESEM and sequential modification index searches.
 3. Implement a Bayesian CFA in Mplus (via `MplusAutomation`), inspect loading and residual correlation heatmaps, and conduct a formal prior sensitivity analysis.
 4. Explain mathematically and geometrically why Gaussian quadrature bogs down exponentially ($Q^d$) as the number of random slopes or non-Gaussian latent dimensions grows, and why MCMC avoids this bottleneck.
-5. Diagnose MCMC chain convergence and model adequacy using traceplots, Potential Scale Reduction ($\hat{R}$/PSR), Posterior Predictive $p$-values ($\text{PP}p$), and Bayesian approximate fit indices (`BRMSEA`, `BCFI`, `BTLI`).
+5. Compute indirect effects from joint posterior draws and distinguish exact from approximate measurement invariance.
+6. Diagnose MCMC chain convergence and model adequacy using traceplots, Potential Scale Reduction ($\hat{R}$/PSR), Posterior Predictive $p$-values ($\text{PP}p$), and Bayesian approximate fit indices (`BRMSEA`, `BCFI`, `BTLI`).
 
 ## Assigned readings
 
@@ -448,7 +452,7 @@ Just as reported in Chen et al. (2024, Table 1), strict ICM-CFA fails global fit
 
 ### Step 3: Fit Bayesian CFA with zero-centered cross-loading priors in Mplus
 
-Now let's fit the **BSEM** specification in Mplus using `mplusModel()` from `MplusAutomation` ($\ge 1.3$). We keep our exact confirmatory 3-factor CFA architecture, assign diffuse default priors to the 9 primary loadings, and assign **zero-centered small-variance priors** $\mathcal{N}(0, 0.01)$ to all 18 off-target cross-loadings simultaneously. We also request `OUTPUT: STDYX TECH8;` so we can inspect standardized posterior summaries and the Potential Scale Reduction (PSR) convergence history directly in R (and in Section 5 we will use `$update()` to attach `SAVEDATA: BPARAMETERS` for Markov chain traceplot extraction).
+Now let's fit the **BSEM** specification in Mplus using `mplusModel()` from `MplusAutomation` ($\ge 1.3$). We keep our exact confirmatory 3-factor CFA architecture, assign diffuse default priors to the 9 primary loadings, and assign **zero-centered small-variance priors** $\mathcal{N}(0, 0.01)$ to all 18 off-target cross-loadings simultaneously. We also request `OUTPUT: STDYX TECH8;` so we can inspect standardized posterior summaries and the Potential Scale Reduction (PSR) convergence history directly in R (and in the diagnostics section we will use `$update()` to attach `SAVEDATA: BPARAMETERS` for Markov chain traceplot extraction).
 
 ```{r fit-bsem-hs}
 # Model A: Bayesian Strict ICM-CFA (exact zero cross-loadings, diffuse priors on target paths)
@@ -963,8 +967,295 @@ The same small-variance shrinkage strategy extends beyond cross-loadings to thre
 
 1. **Residual covariances among items ($\boldsymbol{\Theta}_\varepsilon$):** Placing an informative Inverse-Wishart prior $\boldsymbol{\Theta}_\varepsilon \sim \mathcal{IW}(\mathbf{I}, k + 6)$ on the $k \times k$ residual covariance matrix allows minor item-wording or method covariances to depart slightly from zero (where $k$ is the number of indicators, written $p + 6$ in Muthén & Asparouhov's notation; e.g., `x1-x9 WITH x1-x9 ~ IW(0, 15);` for our $k = 9$ tests in Mplus; Muthén & Asparouhov, 2012, Study 2 on the Big Five). Because an Inverse-Wishart prior couples variances and correlations through a single degrees-of-freedom parameter, calibrate its scale carefully and avoid freeing all cross-loadings and all residual covariances simultaneously unless sample size and substantive theory support it.
 2. **Structural regression paths:** Direct covariate effects hypothesized to be negligible can receive $\mathcal{N}(0, 0.01)$ priors rather than hard zero exclusions, testing structural mediation/exclusion assumptions in a single step (Muthén & Asparouhov, 2012, Fig. 3; Chen et al., 2024, Example 2).
-3. **Bayesian Approximate Measurement Invariance (BAMI):** Across many groups or longitudinal waves where exact scalar invariance fails due to minor idiosyncratic item drift, `MODEL PRIORS: DIFF(lam1-lam9) ~ N(0, 0.01);` shrinks cross-group loading and intercept differences toward zero while identifying the latent mean comparisons (Muthén & Asparouhov, 2013; Chen et al., 2024, Example 3).
+3. **Bayesian Approximate Measurement Invariance (BAMI):** Priors on cross-group loading and intercept differences allow modest item drift while linking the groups for latent mean comparisons (Muthén & Asparouhov, 2013; Chen et al., 2024, Example 3). The [worked example below](#worked-example-approximate-measurement-invariance-across-two-groups) develops this extension.
 :::
+
+---
+
+# Two further uses: mediation and approximate invariance
+
+Chen et al. (2024, Examples 2–3) illustrate two additional reasons to use BSEM: obtaining posterior distributions for indirect effects and allowing small measurement differences across groups. These compact simulations isolate those ideas; they are teaching examples, not replications of Chen's empirical analyses.
+
+## Worked example: a posterior distribution for an indirect effect
+
+Recall [simple mediation](../12_mediation_moderation/mediation_moderation_demo.qmd#simple-mediation):
+
+$$
+M_i = \alpha_M + aX_i + \varepsilon_{Mi}, \qquad
+Y_i = \alpha_Y + bM_i + c'X_i + \varepsilon_{Yi}.
+$$
+
+The indirect effect is $ab$ and the total effect is $c' + ab$. Even when the posterior distributions of $a$ and $b$ are approximately normal, their product can be asymmetric. We can obtain its posterior by multiplying the coefficients **within each joint posterior draw**:
+
+$$
+\text{indirect}^{(s)} = a^{(s)}b^{(s)}, \qquad
+\text{total}^{(s)} = c'^{(s)} + a^{(s)}b^{(s)}.
+$$
+
+Simulate $N = 100$ observations with true $a = .30$, $b = .40$, and $c' = .10$, giving an indirect effect of $.12$. We use observed variables to keep the example small; the same draw-by-draw calculation applies when $X$, $M$, or $Y$ are latent factors in a joint measurement and structural model. The slopes receive $\mathcal{N}(0,1)$ priors on these roughly unit-scale variables. Intercepts receive $\mathcal{N}(0,10)$ priors and residual variances receive $\operatorname{IG}(2,1)$ priors (shape and scale; prior mean $1$). These are explicit regularizing choices, not claims that defaults are harmless in small samples.
+
+```{r small-mediation-fit}
+set.seed(1612)
+n_med <- 100
+x_med <- rnorm(n_med)
+m_med <- 0.30 * x_med + rnorm(n_med)
+y_med <- 0.40 * m_med + 0.10 * x_med + rnorm(n_med)
+med_data <- data.frame(x = x_med, m = m_med, y = y_med)
+med_syntax <- '
+TITLE: Small Bayesian mediation example;
+ANALYSIS:
+  ESTIMATOR = BAYES;
+  CHAINS = 2;
+  PROCESSORS = 2;
+  BITERATIONS = (20000);
+  BSEED = 1612;
+MODEL:
+  m ON x (a);
+  y ON m (b);
+  y ON x (cp);
+  m WITH y@0;
+  [m] (im);
+  [y] (iy);
+  m (vm);
+  y (vy);
+MODEL PRIORS:
+  a ~ N(0, 1);
+  b ~ N(0, 1);
+  cp ~ N(0, 1);
+  im ~ N(0, 10);
+  iy ~ N(0, 10);
+  vm ~ IG(2, 1);
+  vy ~ IG(2, 1);
+MODEL CONSTRAINT:
+  NEW(ind total);
+  ind = a*b;
+  total = cp + ind;
+OUTPUT: TECH8;
+'
+med_fit <- load_or_fit_mplus_model(med_syntax, med_data, mplus_dir, 'med_bayes')
+```
+
+Mplus's `MODEL CONSTRAINT` computes the indirect and total effects during sampling. To make that operation visible, we also save the post-burn-in draws and reproduce it in R. Preserve the pairing of $a$, $b$, and $c'$ within each iteration; multiplying marginal medians or independently shuffling the draws does not recover the joint posterior of the effect.
+
+```{r small-mediation-posterior}
+#| fig-height: 4
+med_draws_file <- file.path(mplus_dir, "med_draws.rds")
+if (run_mplus) {
+  med_draw_fit <- med_fit$update(
+    savedata = "BPARAMETERS = med_bparams.dat;", in_place = FALSE
+  )
+  med_draw_fit$file_stem <- "med_draws_fit"
+  invisible(capture.output(med_draw_fit$run(replaceOutfile = "always", logFile = NULL)))
+  med_draws <- bind_rows(lapply(seq_along(med_draw_fit$bparameters$valid_draw), function(ch) {
+    dr <- as.data.frame(med_draw_fit$bparameters$valid_draw[[ch]])
+    data.frame(chain = ch, iter = dr$Iteration.number,
+               a = dr[[grep("M.ON.X", names(dr), fixed = TRUE)]],
+               b = dr[[grep("Y.ON.M", names(dr), fixed = TRUE)]],
+               cp = dr[[grep("Y.ON.X", names(dr), fixed = TRUE)]])
+  }))
+  med_draws$ind <- med_draws$a * med_draws$b
+  med_draws$total <- med_draws$cp + med_draws$ind
+  saveRDS(med_draws, file.path(mplus_dir, 'med_draws.rds'))
+  unlink(file.path(mplus_dir, c(
+    "med_bparams.dat", "med_draws_fit.inp", "med_draws_fit.out", "med_draws_fit.dat"
+  )))
+} else {
+  med_draws <- readRDS(med_draws_file)
+}
+
+med_summary <- bind_rows(lapply(c("a", "b", "cp", "ind", "total"), function(term) {
+  z <- med_draws[[term]]
+  tibble(Term = term, Median = median(z),
+         Lower = unname(quantile(z, .025)), Upper = unname(quantile(z, .975)),
+         `Pr(effect > 0 | data)` = mean(z > 0))
+}))
+kable(med_summary, digits = 3,
+      caption = "Posterior summaries from paired draws: indirect = a × b; total = c′ + a × b")
+
+# Compare the equal-tailed posterior interval with the familiar Sobel interval.
+med_lm_a <- lm(m ~ x, data = med_data)
+med_lm_b <- lm(y ~ m + x, data = med_data)
+a_hat <- coef(med_lm_a)[["x"]]
+b_hat <- coef(med_lm_b)[["m"]]
+sobel_se <- sqrt(b_hat^2 * vcov(med_lm_a)["x", "x"] +
+                   a_hat^2 * vcov(med_lm_b)["m", "m"])
+sobel_limits <- a_hat * b_hat + c(-1, 1) * qnorm(.975) * sobel_se
+ind_limits <- quantile(med_draws$ind, c(.025, .975))
+
+ggplot(med_draws, aes(x = ind, color = factor(chain))) +
+  geom_density(linewidth = .8) +
+  geom_vline(xintercept = 0, color = "gray50", linetype = "dotted") +
+  annotate("segment", x = ind_limits[1], xend = ind_limits[2],
+           y = 0, yend = 0, linewidth = 1.5, color = "#1b7837") +
+  scale_color_manual(values = c("#2166ac", "#d95f02"), name = "Chain") +
+  labs(title = "The indirect effect has an asymmetric posterior",
+       subtitle = "Multiply a and b within each draw; green segment = equal-tailed 95% CrI",
+       x = "Indirect effect (a × b)", y = "Posterior density") +
+  theme_bsem() + theme(legend.position = "bottom")
+```
+
+The posterior median indirect effect is $`r sprintf("%.3f", median(med_draws$ind))`$, with a 95% credible interval of $[`r sprintf("%.3f", ind_limits[1])`, `r sprintf("%.3f", ind_limits[2])`]$ and $\Pr(ab > 0 \mid \mathbf{Y}) = `r sprintf("%.3f", mean(med_draws$ind > 0))`$. These statements are conditional on the model and priors. The ML Sobel interval is $[`r sprintf("%.3f", sobel_limits[1])`, `r sprintf("%.3f", sobel_limits[2])`]$; unlike the posterior interval, it is symmetric around the estimated product. A bootstrap can also accommodate asymmetry. The Bayesian payoff is that the **same joint posterior** supplies uncertainty for any derived effect while incorporating the prior information.
+
+This example estimates an associational indirect effect. A causal mediation interpretation still requires the identification assumptions discussed in our [causality lecture](../13_causality/causality_in_sem.qmd); changing estimators does not establish them. The model includes all three paths and is saturated, so global fit cannot validate its mediation mechanism.
+
+## Worked example: approximate measurement invariance across two groups
+
+In our [measurement invariance lecture](../11_invariance_groups/invariance_groups_constraints.qmd#measurement-invariance), exact scalar invariance required equal loadings and intercepts. For continuous indicators,
+
+$$
+Y_{ijg} = \nu_{jg} + \lambda_{jg}\eta_{ig} + \varepsilon_{ijg}.
+$$
+
+Instead of requiring $\lambda_{j2}-\lambda_{j1}=0$ and $\nu_{j2}-\nu_{j1}=0$, **Bayesian approximate measurement invariance (BAMI)** places priors on the differences:
+
+$$
+\lambda_{j2}-\lambda_{j1} \sim \mathcal{N}(0,\tau_\lambda^2), \qquad
+\nu_{j2}-\nu_{j1} \sim \mathcal{N}(0,\tau_\nu^2).
+$$
+
+The target is **similar measurement across groups**, rather than loadings or intercepts near zero. With variance $.01$, each difference has a prior SD of $.10$ and about 95% prior probability within $\pm .20$. This scale must be justified in the items' units and the chosen factor metric; loading and intercept priors need not have the same variance.
+
+Simulate two groups of 200 people with four indicators of one factor. Group 1 has loadings $(.80,.70,.90,.75)$ and zero intercepts; Group 2 has loadings $(.85,.65,.95,.70)$ and intercepts $(.05,-.05,.08,-.08)$. The true factor mean difference is $.40$, factor variances are $1$, and item residual SDs are $.65$. We retain the common item scale rather than standardizing within groups, which would erase the mean differences of interest.
+
+```{r small-bami-fit}
+set.seed(1611)
+n_bami <- 200
+bami_group <- rep(1:2, each = n_bami)
+bami_eta <- rnorm(2 * n_bami, mean = ifelse(bami_group == 2, 0.4, 0))
+bami_lambda <- rbind(c(.80, .70, .90, .75), c(.85, .65, .95, .70))
+bami_nu <- rbind(rep(0, 4), c(.05, -.05, .08, -.08))
+bami_items <- sapply(1:4, function(k) {
+  bami_nu[bami_group, k] + bami_lambda[bami_group, k] * bami_eta +
+    rnorm(2 * n_bami, sd = .65)
+})
+bami_data <- data.frame(grp = bami_group, bami_items)
+names(bami_data) <- c('grp', paste0('y', 1:4))
+bami_syntax <- '
+TITLE: Two-group approximate invariance;
+VARIABLE:
+  USEVARIABLES = y1-y4;
+  CLASSES = c(2);
+  KNOWNCLASS = c(grp = 1-2);
+ANALYSIS:
+  TYPE = MIXTURE;
+  ESTIMATOR = BAYES;
+  MODEL = ALLFREE;
+  CHAINS = 2;
+  PROCESSORS = 2;
+  BITERATIONS = (30000);
+  BSEED = 1611;
+MODEL:
+  %OVERALL%
+  eta BY y1-y4*0.8 (lam#_1-lam#_4);
+  [y1-y4] (nu#_1-nu#_4);
+  %c#1%
+  eta@1;
+  [eta@0];
+  %c#2%
+  eta;
+  [eta];
+MODEL PRIORS:
+  DO(1,4) DIFF(lam1_#-lam2_#) ~ N(0, 0.01);
+  DO(1,4) DIFF(nu1_#-nu2_#) ~ N(0, 0.01);
+MODEL CONSTRAINT:
+  NEW(dl1-dl4 dn1-dn4);
+  dl1 = lam2_1 - lam1_1;
+  dl2 = lam2_2 - lam1_2;
+  dl3 = lam2_3 - lam1_3;
+  dl4 = lam2_4 - lam1_4;
+  dn1 = nu2_1 - nu1_1;
+  dn2 = nu2_2 - nu1_2;
+  dn3 = nu2_3 - nu1_3;
+  dn4 = nu2_4 - nu1_4;
+OUTPUT: TECH8;
+'
+bami_fit <- load_or_fit_mplus_model(
+  bami_syntax, bami_data, mplus_dir, "bami_v010"
+)
+```
+
+`KNOWNCLASS` supplies the observed group memberships; no latent classification is being estimated. `MODEL = ALLFREE` frees group-specific measurement parameters. Mplus expands `lam#_1` into group-specific labels such as `lam1_1` and `lam2_1`; `DIFF` places the prior on their difference (see [Mplus User's Guide, Example 5.33](https://www.statmodel.com/HTML_UG/chapter5V8.htm)). `MODEL CONSTRAINT` reports Group 2 minus Group 1 differences so that their posterior magnitudes can be inspected.
+
+We fix Group 1's factor mean to zero and variance to one, estimate Group 2's mean and variance, and orient the factors with positive loading starts. With all item intercepts and loadings allowed to differ, the **difference priors supply information linking the groups' factor origins and scales**. A systematic intercept shift across all items can be confused with a latent mean difference. Consequently, inspect prior sensitivity and consider substantively defensible invariant anchor items in an applied analysis.
+
+For comparison, fit exact scalar invariance using common loading and intercept labels. Keep residual variances free across groups in both approaches, so the comparison concerns scalar rather than strict invariance. Then vary both difference-prior variances from $.0025$ to $.04$:
+
+```{r small-bami-comparison}
+#| fig-height: 3.8
+exact_syntax <- '
+TITLE: Two-group exact scalar invariance;
+VARIABLE:
+  USEVARIABLES = y1-y4;
+  CLASSES = c(2);
+  KNOWNCLASS = c(grp = 1-2);
+ANALYSIS:
+  TYPE = MIXTURE;
+  ESTIMATOR = BAYES;
+  CHAINS = 2;
+  PROCESSORS = 2;
+  BITERATIONS = (30000);
+  BSEED = 1611;
+MODEL:
+  %OVERALL%
+  eta BY y1-y4*0.8 (l1-l4);
+  [y1-y4] (i1-i4);
+  %c#1%
+  eta@1;
+  [eta@0];
+  %c#2%
+  eta;
+  [eta];
+  y1-y4;
+OUTPUT: TECH8;
+'
+exact_fit <- load_or_fit_mplus_model(exact_syntax, bami_data, mplus_dir, 'bami_exact')
+bami_variances <- c(.0025, .01, .04)
+bami_stems <- c("bami_v0025", "bami_v010", "bami_v040")
+bami_models <- lapply(seq_along(bami_variances), function(k) {
+  if (k == 2) return(bami_fit)
+  syntax_k <- gsub("N(0, 0.01)",
+                   sprintf("N(0, %.4f)", bami_variances[k]),
+                   bami_syntax, fixed = TRUE)
+  load_or_fit_mplus_model(syntax_k, bami_data, mplus_dir, bami_stems[k])
+})
+
+bami_mean_row <- function(model, label) {
+  r <- model$parameters$unstandardized %>%
+    filter(paramHeader == "Means", param == "ETA", LatentClass == "2")
+  tibble(Model = label, Median = r$est,
+         Lower = r$lower_2.5ci, Upper = r$upper_2.5ci,
+         PPp = model$summaries$PostPred_PValue,
+         `Final max PSR` = tail(model$tech8$psr$psr, 1))
+}
+bami_comparison <- bind_rows(
+  bami_mean_row(exact_fit, "Exact scalar invariance"),
+  bind_rows(lapply(seq_along(bami_models), function(k) {
+    bami_mean_row(bami_models[[k]],
+                  sprintf("Approximate: prior variance = %.4f", bami_variances[k]))
+  }))
+)
+kable(bami_comparison, digits = 3,
+      caption = "Group 2 minus Group 1 latent mean: true difference = 0.40")
+
+bami_differences <- bami_fit$parameters$unstandardized %>%
+  filter(paramHeader == "New.Additional.Parameters") %>%
+  mutate(Type = ifelse(grepl("^DL", param), "Loading difference", "Intercept difference"),
+         Item = paste0("y", sub("^(DL|DN)", "", param)))
+ggplot(bami_differences, aes(x = est, y = Item)) +
+  geom_vline(xintercept = 0, color = "gray50", linetype = "dashed") +
+  geom_errorbar(aes(xmin = lower_2.5ci, xmax = upper_2.5ci),
+                orientation = "y", width = .15, color = "#2166ac") +
+  geom_point(size = 2, color = "#2166ac") +
+  facet_wrap(~ Type) +
+  labs(title = "Inspect the measurement differences that the model allows",
+       subtitle = "Posterior medians and 95% CrIs under difference-prior variance .01",
+       x = "Group 2 minus Group 1", y = NULL) +
+  theme_bsem()
+```
+
+Read the table as a **sensitivity analysis of the latent mean comparison**, not a contest to find a prior that produces the desired answer. Widening the prior allows more item drift and adds uncertainty about how much observed group difference reflects the factor. In this simulation, the mean comparison remains positive across the displayed choices, but its magnitude and uncertainty depend on the measurement assumptions. Intervals for item differences that include zero do not establish exact invariance, and good global fit alone does not establish that every item difference is negligible. Examine posterior differences against substantively meaningful tolerances as well as predictive fit before interpreting latent mean comparisons.
+
+The new models use two chains and fixed iteration budgets (20,000 for mediation; 30,000 for invariance), with the first half discarded as burn-in. The chain densities above and the final maximum PSR values are initial checks; use the fuller [diagnostic workflow](#diagnostics-and-responsible-interpretation) below before applying these models to substantive data.
 
 ---
 
@@ -1576,7 +1867,8 @@ Muthén & Asparouhov (2012, p. 332) and MacCallum, Edwards, & Cai (2012) raise a
 
 1. **Theory-driven measurement with realistic psychometric noise:** Use Bayesian CFA with zero-centered cross-loading priors ($\lambda_{\text{cross}} \sim \mathcal{N}(0, 0.01)$ on standardized data) when you have a clear confirmatory factor structure, want to avoid sequential Modification Index fishing, and want ESEM-like realism without losing simple structure to mechanical rotation.
 2. **High-dimensional random slopes & non-Gaussian latent variables:** Consider Bayesian MSEM (`TYPE = TWOLEVEL RANDOM; ESTIMATOR = BAYES;` or custom Stan) when your model includes multiple correlated random slopes on categorical outcomes, random slopes on *latent* within-person factors, or latent interactions (`XWITH`) that make tensor-product quadrature expensive. Standard `brms` random slopes use observed predictors; random slopes on latent predictors require a joint measurement model.
-3. **Non-normal derived parameters & small samples/clusters:** Use posterior percentiles for asymmetric indirect effects ($a \times b$) and carefully chosen weakly informative priors when cluster counts are modest.
+3. **Non-normal derived parameters & small samples/clusters:** Compute indirect effects ($a \times b$) within joint posterior draws and summarize their posterior percentiles; use carefully chosen weakly informative priors when sample or cluster counts are modest.
+4. **Group comparisons with modest measurement drift:** Consider approximate-invariance priors on loading and intercept differences, and assess whether latent mean conclusions survive defensible changes to those priors.
 
 ## Software & syntax quick reference
 
@@ -1597,7 +1889,9 @@ State the model and identifying assumptions; justify the prior scales; examine p
 1. If a cross-loading has a posterior interval containing zero, what can we say about its practical size? What additional information would we need?
 2. If widening the prior improves predictive fit but changes the factor correlations substantially, which conclusions remain defensible?
 3. Why might two chains agree while both miss another posterior mode? How would you investigate this?
-4. In the EMA example, which changes reflect modeling measurement error, which reflect partial pooling, and which reflect the choice of Bayesian estimation? What comparison would separate these effects?
+4. Why must we multiply mediation coefficients within the same posterior draw?
+5. In the approximate-invariance example, how could systematic item intercept drift be confused with a factor mean difference? What would invariant anchor items contribute?
+6. In the EMA example, which changes reflect modeling measurement error, which reflect partial pooling, and which reflect the choice of Bayesian estimation? What comparison would separate these effects?
 
 ## Further reading
 

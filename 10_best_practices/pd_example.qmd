@@ -3,6 +3,8 @@ title: "Example of SEM in the ‘Real World'"
 author: "Michael Hallquist"
 ---
 
+{{< include /scripts/matrix-rendering.qmd >}}
+
 ```{r}
 #| label: "setup"
 #| include: false

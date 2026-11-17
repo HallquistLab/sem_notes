@@ -3,6 +3,8 @@ title: "Exploring personality hierarchies"
 author: "Michael Hallquist"
 ---
 
+{{< include /scripts/matrix-rendering.qmd >}}
+
 ```{r}
 #| label: "setup"
 #| message: false

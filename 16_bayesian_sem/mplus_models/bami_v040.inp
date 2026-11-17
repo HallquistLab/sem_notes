@@ -1,0 +1,43 @@
+TITLE:
+Two-group approximate invariance;
+VARIABLE:
+USEVARIABLES = y1-y4;
+CLASSES = c(2);
+KNOWNCLASS = c(grp = 1-2);
+NAMES = y1 y2 y3 y4 grp;
+MISSING = .;
+ANALYSIS:
+TYPE = MIXTURE;
+ESTIMATOR = BAYES;
+MODEL = ALLFREE;
+CHAINS = 2;
+PROCESSORS = 2;
+BITERATIONS = (30000);
+BSEED = 1611;
+MODEL:
+%OVERALL%
+eta BY y1-y4*0.8 (lam#_1-lam#_4);
+[y1-y4] (nu#_1-nu#_4);
+%c#1%
+eta@1;
+[eta@0];
+%c#2%
+eta;
+[eta];
+MODEL PRIORS:
+DO(1,4) DIFF(lam1_#-lam2_#) ~ N(0, 0.0400);
+DO(1,4) DIFF(nu1_#-nu2_#) ~ N(0, 0.0400);
+MODEL CONSTRAINT:
+NEW(dl1-dl4 dn1-dn4);
+dl1 = lam2_1 - lam1_1;
+dl2 = lam2_2 - lam1_2;
+dl3 = lam2_3 - lam1_3;
+dl4 = lam2_4 - lam1_4;
+dn1 = nu2_1 - nu1_1;
+dn2 = nu2_2 - nu1_2;
+dn3 = nu2_3 - nu1_3;
+dn4 = nu2_4 - nu1_4;
+OUTPUT:
+TECH8;
+DATA:
+FILE = "bami_v040.dat";

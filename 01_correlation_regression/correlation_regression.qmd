@@ -3,6 +3,8 @@ title: "Correlation and regression"
 author: "Michael Hallquist"
 ---
 
+{{< include /scripts/matrix-rendering.qmd >}}
+
 ```{r}
 #| label: "setup"
 #| include: false
@@ -202,7 +204,8 @@ mycov <- function(x, y) {
   sum((x - mean(x))*(y - mean(y)))/(length(x) - 1)
 }
 
-cmat <- matrix(NA, nrow=k, ncol=k)
+cmat <- matrix(NA, nrow=k, ncol=k,
+               dimnames=list(names(BostonSmall), names(BostonSmall)))
 indices <- which(is.na(cmat), arr.ind=TRUE)
 cmat[indices] <- apply(indices, 1, function(v) {
   mycov(BostonSmall[, v[1] ], BostonSmall[, v[2] ])
@@ -241,7 +244,7 @@ The correlation of $x$ and $y$ is a covariance that has been standardized by the
 $$r_{XY}= \frac{s_{XY}}{s_{X} s_{Y}}$$
 
 ```{r}
-rmat <- array(NA, dim=dim(cmat)) #initialize an empty correlation matrix
+rmat <- array(NA, dim=dim(cmat), dimnames=dimnames(cmat)) #initialize an empty correlation matrix
 variances <- diag(cmat) #variances of each variable are on the diagonal of the covariance matrix
 rmat[indices] <- apply(indices, 1, function(v) { cmat[v[1],v[2]] / sqrt(variances[ v[1] ] * variances[ v[2] ]) })
 rmat
@@ -592,7 +595,9 @@ Sigma <- tribble(
   0.4, 0, 1
 )
 
-print(Sigma)
+Sigma <- as.matrix(Sigma)
+rownames(Sigma) <- colnames(Sigma)
+Sigma
 ```
 
 ```{r}
@@ -652,7 +657,9 @@ Sigma <- tribble(
   0.4, 1, 0.6,
   0.4, 0.6, 1
 )
-print(Sigma)
+Sigma <- as.matrix(Sigma)
+rownames(Sigma) <- colnames(Sigma)
+Sigma
 
 sim_withcorr <- data.frame(MASS::mvrnorm(n=5000, mu=mu, Sigma=Sigma, empirical=TRUE))
 names(sim_withcorr) <- c("y", "x1", "x2")

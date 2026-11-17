@@ -1,0 +1,30 @@
+TITLE:
+Two-group exact scalar invariance;
+VARIABLE:
+USEVARIABLES = y1-y4;
+CLASSES = c(2);
+KNOWNCLASS = c(grp = 1-2);
+NAMES = y1 y2 y3 y4 grp;
+MISSING = .;
+ANALYSIS:
+TYPE = MIXTURE;
+ESTIMATOR = BAYES;
+CHAINS = 2;
+PROCESSORS = 2;
+BITERATIONS = (30000);
+BSEED = 1611;
+MODEL:
+%OVERALL%
+eta BY y1-y4*0.8 (l1-l4);
+[y1-y4] (i1-i4);
+%c#1%
+eta@1;
+[eta@0];
+%c#2%
+eta;
+[eta];
+y1-y4;
+OUTPUT:
+TECH8;
+DATA:
+FILE = "bami_exact.dat";
