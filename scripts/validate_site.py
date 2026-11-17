@@ -32,6 +32,9 @@ for p in SITE.rglob('*.html'):
 for source in ROOT.rglob('*.qmd'):
     if any(part in {'_site', 'maintenance'} for part in source.parts):
         continue
+    # Shared includes execute inside chapters and have no page of their own.
+    if source.relative_to(ROOT).parts[0] == 'scripts':
+        continue
     target = SITE / source.relative_to(ROOT).with_suffix('.html')
     if not target.is_file():
         errors.append(f"Missing rendered page: {target.relative_to(SITE)}")

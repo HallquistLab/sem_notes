@@ -13,9 +13,11 @@ config = (ROOT / '_quarto.yml').read_text()
 for p in sources:
     text = p.read_text()
     rel = p.relative_to(ROOT)
-    if str(rel) not in config:
+    # Shared includes are checked as sources but are not standalone pages.
+    is_page = rel.parts[0] != 'scripts'
+    if is_page and str(rel) not in config:
         errors.append(f"Missing navigation: {rel}")
-    if not text.startswith('---\n') or '\ntitle:' not in text:
+    if is_page and (not text.startswith('---\n') or '\ntitle:' not in text):
         errors.append(f"Missing Quarto title metadata: {rel}")
     if re.search(r'(?m)^output:', text):
         errors.append(f"Legacy R Markdown output metadata: {rel}")
@@ -47,4 +49,4 @@ for p in ROOT.rglob('*'):
 if errors:
     print('\n'.join(errors))
     sys.exit(1)
-print(f"Validated {len(sources)} Quarto pages, navigation, local resources, and exclusions.")
+print(f"Validated {len(sources)} Quarto sources, navigation, local resources, and exclusions.")

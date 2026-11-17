@@ -22,6 +22,9 @@ local({
                            p_columns = character()) {
     digits <- options$matrix.digits
     if (is.null(digits)) digits <- 3L
+    # Classes such as psych's "loadings" have data-frame methods that retain
+    # a matrix column. Use a plain matrix so kable receives scalar columns.
+    if (is.matrix(x)) x <- unclass(x)
     x <- as.data.frame(x, optional = TRUE)
     alignment <- vapply(x, function(col) if (is.numeric(col)) "r" else "l", "")
     for (name in names(x)) {
