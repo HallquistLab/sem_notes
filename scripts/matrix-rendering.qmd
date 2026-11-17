@@ -1,0 +1,105 @@
+```{r}
+#| label: matrix-rendering-setup
+#| include: false
+#| cache: false
+# Keep formatting helpers local: rendering never changes analysis objects.
+local({
+  format_numbers <- function(x, digits, p_value = FALSE) {
+    out <- formatC(x, format = "f", digits = digits)
+    out[is.na(x)] <- "NA"
+    if (p_value) {
+      small <- is.finite(x) & x >= 0 & x < 0.001
+      out[small] <- "< .001"
+    } else {
+      # Preserve nonzero likelihoods and other values that would round to zero.
+      small <- is.finite(x) & x != 0 & round(x, digits) == 0
+      out[small] <- formatC(x[small], format = "e", digits = max(0, digits - 1))
+    }
+    out
+  }
+
+  render_table <- function(x, options, caption = NULL, row_names = TRUE,
+                           p_columns = character()) {
+    digits <- options$matrix.digits
+    if (is.null(digits)) digits <- 3L
+    x <- as.data.frame(x, optional = TRUE)
+    alignment <- vapply(x, function(col) if (is.numeric(col)) "r" else "l", "")
+    for (name in names(x)) {
+      if (is.numeric(x[[name]])) {
+        if (name %in% c("Df", "Df diff", "df")) {
+          x[[name]] <- format_numbers(x[[name]], 0)
+        } else {
+          x[[name]] <- format_numbers(x[[name]], digits, name %in% p_columns)
+        }
+      }
+    }
+    html <- knitr::is_html_output()
+    if (html && !is.null(caption)) caption <- htmltools::htmlEscape(caption)
+    table <- knitr::kable(
+      x, format = if (html) "html" else "pipe",
+      row.names = row_names, align = alignment, caption = caption,
+      escape = TRUE,
+      table.attr = if (html) 'class="matrix-table"' else ""
+    )
+    paste0("\n\n", table, "\n\n")
+  }
+
+  # fitMeasures() loses its lavaan class when subsetted. Recognize only a
+  # conservative set of metric names, rather than formatting arbitrary vectors.
+  fit_names <- c("chisq", "df", "pvalue", "rmsea", "rmsea.ci.lower",
+                 "rmsea.ci.upper", "rmsea.pvalue", "srmr", "cfi", "tli",
+                 "aic", "bic", "bic2", "npar", "logl", "unrestricted.logl")
+  fit_labels <- c(chisq = "Chi-square", df = "df", pvalue = "p-value",
+                  rmsea = "RMSEA", srmr = "SRMR", cfi = "CFI", tli = "TLI",
+                  aic = "AIC", bic = "BIC", bic2 = "Adjusted BIC")
+
+  matrix_tree <- function(x) {
+    is.matrix(x) || (is.list(x) && length(x) > 0L &&
+      !is.null(names(x)) && all(vapply(x, matrix_tree, logical(1))))
+  }
+  render_matrices <- function(x, options, path = character()) {
+    if (is.matrix(x)) {
+      if (is.null(rownames(x))) rownames(x) <- seq_len(nrow(x))
+      if (is.null(colnames(x))) colnames(x) <- seq_len(ncol(x))
+      return(render_table(x, options, caption = if (length(path)) paste(path, collapse = " / ")))
+    }
+    paste(vapply(names(x), function(name) {
+      render_matrices(x[[name]], options, c(path, name))
+    }, ""), collapse = "\n")
+  }
+
+  knitr::opts_chunk$set(render = function(x, options, ...) {
+    if (!isTRUE(options$inline)) {
+      if (is.matrix(x) && length(x) > 0L) {
+        return(knitr::asis_output(render_matrices(x, options)))
+      }
+      if (inherits(x, "lavaan.list") && matrix_tree(x)) {
+        return(knitr::asis_output(render_matrices(x, options)))
+      }
+      if (inherits(x, "anova") && is.data.frame(x)) {
+        # Retain test names, model formulas, and robust-test notes from R.
+        heading <- paste(attr(x, "heading"), collapse = "\n")
+        return(knitr::asis_output(render_table(
+          x, options, caption = heading,
+          p_columns = names(x)[grepl("Pr\\(|pvalue|p.value", names(x))]
+        )))
+      }
+      if (is.numeric(x) && is.null(dim(x)) && length(x) > 1L &&
+          !is.null(names(x)) &&
+          all(names(x) %in% fit_names)) {
+        labels <- names(x)
+        known <- labels %in% names(fit_labels)
+        labels[known] <- unname(fit_labels[labels[known]])
+        digits <- if (is.null(options$matrix.digits)) 3L else options$matrix.digits
+        values <- format_numbers(unname(x), digits)
+        p <- grepl("pvalue", names(x), fixed = TRUE)
+        values[p] <- format_numbers(unname(x[p]), digits, p_value = TRUE)
+        return(knitr::asis_output(render_table(
+          data.frame(Measure = labels, Value = values), options, row_names = FALSE
+        )))
+      }
+    }
+    knitr::knit_print(x, options = options, ...)
+  })
+})
+```
