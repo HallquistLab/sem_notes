@@ -129,6 +129,62 @@ $$
 2. **An option to sample latent variables:** Conditioning on $\boldsymbol{\eta}_i$ inside MCMC avoids integrating $\boldsymbol{\eta}_i$ out numerically when the model is non-Gaussian or has many random slopes (see [Random slopes and numerical integration](#random-slopes-and-numerical-integration)).
 
 
+::: {.callout-note #latent-augmentation-walkthrough}
+## Where do the latent variables go? Integration versus augmentation
+
+Imagine a one-factor CFA: each student has an unobserved ability $\eta_i$, and we observe their test scores $\mathbf{y}_i$. The model parameters $\boldsymbol{\theta}$ include loadings and variances; $\eta_i$ is a **person-specific latent score**, not a loading shared across students.
+
+**ML: average over possible latent scores, then optimize.** For independent students, the observed-data likelihood is
+
+$$
+L(\boldsymbol{\theta};\mathbf{Y}) = \prod_{i=1}^N
+\underbrace{\int p(\mathbf{y}_i\mid\eta_i,\boldsymbol{\theta})\,
+p(\eta_i\mid\boldsymbol{\theta})\,d\eta_i}_{p(\mathbf{y}_i\mid\boldsymbol{\theta})}.
+$$
+
+At each candidate parameter vector, ML averages the conditional likelihood over the model's distribution of latent scores, then searches for $\hat{\boldsymbol{\theta}}$ maximizing this marginal likelihood. It does **not** need to assign each student a single ability score. In linear Gaussian CFA this integral is analytic: if $\eta_i\sim\mathcal{N}(0,\phi)$, then $\mathbf{y}_i\sim\mathcal{N}(\boldsymbol{\nu},\boldsymbol{\Lambda}\phi\boldsymbol{\Lambda}'+\boldsymbol{\Theta}_\varepsilon)$. Numerical integration is needed only when such simplifications are unavailable.
+
+**Augmented BSEM: alternate between plausible latent scores and model parameters.** Start with parameter values $\boldsymbol{\theta}^{(0)}$ and repeat the following Gibbs-style cycle:
+
+$$
+\begin{aligned}
+\text{Draw scores:}\quad
+\boldsymbol{\eta}^{(s)} &\sim p(\boldsymbol{\eta}\mid\mathbf{Y},\boldsymbol{\theta}^{(s-1)}),\\
+\text{Draw parameters:}\quad
+\boldsymbol{\theta}^{(s)} &\sim p(\boldsymbol{\theta}\mid\mathbf{Y},\boldsymbol{\eta}^{(s)}).
+\end{aligned}
+$$
+
+```{mermaid}
+%%| fig-cap: "Two computational routes for handling unobserved scores. The Bayesian cycle retains uncertainty by drawing new scores and parameters repeatedly."
+flowchart TB
+  subgraph ML["Maximum likelihood"]
+    direction TB
+    M1["Candidate parameters"] --> M2["Integrate over latent scores"]
+    M2 --> M3["Evaluate observed-data likelihood"]
+    M3 -->|"Optimizer updates parameters"| M1
+  end
+  subgraph BSEM["BSEM with augmentation"]
+    direction TB
+    B1["Current parameter draw"] --> B2["Draw latent scores given data + parameters"]
+    B2 --> B3["Draw parameters given data + latent scores"]
+    B3 -->|"Repeat; retain draws after convergence"| B1
+  end
+```
+
+**A concrete score draw.** Suppose $y_{i1}=\eta_i+\varepsilon_{i1}$ and $y_{i2}=\eta_i+\varepsilon_{i2}$, with $\eta_i\sim\mathcal{N}(0,1)$ and independent errors $\varepsilon_{ij}\sim\mathcal{N}(0,0.5)$ (second argument = variance). For a student with both observed scores equal to 1, conditional on these parameter values,
+
+$$
+\eta_i\mid\mathbf{y}_i,\boldsymbol{\theta}\sim\mathcal{N}(0.8,\,0.2),\qquad
+\underbrace{0.2}_{\text{conditional variance}}=(1+2/0.5)^{-1},\quad
+\underbrace{0.8}_{\text{conditional mean}}=0.2(1/0.5+1/0.5).
+$$
+
+The sampler draws from this distribution; it does not permanently fill in $0.8$. At the next parameter update, the sampled score is treated as known **only for that update**. As parameters change, the conditional score distribution changes too. Repeated draws propagate score uncertainty into parameter uncertainty, unlike estimating factor scores once and treating them as error-free observations.
+
+**Integration still underlies Bayesian inference.** The parameter posterior is $p(\boldsymbol{\theta}\mid\mathbf{Y})=\int p(\boldsymbol{\theta},\boldsymbol{\eta}\mid\mathbf{Y})\,d\boldsymbol{\eta}$. After convergence, keeping the parameter draws and ignoring the accompanying score draws approximates this marginal posterior. Augmentation changes how we compute it. It is a computational choice, not a requirement of Bayesian inference: for example, [the default `blavaan` Stan backend marginalizes latent variables](https://blavaan.org/articles/estimate.html). The later [random-slopes section](#random-slopes-and-numerical-integration) explains when sampling latent variables is especially useful.
+:::
+
 ::: {.callout-tip}
 ## What does a credible interval mean?
 
