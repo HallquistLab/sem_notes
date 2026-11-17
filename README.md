@@ -46,12 +46,17 @@ prevents deployment.
 - Run `make render` for source checks, R syntax validation, rendering, and rendered-link checks.
 
 R chapters include `/scripts/matrix-rendering.qmd` before their setup chunk.
-Matrix results use the shared table renderer in `scripts/matrix-rendering.qmd`, with variable
-names (or numbered rows and columns) and three decimal places. Set
-`#| matrix.digits: 5` in a chunk to show more precision. End an expression with
-the matrix itself rather than `print(matrix)` so knitr can format it; explicit
-`print()` calls use R's console output. Use `#| render: !expr knitr::normal_print`
-when a chunk needs the original console presentation. Formatting does not
-change the matrix values used in calculations.
+The shared renderer formats matrices, named lavaan matrix lists, ANOVA/model
+comparison results, and selected fit-measure vectors as tables. It preserves
+model-comparison test descriptions and leaves full model summaries unchanged.
+Numbers use three decimal places, with scientific notation for nonzero values
+that would otherwise round to zero. Table p-values below .001 display as
+`< .001`; missing values remain `NA`.
+
+Set `#| matrix.digits: 5` in a chunk to show more precision. End an expression
+with the object itself rather than `print(object)` so knitr can format it;
+explicit `print()` calls use R's console output. Use
+`#| render: !expr knitr::normal_print` when a chunk needs the original console
+presentation. Formatting does not change values used in calculations.
 
 Original author and contributor credits are preserved in the notes and [about page](about.qmd). No additional license is imposed on third-party teaching figures, data, or adapted material.

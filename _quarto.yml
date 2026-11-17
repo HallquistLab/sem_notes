@@ -97,6 +97,6 @@ knitr:
   opts_chunk:
     comment: "#>"
     dpi: 144
-    # Format matrix results across chapters; leave other object printers intact.
+    # Precision for shared matrix and statistical table output.
     # Override matrix.digits in a chunk when more precision is useful.
     matrix.digits: 3
