@@ -6,6 +6,7 @@ project:
     - "[0-9]*/*.qmd"
     - "02_sem_basics/onyx_tutorial/Onyx.qmd"
     - "!maintenance/**"
+    - "!scripts/**"
   resources:
     - "**/*.csv"
     - "**/*.dat"
