@@ -32,7 +32,7 @@ These notes develop both core motivations for Bayesian SEM across five connected
 1. **Bayesian foundations for SEM:** How precision-weighted shrinkage combines prior expectations with the data likelihood, how priors are scaled in Mplus and `blavaan`, and how Posterior Predictive Checking ($\text{PP}p$) and Bayesian approximate fit indices (`BRMSEA`, `BCFI`, `BTLI`, `DIC`, `LOO`) evaluate model adequacy.
 2. **Approximate-zero cross-loading priors:** How placing zero-centered, small-variance priors ($\lambda_{\text{cross}} \sim \mathcal{N}(0, 0.01)$) on non-target loadings in Bayesian CFA captures realistic secondary item influences while preserving confirmatory simple structure — compared directly against strict ML ICM-CFA and exploratory Geomin ESEM on the Holzinger & Swineford (1939) tests, followed by a formal prior sensitivity sweep across $\sigma^2_0$.
 3. **Two further uses:** Worked posterior mediation and two-group approximate-invariance examples connect BSEM to earlier lectures, including sensitivity of latent mean comparisons to difference priors.
-4. **Random slopes and numerical integration:** Why models with multiple random slopes, non-Gaussian outcomes, or latent within-person predictors (`TYPE = TWOLEVEL RANDOM`, [extending our multilevel SEM notes](../15_multilevel/multilevel_sem.qmd)) run into the exponential $Q^d$ Gauss–Hermite quadrature bottleneck under frequentist ML, how MCMC data augmentation sidesteps that grid, and how Bayesian MSEM recovers person-specific latent reactivity slopes without two-stage attenuation.
+4. **Random slopes and numerical integration:** Why models with multiple random slopes, non-Gaussian outcomes, or latent within-person predictors (`TYPE = TWOLEVEL RANDOM`, [extending our multilevel SEM notes](../15_multilevel/multilevel_sem.qmd)) run into the exponential $Q^d$ Gauss–Hermite quadrature bottleneck under frequentist ML, how MCMC data augmentation sidesteps that grid, and how Bayesian MSEM recovers person-specific latent reactivity slopes while accounting for measurement error and random-slope uncertainty jointly.
 5. **Diagnostics and responsible interpretation:** Multi-chain convergence diagnostics ($\hat{R}$ / PSR, effective sample size), why you should never rely on Mplus's default `PSR < 1.05` auto-stop without an iteration floor, and substantive guardrails from the WAMBS workflow.
 
 Before starting, you may find it helpful to review [maximum likelihood](../04_latent_variables_estimation/maximum_likelihood.qmd), [factor models](../06_factor_models/factor_models.qmd), [model fit](../08_fit/sem_fit_modification.qmd), and [multilevel SEM](../15_multilevel/multilevel_sem.qmd).
@@ -338,14 +338,14 @@ Both Muthén & Asparouhov (2012, Study 1) and Chen et al. (2024, Empirical Examp
 - **Textual** (`textual`): `x4` (paragraph comprehension), `x5` (sentence completion), `x6` (word meaning)
 - **Speed** (`speed`): `x7` (speeded addition), `x8` (speeded counting of dots), `x9` (speeded discrimination between straight and curved capitals)
 
-Notice the substantive content of item `x9`: participants must *rapidly distinguish visual letter shapes* (straight vs. curved capitals). Psychologically, `x9` is primarily a processing-speed test, **but it inherently recruits visual form perception**! Let's see how ICM-CFA, ESEM, and BSEM handle this reality.
+Notice the substantive content of item `x9`: participants must *rapidly distinguish visual letter shapes* (straight vs. curved capitals). Psychologically, `x9` is primarily a processing-speed test, **but it inherently recruits visual form perception**. Let's see how ICM-CFA, ESEM, and BSEM handle this reality.
 
 ### Step 1: Standardize indicators so the prior matches the metric
 
 ::: {.callout-important}
 ## Crucial BSEM scaling rule
 
-A prior of $\lambda \sim \mathcal{N}(0, 0.01)$ corresponds to 95% limits of $\pm 0.20$ **only when both the latent factor and the observed indicator have unit variance ($\text{SD} = 1.0$)**. If an observed test score had $\text{SD} = 10$, then $\mathcal{N}(0, 0.01)$ would restrict its standardized cross-loading to $\pm 0.02$ — accidentally turning your BSEM back into strict ICM-CFA! In practice, the cleanest workflow is to standardize continuous indicators ($M = 0, \text{SD} = 1$) and fix latent factor variances to $1.0$ before fitting, or else rescale the prior variance $\sigma^2_0$ proportionally to each indicator's variance.
+A prior of $\lambda \sim \mathcal{N}(0, 0.01)$ corresponds to 95% limits of $\pm 0.20$ **only when both the latent factor and the observed indicator have unit variance ($\text{SD} = 1.0$)**. If an observed test score had $\text{SD} = 10$, then $\mathcal{N}(0, 0.01)$ would restrict its standardized cross-loading to $\pm 0.02$ — accidentally turning your BSEM back into strict ICM-CFA. In practice, the cleanest workflow is to standardize continuous indicators ($M = 0, \text{SD} = 1$) and fix latent factor variances to $1.0$ before fitting, or else rescale the prior variance $\sigma^2_0$ proportionally to each indicator's variance.
 :::
 
 ```{r hs-data-prep}
@@ -517,9 +517,9 @@ m_bsem <- load_or_fit_mplus_model(
 
 **Unpacking `mplusModel()`, Mplus priors, & open-source `blavaan` syntax:**
 
-- **`mplusModel()` R6 workflow (`MplusAutomation` $\ge 1.3$):** Passing unified Mplus `syntax`, `data`, `dir`, and `file_stem` returns an R6 model object that automatically manages `DATA:` and `VARIABLE: NAMES = ...;`, executes locally via `m_bsem$run(replaceOutfile = "always")` (or on an HPC cluster via `m_bsem$submit()`), clones/modifies models via `m_bsem$update(..., in_place = FALSE)`, and exposes parsed outputs directly as active bindings (`m_bsem$summaries`, `m_bsem$parameters`, `m_bsem$bparameters`, `m_bsem$savedata`). Even if Mplus is not installed locally, `mplusModel(..., read = TRUE)` automatically loads pre-existing `.out` and `SAVEDATA` files from `dir`!
+- **`mplusModel()` R6 workflow (`MplusAutomation` $\ge 1.3$):** Passing unified Mplus `syntax`, `data`, `dir`, and `file_stem` returns an R6 model object that automatically manages `DATA:` and `VARIABLE: NAMES = ...;`, executes locally via `m_bsem$run(replaceOutfile = "always")` (or on an HPC cluster via `m_bsem$submit()`), clones/modifies models via `m_bsem$update(..., in_place = FALSE)`, and exposes parsed outputs directly as active bindings (`m_bsem$summaries`, `m_bsem$parameters`, `m_bsem$bparameters`, `m_bsem$savedata`). Even if Mplus is not installed locally, `mplusModel(..., read = TRUE)` automatically loads pre-existing `.out` and `SAVEDATA` files from `dir`.
 - **Mplus prior parameterization:** `visual BY x4-x9*0 (cl1-cl6);` declares the cross-loadings with starting values of `0` and labels `cl1`–`cl6`, which receive `cl1-cl18 ~ N(0, 0.01);` under `MODEL PRIORS:`. Notice that **Mplus parameterizes normal priors using the variance** ($\sigma^2_0 = 0.01 \implies \text{SD} = 0.10$).
-- **Open-source R (`blavaan`):** You write standard `lavaan` syntax and attach priors with `prior("normal(0, 0.1)", ...)`. **Watch out for parameterization differences** (Chen et al., 2024; Jak et al., 2021): Stan/`blavaan` specifies normal priors using the **standard deviation (`0.1`)**, *not* the variance (`0.01`)!
+- **Open-source R (`blavaan`):** You write standard `lavaan` syntax and attach priors with `prior("normal(0, 0.1)", ...)`. **Watch out for parameterization differences** (Chen et al., 2024; Jak et al., 2021): Stan/`blavaan` specifies normal priors using the **standard deviation (`0.1`)**, *not* the variance (`0.01`).
   ```r
   # Equivalent specification in blavaan (Stan HMC backend):
   library(blavaan)
@@ -598,7 +598,7 @@ kable(fit_table, caption = "Global Fit Comparison Across Frequentist CFA, ESEM, 
 Look closely at **Rows 4 and 5** of that table:
 
 1. **Switching estimators alone does not repair a measurement model:** Bayesian Strict ICM-CFA (Row 4, with exact zeros) fails Posterior Predictive Checking just like ML ($\Delta f$ 95% CI is entirely positive at $[1.1, 53.9]$, $\text{PP}p = .020$, $\text{BRMSEA} = .092$).
-2. **Approximate-zero priors improve fit in this example:** Even though BSEM (Row 5) nominally lists 48 parameters (18 more than ICM-CFA!), the narrow $\mathcal{N}(0, 0.01)$ priors constrain those 18 cross-loadings so tightly that the **effective number of parameters $p_D$ increases by only ~6.5 effective parameters** ($p_D = 36.8$ vs. $30.3$), DIC drops substantially ($\Delta\text{DIC} = 19.6$), the posterior predictive $\Delta f$ interval straddles zero cleanly ($[-25.6, 29.9]$), $\text{PP}p = .440$, $\text{BRMSEA} = .033$, and $\text{BCFI} = .994$!
+2. **Approximate-zero priors improve fit in this example:** Even though BSEM (Row 5) nominally lists 48 parameters (18 more than ICM-CFA), the narrow $\mathcal{N}(0, 0.01)$ priors constrain those 18 cross-loadings so tightly that the **effective number of parameters $p_D$ increases by only ~6.5 effective parameters** ($p_D = 36.8$ vs. $30.3$), DIC drops substantially ($\Delta\text{DIC} = 19.6$), the posterior predictive $\Delta f$ interval straddles zero cleanly ($[-25.6, 29.9]$), $\text{PP}p = .440$, $\text{BRMSEA} = .033$, and $\text{BCFI} = .994$.
 
 ### Visualizing loading patterns and shrinkage: ICM-CFA vs. ESEM vs. BSEM
 
@@ -685,8 +685,8 @@ ggplot(all_loadings, aes(x = factor, y = item_label, fill = loading)) +
 
 Look at what that three-panel comparison reveals:
 
-1. **ML ESEM (middle panel)** fits the covariance matrix well, *but* because mechanical Geomin rotation applies zero shrinkage to noisy off-target loadings, it produces **two statistically significant negative cross-loadings** (`Visual =~ x7` $= -.32^*$ and `Textual =~ x8` $= -.22^*$) alongside `Visual =~ x9` ($+.33^*$), while inflating `x7` and `x8`'s primary loadings on `Speed` to $.85\text{–}.86$ to compensate! *(Note: we set `geomin.epsilon = 0.01` to match Mplus's 3-factor ESEM default [Asparouhov & Muthén, 2009]; under `lavaan`'s smaller `.001` default, penalty curvature right at zero pinches the analytic delta-method SE on `Visual =~ x8` down to `.002`, falsely flagging a `.005` loading as $p < .05$!)*
-2. **BSEM CFA (right panel)** keeps **17 of the 18 cross-loadings tightly shrunk near zero** (all with 95% credible intervals comfortably straddling zero, including `Visual =~ x7` and `Textual =~ x8`), while **cleanly isolating the single substantively meaningful cross-loading — `Visual BY x9` ($\hat{\lambda} = .18^*$, 95% CrI $[.02, .34]$)** — in a *single* estimation step!
+1. **ML ESEM (middle panel)** fits the covariance matrix well, *but* because mechanical Geomin rotation applies zero shrinkage to noisy off-target loadings, it produces **two statistically significant negative cross-loadings** (`Visual =~ x7` $= -.32^*$ and `Textual =~ x8` $= -.22^*$) alongside `Visual =~ x9` ($+.33^*$), while inflating `x7` and `x8`'s primary loadings on `Speed` to $.85\text{–}.86$ to compensate. *(Note: we set `geomin.epsilon = 0.01` to match Mplus's 3-factor ESEM default [Asparouhov & Muthén, 2009]; under `lavaan`'s smaller `.001` default, penalty curvature right at zero pinches the analytic delta-method SE on `Visual =~ x8` down to `.002`, falsely flagging a `.005` loading as $p < .05$)*
+2. **BSEM CFA (right panel)** keeps **17 of the 18 cross-loadings tightly shrunk near zero** (all with 95% credible intervals comfortably straddling zero, including `Visual =~ x7` and `Textual =~ x8`), while **cleanly isolating the single substantively meaningful cross-loading — `Visual BY x9` ($\hat{\lambda} = .18^*$, 95% CrI $[.02, .34]$)** — in a *single* estimation step.
 
 Let's visualize that shrinkage directly across all 18 off-target cross-loadings, and compare the resulting **factor correlations** across models:
 
@@ -785,7 +785,7 @@ Look at **Panel B**: in strict ICM-CFA, because `x9` is forbidden from cross-loa
 ::: {.callout-note}
 ## Two-step BSEM refinement (Muthén & Asparouhov, 2012, p. 320)
 
-Notice that under $\mathcal{N}(0, 0.01)$, a *truly large* cross-loading like `Visual BY x9` gets shrunk somewhat toward zero ($\hat{\lambda} = .18$ in BSEM vs. $.45$ when freely estimated in ML CFA+MI). Muthén & Asparouhov note that once BSEM identifies a cross-loading whose 95% credible interval excludes zero *and* that makes clear substantive sense (here, visual discrimination of straight vs. curved letters!), you can **free that specific cross-loading with a diffuse prior** while retaining $\mathcal{N}(0, 0.01)$ priors on the remaining 17 nuisance cross-loadings — eliminating shrinkage on that focal path while keeping background noise regularized (and, as with any data-informed model revision, documenting the two-step refinement transparently and replicating it in new data when possible).
+Notice that under $\mathcal{N}(0, 0.01)$, a *truly large* cross-loading like `Visual BY x9` gets shrunk somewhat toward zero ($\hat{\lambda} = .18$ in BSEM vs. $.45$ when freely estimated in ML CFA+MI). Muthén & Asparouhov note that once BSEM identifies a cross-loading whose 95% credible interval excludes zero *and* that makes clear substantive sense (here, visual discrimination of straight vs. curved letters), you can **free that specific cross-loading with a diffuse prior** while retaining $\mathcal{N}(0, 0.01)$ priors on the remaining 17 nuisance cross-loadings — eliminating shrinkage on that focal path while keeping background noise regularized (and, as with any data-informed model revision, documenting the two-step refinement transparently and replicating it in new data when possible).
 :::
 
 ### Visualizing local misfit: Residual correlations before and after BSEM
@@ -860,7 +860,7 @@ ggplot(resid_both, aes(x = item1, y = item2, fill = resid)) +
   coord_fixed()
 ```
 
-Notice how the large positive residual block linking `x9` to the Visual tests (`x1`–`x3`, up to $r_{\text{res}} = .24$ under strict ICM-CFA) drops to $\le .14$ once BSEM allows `x9` to load on `Visual`! *(Technical note: whereas `lavResiduals()` computes residuals at the ML point estimate, our BSEM panel above is a convenient plug-in summary built from marginal posterior median loadings and factor correlations; in a full posterior predictive check, residuals are evaluated draw-by-draw across the Markov chain to incorporate parameter uncertainty.)*
+Notice how the large positive residual block linking `x9` to the Visual tests (`x1`–`x3`, up to $r_{\text{res}} = .24$ under strict ICM-CFA) drops to $\le .14$ once BSEM allows `x9` to load on `Visual`. *(Technical note: whereas `lavResiduals()` computes residuals at the ML point estimate, our BSEM panel above is a convenient plug-in summary built from marginal posterior median loadings and factor correlations; in a full posterior predictive check, residuals are evaluated draw-by-draw across the Markov chain to incorporate parameter uncertainty.)*
 
 ### Step 4: Prior sensitivity analysis — Varying $\sigma^2_0$ along the CFA–EFA continuum
 
@@ -958,7 +958,7 @@ Notice the classic **bias–variance / identification tradeoff** (Muthén & Aspa
 
 - At $\sigma^2_0 = 0.001$ ($95\%$ prior limit $\pm 0.06$), the prior is too rigid to let `Visual =~ x9` escape zero ($\hat{\lambda} = .03$, 95% CrI $[-.03, .10]$), leaving $\text{PP}p = .070$ on the edge of rejection.
 - Between $\sigma^2_0 = 0.01$ ($\pm 0.20$) and $\sigma^2_0 = 0.04$ ($\pm 0.39$), $\text{PP}p$ plateaus comfortably at $.44\text{–}.52$, `Visual =~ x9` is reliably detected across every choice (95% CrI excludes zero), and `r(Visual, Speed)` remains remarkably stable ($.42\text{–}.45$).
-- At $\sigma^2_0 = 0.08$ ($\pm 0.55$), look at what happens: the posterior SD of `Visual =~ x9` nearly doubles (from $.080$ to $.156$) as the prior contributes less identifying information, **causing the 95% CrI ($[-.02, .60]$) to widen right back across zero** — reproducing Muthén & Asparouhov's (2012, p. 320, Table 7) classic empirical demonstration of what happens as BSEM approaches the frequentist $m^2$ rotational non-identification boundary!
+- At $\sigma^2_0 = 0.08$ ($\pm 0.55$), look at what happens: the posterior SD of `Visual =~ x9` nearly doubles (from $.080$ to $.156$) as the prior contributes less identifying information, **causing the 95% CrI ($[-.02, .60]$) to widen right back across zero** — reproducing Muthén & Asparouhov's (2012, p. 320, Table 7) classic empirical demonstration of what happens as BSEM approaches the frequentist $m^2$ rotational non-identification boundary.
 
 ::: {.callout-note collapse="true"}
 ## Extension: approximate zeros beyond cross-loadings
@@ -1294,7 +1294,7 @@ How does frequentist ML (`ALGORITHM = INTEGRATION` in Mplus) approximate that $d
 In $d$ dimensions, however, a tensor-product quadrature grid requires evaluating the likelihood at **$Q^d$ grid points per cluster, at every single EM / Newton iteration**:
 
 $$
-\int_{\mathbb{R}^d} g(\mathbf{u}_j)\,\phi_d(\mathbf{u}_j)\,d\mathbf{u}_j \;\approx\; \sum_{q_1=1}^Q \cdots \sum_{q_d=1}^Q w_{q_1}\cdots w_{q_d} \, g(z_{q_1}, \dots, z_{q_d}) \qquad \Longrightarrow \qquad \mathcal{O}\!\left(J \cdot T \cdot Q^d\right) \text{ operations/step!}
+\int_{\mathbb{R}^d} g(\mathbf{u}_j)\,\phi_d(\mathbf{u}_j)\,d\mathbf{u}_j \;\approx\; \sum_{q_1=1}^Q \cdots \sum_{q_d=1}^Q w_{q_1}\cdots w_{q_d} \, g(z_{q_1}, \dots, z_{q_d}) \qquad \Longrightarrow \qquad \mathcal{O}\!\left(J \cdot T \cdot Q^d\right) \text{ operations/step.}
 $$
 
 Look at the combinatorics for $Q = 15$ nodes per dimension:
@@ -1303,7 +1303,7 @@ Look at the combinatorics for $Q = 15$ nodes per dimension:
 - $d = 3$ (intercept + 2 random slopes): $15^3 = \mathbf{3{,}375}$ nodes/person
 - $d = 4$ (intercept + 3 random slopes): $15^4 = \mathbf{50{,}625}$ nodes/person
 - $d = 5$ (intercept + 4 random slopes): $15^5 = \mathbf{759{,}375}$ nodes/person
-- $d = 6$ (intercept + 5 random slopes): $15^6 = \mathbf{11{,}390{,}625}$ nodes/person!
+- $d = 6$ (intercept + 5 random slopes): $15^6 = \mathbf{11{,}390{,}625}$ nodes/person.
 
 Geometrically, as dimension $d$ grows, an increasing fraction of a rectangular $Q^d$ tensor-product grid falls in low-density tail regions of the multivariate normal random-effect distribution (especially when random intercepts and slopes correlate). Adaptive quadrature, Laplace approximations (`lme4::glmer()`'s `nAGQ = 1`), and Monte Carlo integration can mitigate this cost, though Laplace approximations can downward-bias random-effect variances for binary outcomes in small clusters and `lme4` does not support `nAGQ > 1` with random slopes.
 
@@ -1313,14 +1313,14 @@ Why doesn't BSEM suffer from $Q^d$ scaling? Because **MCMC samples from the join
 
 In Mplus (`GIBBS` / Metropolis-within-Gibbs; Asparouhov & Muthén, 2010b), this is accomplished via **latent-variable data augmentation** (Tanner & Wong, 1987), whereas Stan (`brms` / `blavaan`) updates continuous unknowns jointly using Hamiltonian Monte Carlo (and [marginalizes continuous linear-Gaussian latents analytically when closed-form covariances exist](https://blavaan.org/articles/estimate.html)). Under data augmentation, at iteration $s$ of the Markov chain we treat each person's random effects $\mathbf{u}_j^{(s)}$ and latent factor scores $\boldsymbol{\eta}_{tj}^{(s)}$ as *imputed latent data* and cycle through two conditional updates:
 
-1. **Draw latent random effects / factor scores given current parameters:** For each cluster $j = 1, \dots, J$ independently, draw $\mathbf{u}_j^{(s)} \sim p(\mathbf{u}_j \mid \mathbf{y}_j, \boldsymbol{\theta}^{(s-1)})$ (and for binary/ordinal probit items, draw continuous underlying normal utilities $y^*_{tj}$ from truncated normals!).
-2. **Draw model parameters given current latent scores:** *Once $\mathbf{u}_j^{(s)}$ and $\boldsymbol{\eta}_{tj}^{(s)}$ are conditioned upon as known numbers*, a gnarly latent random-slope equation $y_{tj} = u_{0j}^{(s)} + s_j^{(s)} \eta_{tj}^{(s)} + \varepsilon_{tj}$ collapses into **ordinary linear regression**, and the $d \times d$ random-effect covariance matrix $\boldsymbol{\Sigma}_u^{(s)}$ is drawn in one step from its conjugate Inverse-Wishart posterior given $\sum_{j=1}^J \mathbf{u}_j^{(s)} \mathbf{u}_j^{(s)\prime}$!
+1. **Draw latent random effects / factor scores given current parameters:** For each cluster $j = 1, \dots, J$ independently, draw $\mathbf{u}_j^{(s)} \sim p(\mathbf{u}_j \mid \mathbf{y}_j, \boldsymbol{\theta}^{(s-1)})$ (and for binary/ordinal probit items, draw continuous underlying normal utilities $y^*_{tj}$ from truncated normals).
+2. **Draw model parameters given current latent scores:** *Once $\mathbf{u}_j^{(s)}$ and $\boldsymbol{\eta}_{tj}^{(s)}$ are conditioned upon as known numbers*, a gnarly latent random-slope equation $y_{tj} = u_{0j}^{(s)} + s_j^{(s)} \eta_{tj}^{(s)} + \varepsilon_{tj}$ collapses into **ordinary linear regression**, and the $d \times d$ random-effect covariance matrix $\boldsymbol{\Sigma}_u^{(s)}$ is drawn in one step from its conjugate Inverse-Wishart posterior given $\sum_{j=1}^J \mathbf{u}_j^{(s)} \mathbf{u}_j^{(s)\prime}$.
 
 Rather than scaling exponentially as $\mathcal{O}(Q^d)$, adding another random slope increases per-iteration matrix algebra only polynomially ($\sim \mathcal{O}(d^2\text{–}d^3)$) while concentrating draws inside the high-probability region ("typical set") of the posterior. Of course, higher-dimensional random-effect covariance matrices still exhibit stronger posterior autocorrelation and require more iterations to achieve a target Effective Sample Size (ESS), so we always evaluate computational efficiency **per effective independent draw** rather than per raw iteration.
 
 ## Archived timing illustration: Gaussian quadrature vs. Bayesian MCMC across $d = 1 \dots 5$
 
-To see this scaling contrast concretely, we simulate an EMA dataset of $J = 80$ participants observed across $T = 25$ prompts ($N = 2{,}000$ rows) with a binary daily symptom outcome (`y_bin`) generated under a probit link and up to 4 within-person triggers (`x1`–`x4`), creating $d = 1$ to $d = 5$ correlated random effects. Both estimators fit the **exact same probit random-effects likelihood**: Mplus `ESTIMATOR = MLR; LINK = PROBIT;` with standard 15-point Gauss–Hermite quadrature ($d = 1, 2, 3$, plus a $15^d$ scaling projection for $d = 4, 5$ so rendering this notebook doesn't take over an hour!) alongside Mplus `ESTIMATOR = BAYES; LINK = PROBIT;` ($d = 1, 2, 3, 4, 5$, 5,000 MCMC iterations across 2 chains).
+To see this scaling contrast concretely, we simulate an EMA dataset of $J = 80$ participants observed across $T = 25$ prompts ($N = 2{,}000$ rows) with a binary daily symptom outcome (`y_bin`) generated under a probit link and up to 4 within-person triggers (`x1`–`x4`), creating $d = 1$ to $d = 5$ correlated random effects. Both estimators fit the **exact same probit random-effects likelihood**: Mplus `ESTIMATOR = MLR; LINK = PROBIT;` with standard 15-point Gauss–Hermite quadrature ($d = 1, 2, 3$, plus a $15^d$ scaling projection for $d = 4, 5$ so rendering this notebook doesn't take over an hour) alongside Mplus `ESTIMATOR = BAYES; LINK = PROBIT;` ($d = 1, 2, 3, 4, 5$, 5,000 MCMC iterations across 2 chains).
 
 ```{r quadrature-vs-bayes-benchmark}
 #| fig-width: 13.4
@@ -1528,7 +1528,7 @@ p_time <- ggplot() +
 p_geom + p_time + plot_layout(widths = c(1, 1.48))
 ```
 
-Look at **Panel B**: on a logarithmic vertical axis, 15-point Gaussian quadrature climbs steeply from $`r sprintf("%.2f", bench_list$ml_sec[1])`\text{ s}$ ($d = 1$) to $`r sprintf("%.1f", bench_list$ml_sec[2])`\text{ s}$ ($d = 2$) and $`r sprintf("%.1f", bench_list$ml_sec[3])`\text{ s}$ ($d = 3$) in the archived Mplus runs; the dashed segment projects that $\times 15$-per-dimension grid scaling out to ~$`r sprintf("%.1f", bench_list$ml_plot_sec[4] / 60)`\text{ min}$ ($d = 4$) and ~$`r sprintf("%.1f", bench_list$ml_plot_sec[5] / 3600)`\text{ hr}$ ($d = 5$; those $d = 4, 5$ values are $15^d$ projections from $d = 3$, not measured runs). Meanwhile, **5,000 Bayesian MCMC iterations remain between $`r sprintf("%.1f", min(bench_list$bayes_sec))`\text{ s}$ and $`r sprintf("%.1f", max(bench_list$bayes_sec))`\text{ s}$ across all five models**!
+Look at **Panel B**: on a logarithmic vertical axis, 15-point Gaussian quadrature climbs steeply from $`r sprintf("%.2f", bench_list$ml_sec[1])`\text{ s}$ ($d = 1$) to $`r sprintf("%.1f", bench_list$ml_sec[2])`\text{ s}$ ($d = 2$) and $`r sprintf("%.1f", bench_list$ml_sec[3])`\text{ s}$ ($d = 3$) in the archived Mplus runs; the dashed segment projects that $\times 15$-per-dimension grid scaling out to ~$`r sprintf("%.1f", bench_list$ml_plot_sec[4] / 60)`\text{ min}$ ($d = 4$) and ~$`r sprintf("%.1f", bench_list$ml_plot_sec[5] / 3600)`\text{ hr}$ ($d = 5$; those $d = 4, 5$ values are $15^d$ projections from $d = 3$, not measured runs). Meanwhile, **5,000 Bayesian MCMC iterations remain between $`r sprintf("%.1f", min(bench_list$bayes_sec))`\text{ s}$ and $`r sprintf("%.1f", max(bench_list$bayes_sec))`\text{ s}$ across all five models**.
 
 ::: {.callout-note}
 ## Methodological notes on this timing illustration
@@ -1552,11 +1552,11 @@ Our substantive theory predicts *individual differences in within-person dynamic
 ::: {.callout-note}
 ## Why frequentist researchers get stuck here
 
-1. **Full ML MSEM hits 5D numerical integration:** Because $s_{\text{NA}, j} \cdot \eta_{\text{NA}, tj}$ and $s_{\text{ST}, j} \cdot \eta_{\text{ST}, tj}$ multiply *latent* Level-1 factors by *latent* Level-2 slopes, ML requires 5 dimensions of numerical integration ($\eta_{\text{NA}}, \eta_{\text{ST}}, y_b, s_{\text{NA}}, s_{\text{ST}} \implies 15^5 = 759{,}375$ quadrature points!).
-2. **Naive manifest sum-scores bias the slopes:** If you try to dodge integration by averaging `(na1 + na2 + na3)/3` and fitting a two-stage OLS slope per person, **unreliability at Level 1 attenuates the within-person slopes**, while **small-$T$ sampling noise ($T = 20$ days) inflates slope variance and attenuates $\hat{\beta}_2, \hat{\beta}_3$ at Level 2**!
+1. **Full ML MSEM hits 5D numerical integration:** Because $s_{\text{NA}, j} \cdot \eta_{\text{NA}, tj}$ and $s_{\text{ST}, j} \cdot \eta_{\text{ST}, tj}$ multiply *latent* Level-1 factors by *latent* Level-2 slopes, ML requires 5 dimensions of numerical integration ($\eta_{\text{NA}}, \eta_{\text{ST}}, y_b, s_{\text{NA}}, s_{\text{ST}} \implies 15^5 = 759{,}375$ quadrature points).
+2. **Naive manifest composites distort the slopes:** Averaging `(na1 + na2 + na3)/3` and fitting OLS slopes separately for each person ignores indicator measurement error and leaves substantial sampling noise with only $T = 20$ days. Classical predictor measurement error can attenuate within-person slopes, but the composites also use a different scale from the latent factors. Treating these estimated slopes as error-free predictors in a second-stage regression can distort the Level-2 coefficients; **the net distortion need not be toward zero**.
 :::
 
-In **Bayesian MSEM**, the entire latent-variable random-slope system estimates in **~3–4 seconds**, simultaneously disattenuating measurement error at Level 1, shrinking noisy person-level slopes via hierarchical partial pooling, and propagating uncertainty honestly into the Level-2 burnout regression! Let's simulate this design, fit it in Mplus `ESTIMATOR = BAYES`, and visualize the recovered person-level slopes.
+In **Bayesian MSEM**, the entire latent-variable random-slope system estimates in **~3–4 seconds**, simultaneously disattenuating measurement error at Level 1, shrinking noisy person-level slopes via hierarchical partial pooling, and propagating uncertainty honestly into the Level-2 burnout regression. Let's simulate this design, fit it in Mplus `ESTIMATOR = BAYES`, and visualize the recovered person-level slopes.
 
 ```{r fit-msem-latent-slopes}
 set.seed(1042)
@@ -1743,7 +1743,7 @@ p_cat <- bsem_person %>%
   geom_point(color = "#1f2933", size = 1.6) +
   labs(
     title = "B. Posterior slopes across 90 trainees",
-    subtitle = "Posterior medians & 95% CrIs propagated\njointly into Level-2 burnout regression",
+    subtitle = "Posterior medians & 95% CrIs from the joint model;\nLevel-2 regression integrates over slope uncertainty",
     x = expression("Latent NA reactivity slope (" * s["NA," * j] * ")"),
     y = "Trainee (ordered by posterior median)"
   ) +
@@ -1752,7 +1752,13 @@ p_cat <- bsem_person %>%
 p_rec + p_cat + plot_layout(widths = c(1.5, 1.05))
 ```
 
-Look at **Panel A** and the downstream Level-2 burnout regression: in this simulated dataset, naive two-stage manifest OLS slopes have higher person-level error ($\text{RMSE} = `r sprintf("%.2f", rmse_ols)`$ vs. $`r sprintf("%.2f", rmse_bsem)`$ in Bayesian MSEM), and plugging those noisy manifest slopes into a second-stage regression severely attenuates the estimated effect of NA reactivity on 6-month burnout ($\hat{\beta}_{\text{naive}} = `r sprintf("%.2f", coef(fit_naive_l2)["ols_s_na"])`$ vs. true $\beta = 1.00$), whereas Bayesian MSEM estimates the measurement model, random slopes, and Level-2 regression jointly (of course, establishing formal bias and interval coverage properties requires a multi-replication Monte Carlo study rather than a single illustrative sample).
+**Panel A concerns person-level slope recovery:** in this simulated dataset, naive manifest OLS slopes have higher error ($\text{RMSE} = `r sprintf("%.2f", rmse_ols)`$) than Bayesian MSEM posterior medians ($`r sprintf("%.2f", rmse_bsem)`$).
+
+**The Level-2 result does not demonstrate attenuation.** The naive second-stage NA coefficient is $\hat{\beta}_{\text{naive}} = `r sprintf("%.2f", coef(fit_naive_l2)["ols_s_na"])`$, compared with the generating latent-slope coefficient $\beta_2 = 1.00$: the estimate is slightly **above**, rather than below, the generating value in this sample. Attenuation means a systematic shift toward zero, not simply an estimate that differs from the truth.
+
+Why can the second-stage coefficient be larger? Sampling error in estimated slopes can attenuate a subsequent regression coefficient, but compression of the predictor's scale can increase its unstandardized coefficient. Here, manifest composites and latent factors have different scales, and the second-stage regression includes several noisy, correlated predictors. These effects and finite-sample variation mean that the direction of the discrepancy cannot be assumed. The familiar attenuation result for a single predictor with classical additive measurement error does not directly describe this two-stage analysis.
+
+Bayesian MSEM estimates the measurement model, random slopes, and Level-2 regression jointly, integrating over uncertainty in the latent slopes rather than plugging their posterior medians into a separate regression. This example illustrates improved person-level slope recovery and joint uncertainty propagation; **it does not establish systematic attenuation of the naive Level-2 coefficient or unbiasedness of the Bayesian coefficient**. Comparing bias and interval coverage requires a multi-replication Monte Carlo study with coefficients placed on comparable scales.
 
 ---
 
@@ -1844,7 +1850,7 @@ p_trace + p_dens + p_psr + plot_layout(widths = c(1.05, 1.0, 1.0))
 
 1. **Visual traceplots:** Every parameter (especially cross-loadings, residual covariances, and small Level-2 variances) should fluctuate around a stable distribution ("fat hairy caterpillars"), not wandering snakes or flat stuck plateaus.
 2. **Potential Scale Reduction ($\hat{R}$ / PSR) and Mplus's auto-stop trap:** PSR compares total between- plus within-chain variance to within-chain variance across $m \ge 2$ chains initialized from dispersed starting values ($\text{PSR} = \sqrt{(W + B)/W}$; in our Holzinger–Swineford BSEM above, `TECH8` reaches $\text{PSR} = 1.015$ by iteration 5,000).
-   - **Critical Mplus rule:** Never rely on Mplus's default auto-stop (`ESTIMATOR = BAYES;` with no iteration floor), which halts as soon as $\text{PSR} < 1.05$! Look closely at **Panel C** above: max PSR briefly dips below the red $1.05$ threshold around iterations $700\text{–}800$ ($\text{PSR} = 1.03$) and then bounces back up above $1.05$ ($\text{PSR} = 1.09$) through iteration $1{,}400$ before genuinely stabilizing near $1.015$ after iteration $2{,}000$ (illustrating Muthén & Asparouhov's [2012, pp. 318, 335] exact warning!). Always set an explicit minimum iteration count — e.g., `BITERATIONS = 50000 (20000);` or `FBITERATIONS = 40000;` — verify that substantive conclusions do not shift when iterations are doubled, and in modern Stan/`blavaan` workflows target rank-normalized split-$\hat{R} < 1.01$ across four chains.
+   - **Critical Mplus rule:** Never rely on Mplus's default auto-stop (`ESTIMATOR = BAYES;` with no iteration floor), which halts as soon as $\text{PSR} < 1.05$! Look closely at **Panel C** above: max PSR briefly dips below the red $1.05$ threshold around iterations $700\text{–}800$ ($\text{PSR} = 1.03$) and then bounces back up above $1.05$ ($\text{PSR} = 1.09$) through iteration $1{,}400$ before genuinely stabilizing near $1.015$ after iteration $2{,}000$ (illustrating Muthén & Asparouhov's [2012, pp. 318, 335] exact warning). Always set an explicit minimum iteration count — e.g., `BITERATIONS = 50000 (20000);` or `FBITERATIONS = 40000;` — verify that substantive conclusions do not shift when iterations are doubled, and in modern Stan/`blavaan` workflows target rank-normalized split-$\hat{R} < 1.01$ across four chains.
 3. **Effective sample size (ESS) and Monte Carlo error:** Autocorrelated draws contain less information than independent draws. Inspect bulk and tail ESS (targeting $\text{ESS} > 400$; Vehtari et al., 2021) so Monte Carlo standard errors remain tiny relative to posterior uncertainty, and check for divergent transitions in HMC (`blavaan` / `brms`). See the [Stan diagnostics reference](https://mc-stan.org/rstan/reference/Rhat.html).
 4. **Prior predictive and sensitivity checks:** Before or alongside estimation, verify that your priors imply plausible outcome scales, and repeat the analysis across defensible narrower and wider priors (as in our Step 4 sensitivity sweep) to confirm that substantive conclusions are robust.
 
@@ -1853,10 +1859,10 @@ p_trace + p_dens + p_psr + plot_layout(widths = c(1.05, 1.0, 1.0))
 Muthén & Asparouhov (2012, p. 332) and MacCallum, Edwards, & Cai (2012) raise a vital epistemological warning that every graduate student using BSEM should internalize:
 
 ::: {.callout-warning}
-## Approximate-zero priors are not a magic wand to make bad theories pass $\text{PP}p > .05$!
+## Approximate-zero priors are not a magic wand to make bad theories pass $\text{PP}p > .05$
 
-- **Don't free cross-loadings *and* all residual covariances blindly at the same time:** Both $\boldsymbol{\Lambda}_y$ cross-loadings and $\boldsymbol{\Theta}_\varepsilon$ residual covariances compete to absorb off-diagonal item correlations. Turning both on simultaneously slows MCMC mixing dramatically and can mask a genuinely wrong number of factors (e.g., fitting a 2-factor model to 3-factor data and letting correlated residuals soak up the missing factor!).
-- **Inspect the posterior of your "approximate zeros":** Even if $\text{PP}p = .45$, if several hypothesized near-zero paths have 95% credible intervals far from zero (like socioeconomic status directly predicting science achievement in Muthén & Asparouhov's NELS:88 example, p. 329), *your original theoretical exclusion restriction was wrong* — and discovering that cleanly in one step is the scientific point!
+- **Don't free cross-loadings *and* all residual covariances blindly at the same time:** Both $\boldsymbol{\Lambda}_y$ cross-loadings and $\boldsymbol{\Theta}_\varepsilon$ residual covariances compete to absorb off-diagonal item correlations. Turning both on simultaneously slows MCMC mixing dramatically and can mask a genuinely wrong number of factors (e.g., fitting a 2-factor model to 3-factor data and letting correlated residuals soak up the missing factor).
+- **Inspect the posterior of your "approximate zeros":** Even if $\text{PP}p = .45$, if several hypothesized near-zero paths have 95% credible intervals far from zero (like socioeconomic status directly predicting science achievement in Muthén & Asparouhov's NELS:88 example, p. 329), *your original theoretical exclusion restriction was wrong* — and discovering that cleanly in one step is the scientific point.
 :::
 
 ---
