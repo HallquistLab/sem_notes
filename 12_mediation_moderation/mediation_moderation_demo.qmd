@@ -26,17 +26,20 @@ options(digits=3)
 set.seed(15092) #to make simulated data the same across computers
 ```
 
-Code for this demo adapted from Nick Michalak. Also see https://nickmichalak.com/post/2019-02-14-testing-conditional-indirect-effects-mediation-in-r/testing-conditional-indirect-effects-mediation-in-r/
+Code for this demo adapted from [Nick Michalak's tutorial on testing conditional indirect effects in R](https://nickmichalak.com/post/2019-02-14-testing-conditional-indirect-effects-mediation-in-r/testing-conditional-indirect-effects-mediation-in-r/).
 
 # Example dataset
 
-The dataset for this example contains standardized test scores on reading, writing, math, science, and social studies. There are also binary indicators (e.g., `hisci`) that encode whether someone received a high score on a given test. We also want to compute centered versions of each variable to aid interpretation in moderation-related models.
+The dataset for this example contains standardized test scores on reading, writing, math, science, and social studies. There are also binary indicators (e.g., `hisci`) that encode whether someone received a high score on a given test. We also want to compute mean-centered versions of each variable (keeping their original test-score scale) to aid interpretation in moderation-related models.
 
 Following Hayes, I will use the convention $X$ for independent variable/predictor, $M$ for mediator, $W$ for moderator, and $Y$ for outcome.
 
 ```{r}
 df <- read_csv("mediation_data.csv")
-df <- df %>% mutate_at(vars(read, write, math, science, socst), funs(c=scale))
+df <- df %>%
+  mutate(across(c(read, write, math, science, socst),
+                ~ as.numeric(scale(.x, center = TRUE, scale = FALSE)),
+                .names = "{.col}_c"))
 ```
 
 # Moderation with a continuous moderator
@@ -47,9 +50,9 @@ Does the relationship between performance on reading ($Y$) and social studies ($
 
 ![](moderation_example.png)
 
-```{r}
-library(lavaan)
+*(Note on `lavaan` exogenous covariances: when we explicitly label a predictor's mean and variance in the model syntax—e.g., `math_c ~ math.mean*1` and `math_c ~~ math.var*math_c`—so we can compute simple slopes at $\pm 1\text{ SD}$, `lavaan` stops treating that variable as a fixed exogenous predictor and will constrain its covariances with other exogenous predictors to zero unless we free them explicitly and set `fixed.x = FALSE`.)*
 
+```{r}
 # create interaction term between centered X (socst) and W (math)
 df <- df %>% mutate(socst_x_math = socst_c * math_c)
 
@@ -60,21 +63,24 @@ moderation_model <- '
   read ~ b2*math_c
   read ~ b3*socst_x_math
 
-  # define mean parameter label for centered math for use in simple slopes
+  # define mean and variance labels for centered math for use in simple slopes
   math_c ~ math.mean*1
-
-  # define variance parameter label for centered math for use in simple slopes
   math_c ~~ math.var*math_c
 
-  # simple slopes for condition effect
+  # keep all exogenous predictor covariances free (matches OLS / saturated model)
+  math_c ~~ socst_c + socst_x_math
+  socst_c ~~ socst_x_math
+
+  # simple slopes for conditional effect of socst_c at -1 SD, mean, and +1 SD of math_c
   SD.below := b1 + b3*(math.mean - sqrt(math.var))
-  mean := b1 + b3*(math.mean)
+  mean     := b1 + b3*(math.mean)
   SD.above := b1 + b3*(math.mean + sqrt(math.var))
   '
 
 # fit the model using nonparametric bootstrapping (this takes some time)
 sem1 <- sem(model = moderation_model,
             data = df,
+            fixed.x = FALSE,
             se = "bootstrap",
             bootstrap = 1000)
 
@@ -91,7 +97,7 @@ parameterEstimates(sem1, boot.ci.type = "bca.simple",
 
 Hayes Process model 4
 
-Is the relationship between `science` and `math` mediated by `read`?
+Is the relationship between `math` ($X$) and `science` ($Y$) mediated by `read` ($M$)?
 
 ![](mediation_example.png)
 
@@ -118,12 +124,18 @@ mediation_model <- '
 sem2 <- sem(model = mediation_model, data = df, se = "bootstrap", bootstrap = 1000)
 
 # fit measures
-summary(sem2, fit.measures = TRUE, standardize = TRUE, rsquare = TRUE)
+summary(sem2, fit.measures = TRUE, standardized = TRUE, rsquare = TRUE)
+```
+
+```{r}
+# compute bias-corrected bootstrapped confidence intervals for direct, indirect, and total effects
+parameterEstimates(sem2, boot.ci.type = "bca.simple",
+                   level = .95, ci = TRUE, standardized = FALSE)
 ```
 
 # First-stage moderated mediation
 
-Does the indirect effect of `math` ($X$) on `science` ($Y$) via `read` ($M$) depend on `write` ($W$)? More specifically, does writing ability moderate the relationship between math and reading? For example, perhaps only people with high writing and math ability tend to score higher on a reading test. If this is true, then the indirect effect of math on science via reading depends on writing as well.
+Does the indirect effect of `math` ($X$) on `science` ($Y$) via `read` ($M$) depend on `write` ($W$)? More specifically, does writing ability moderate the relationship between math and reading (Hayes PROCESS Model 7)? For example, perhaps only people with high writing and math ability tend to score higher on a reading test. If this is true, then the indirect effect of math on science via reading depends on writing as well.
 
 ![](moderated_mediation_first_stage_example.png)
 
@@ -140,27 +152,29 @@ moderated_mediation_1 <- '
     read_c ~ a3*math_x_write
     science ~ cdash*math_c
 
-  # mean of centered write (for use in simple slopes)
+  # mean and variance of centered write (for use in conditional indirect effects)
     write_c ~ write.mean*1
-
-  # variance of centered write (for use in simple slopes)
     write_c ~~ write.var*write_c
 
-  # index of moderated mediation
+  # keep exogenous predictor covariances free
+    write_c ~~ math_c + math_x_write
+    math_c ~~ math_x_write
+
+  # index of moderated mediation (Hayes, 2015)
     imm := a3*b
 
-  # indirect effects conditional on moderator (a1 + a3*a2.value)*b
-    indirect.SDbelow := a1*b + a3*-sqrt(write.var)*b
-    indirect.mean := a1*b + a3*write.mean*b
-    indirect.SDabove := a1*b + a3*sqrt(write.var)*b
-
+  # indirect effects conditional on moderator: (a1 + a3*W)*b
+    indirect.SDbelow := (a1 + a3*(write.mean - sqrt(write.var)))*b
+    indirect.mean    := (a1 + a3*write.mean)*b
+    indirect.SDabove := (a1 + a3*(write.mean + sqrt(write.var)))*b
 '
 
 # fit model
-sem3 <- sem(model = moderated_mediation_1, data = df, se = "bootstrap", bootstrap = 1000)
+sem3 <- sem(model = moderated_mediation_1, data = df, fixed.x = FALSE,
+            se = "bootstrap", bootstrap = 1000)
 
 # fit measures
-summary(sem3, fit.measures = TRUE, standardize = TRUE, rsquare = TRUE)
+summary(sem3, fit.measures = TRUE, standardized = TRUE, rsquare = TRUE)
 ```
 
 ```{r}
@@ -168,14 +182,16 @@ summary(sem3, fit.measures = TRUE, standardize = TRUE, rsquare = TRUE)
 parameterEstimates(sem3, boot.ci.type = "bca.simple", level = .95, ci = TRUE, standardized = FALSE)
 ```
 
+Notice an important conceptual lesson in `sem3` (Hayes, 2015): even though all three conditional indirect effects (`indirect.SDbelow`, `indirect.mean`, and `indirect.SDabove`) have 95% bootstrapped CIs excluding zero, the **Index of Moderated Mediation (`imm := a3*b`)** does not differ significantly from zero (its 95% CI straddles zero). Thus, there is significant mediation across levels of writing ability, but no statistical evidence that writing ability *moderates* the indirect effect.
+
 # Second-stage moderated mediation
 
-Mediated effects could also be moderated at what Hayes calls the 'second stage' (i.e., the relationship between $M$ and $Y$). In the Hayes Process model world, this is also called Model 14. For example, does the indirect effect of `math` ($X$) on `science` ($Y$) via `read` ($M$) depend on `write` ($W$) because it moderates the relationship between math and reading? Perhaps only people with high writing and reading ability tend to do well in science. If this is true, then the indirect effect of math on science via reading depends on writing as well.
+Mediated effects could also be moderated at what Hayes calls the 'second stage' (i.e., the relationship between $M$ and $Y$). In the Hayes Process model world, this is also called Model 14. For example, does the indirect effect of `math` ($X$) on `science` ($Y$) via `read` ($M$) depend on `write` ($W$) because it moderates the relationship between reading and science? Perhaps only people with high writing and reading ability tend to do well in science. If this is true, then the indirect effect of math on science via reading depends on writing as well.
 
 ![](moderated_mediation_second_stage_example.png)
 
 ```{r}
-#compute math x writing interaction term
+#compute reading x writing interaction term
 df <- df %>% mutate(read_x_write = read_c*write_c)
 
 moderated_mediation_stage2 <- '
@@ -186,35 +202,39 @@ moderated_mediation_stage2 <- '
     science ~ b3*read_x_write
     science ~ cdash*math_c
 
-  # mean of centered write (moderator; for use in simple slopes)
+  # mean and variance of centered write (moderator; for use in conditional indirect effects)
     write_c ~ write.mean*1
-
-  # variance of centered write (moderator; for use in simple slopes)
     write_c ~~ write.var*write_c
 
-  #index of moderated mediation
+  # keep exogenous covariances and M-W / M-(M*W) residual covariances free (matches Hayes Model 14)
+    write_c ~~ math_c + read_x_write
+    math_c ~~ read_x_write
+    read_c ~~ write_c + read_x_write
+
+  # index of moderated mediation (Hayes, 2015)
     imm := a*b3
 
-  # indirect effects conditional on moderator (a1 + a3*b2.value)*a
-    indirect.SDbelow := a*b1 + a*-sqrt(write.var)*b3
-    indirect.mean := a*b1 + a*write.mean*b3
-    indirect.SDabove := a*b1 + a*sqrt(write.var)*b3
+  # indirect effects conditional on moderator: a*(b1 + b3*W)
+    indirect.SDbelow := a*(b1 + b3*(write.mean - sqrt(write.var)))
+    indirect.mean    := a*(b1 + b3*write.mean)
+    indirect.SDabove := a*(b1 + b3*(write.mean + sqrt(write.var)))
 '
 
 # fit model
-sem4 <- sem(model = moderated_mediation_stage2, data = df, se = "bootstrap", bootstrap = 1000)
+sem4 <- sem(model = moderated_mediation_stage2, data = df, fixed.x = FALSE,
+            se = "bootstrap", bootstrap = 1000)
 
 # fit measures
-summary(sem4, fit.measures = TRUE, standardize = TRUE, rsquare = TRUE)
+summary(sem4, fit.measures = TRUE, standardized = TRUE, rsquare = TRUE)
 ```
 
 ```{r}
 #compute bias-corrected confidence intervals
-parameterEstimates(sem3, boot.ci.type = "bca.simple", level = .95, ci = TRUE, standardized = FALSE)
+parameterEstimates(sem4, boot.ci.type = "bca.simple", level = .95, ci = TRUE, standardized = FALSE)
 ```
 
 # Multiple-groups moderation
 
-In a two-group case, treating moderator as a 0/1 variable is an easy way to handle mediation in SEM. When a moderating variable, $W$, is categorical, but has many levels (e.g., 5 groups), setting up dummy codes and computing all of the relevant interactions is very painful and laborious.
+In a two-group case, treating a moderator as a 0/1 variable is an easy way to handle moderation in SEM. When a moderating variable, $W$, is categorical, but has many levels (e.g., 5 groups), setting up dummy codes and computing all of the relevant interactions is very painful and laborious.
 
 The better route is to treat the moderator $W$ as a grouping variable such that any path in the model could be moderated by group. This allows one to test categorical moderation of parameters not often considered in regression, such as latent variable variance estimates across groups.
