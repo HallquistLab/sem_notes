@@ -44,22 +44,22 @@ corrplot(matrix_toplot, is.corr = FALSE,
 
 # Brief intro to SEM
 
-Structural equation modeling (SEM) can be a very useful tool in determining relationships between variables. Often SEM is used in a "confirmatory" manner, when determining whether a certain model is valid (i.e., comparing the goodness-of-fit of nested models). We can even extend SEM to study interactions across groups. SEM is sometimes referred to as **causal modeling**, **path analysis (with latent variables)**, or **covariances structure analysis**. It subsumes a bunch of other techniques, like multiple regression, confirmatory factor analysis, ANOVA, etc.
+Structural equation modeling (SEM) can be a very useful tool in determining relationships between variables. Often SEM is used in a "confirmatory" manner, when determining whether a certain model is valid (i.e., comparing the goodness-of-fit of nested models). We can even extend SEM to study interactions across groups. SEM is sometimes referred to as **causal modeling**, **path analysis (with latent variables)**, or **covariance structure analysis**. It subsumes a bunch of other techniques, like multiple regression, confirmatory factor analysis, ANOVA, etc.
 
 You supply the **observed relationship between variables** (i.e., the covariance or correlation matrix), the **# of observations**, and a **formal model specification**, and SEM basically **estimates parameters** that will give you the "best" reproduction of the **covariance matrix**. The better your model fit, the better your reproduction of the covariance matrix (hence, lower chi-squared = better model)!
 
 ## Mediation
-For more information on how to conduct classic mediation with lavaan, check out the tutorial [here](http://lavaan.ugent.be/tutorial/mediation.html).
+For more information on how to conduct classic mediation with lavaan, check out the tutorial [here](https://lavaan.ugent.be/tutorial/mediation.html).
 
 ## Latent variables
 Often we are interested in investigating **latent, abstract variables** (like "intelligence") by obtaining multiple observable measures (e.g., high school GPA, SAT and ACT scores). Using SEM we can easily include latent variables!
 
 ## Sample size
-[Source](http://faculty.chass.ncsu.edu/garson/PA765/structur.htm)
+*Rules of thumb adapted from Garson's Statnotes on Structural Equation Modeling.*
 
 SEM necessitates large sample sizes! In the literature, **sample sizes commonly run 200 - 400 for models with 10 - 15 indicators**. One survey of 72 SEM studies found the median sample size was 198. A sample of 150 is considered too small unless the covariance coefficients are relatively large. With over ten variables, sample size under 200 generally means parameter estimates are unstable and significance tests lack power.
 
-One rule of thumb found in the literature is that **sample size should be at least 50 more than 8 times the number of variables in the model**. Mitchell (1993) advances the rule of thumb that there be 10 to 20 times as many cases as variables. Another rule of thumb, based on Stevens (1996), is to **have at least 15 cases per measured variable or indicator**. The researcher should go beyond these minimum sample size recommendations particularly when data are non-normal (skewed, kurtotic) or incomplete. Note also that to compute the asymptotic covariance matrix, one needs $\frac{k(k+1)}{2}$ observations, where $k$ is the number of variables.
+One rule of thumb found in the literature is that **sample size should be at least 50 more than 8 times the number of variables in the model**. Mitchell (1993) advances the rule of thumb that there be 10 to 20 times as many cases as variables. Another rule of thumb, based on Stevens (1996), is to **have at least 15 cases per measured variable or indicator**. The researcher should go beyond these minimum sample size recommendations particularly when data are non-normal (skewed, kurtotic) or incomplete. Note also that to compute and invert the asymptotic covariance matrix (e.g., in WLS/ADF estimation), one needs at least $N > \frac{k(k+1)}{2}$ cases, where $k$ is the number of variables.
 
 ## Lavaan in action
 Kievit, R. A., Davis, S. W., Mitchell, D. J., Taylor, J. R., Duncan, J., Henson, R. N., & Cam-CAN Research team. (2014). Distinct aspects of frontal lobe structure mediate age-related differences in fluid intelligence and multitasking. *Nature communications, 5*.
@@ -76,7 +76,7 @@ Kievit, R. A., Davis, S. W., Mitchell, D. J., Taylor, J. R., Duncan, J., Henson,
 # Lavaan steps & syntax
 
 ## Brief dataset description
-Here we have data on environmental, behavioral, genetic, and control variables. The main environmental risk was **adolescent-onset use of cannabis** (`earlyon` = 1/0, i.e., yes/no). The variable, `schizo` (= 1/0), indexes whether or not a person is diagnosed with **schizophreniform disorder** at age 26, and `psysym` is a self-report of the **severity of psychotic symptoms** at that age. The specific gene used to define the genotypes was the **COMT gene**, which has two alleles, namely, valine (V) and methionine (M), that affect the level of dopamine activity. We can treat "genotype" as a quantitative variable (`COMT`) with values 0 (for MM individuals), 1 (for VM) and 2 (for VV). Many control variables were measured, such as, `chpsycq` a quantitative measure of the **severity of childhood psychotic symptoms**.
+Here we have data on environmental, behavioral, genetic, and control variables. The main environmental risk was **adolescent-onset use of cannabis** (`EarlyOn` = 1/0, i.e., yes/no). The variable, `Schizo` (= 1/0), indexes whether or not a person is diagnosed with **schizophreniform disorder** at age 26, and `Psysym` is a self-report of the **severity of psychotic symptoms** at that age. The specific gene used to define the genotypes was the **COMT gene**, which has two alleles, namely, valine (V) and methionine (M), that affect the level of dopamine activity. We can treat "genotype" as a quantitative variable (`COMT`) with values 0 (for MM individuals), 1 (for VM) and 2 (for VV). Many control variables were measured, such as `Chpsyq`, a quantitative measure of the **severity of childhood psychotic symptoms**.
 
 ## Define your data!
 Lavaan can take a **correlation** or **covariance matrix** (or even a dataframe) as input. Here, we have a covariance matrix. Remember to look at your data!
@@ -98,19 +98,18 @@ comt7.cov = getCov(lower, names = labels1); comt7.cov
 
 plot_matrix(comt7.cov)
 ```
-<p>This plot shows the relative weight of the variance/covariance terms in our matrix.  Clearly, the variance of `chpsyq` is the largest in our matrix, which is consistent with the numbers above.
+This plot shows the relative weight of the variance/covariance terms in our matrix. Clearly, the variance of `Chpsyq` is the largest in our matrix, which is consistent with the numbers above.
 
 ## Plan the model
 Before running SEM, it's helpful to plan out your hypothesized "model" of how the variables are related. For instance, run `lm()` or `glm()` models to get a sense for relationships! Better yet, have a priori hypotheses before collecting data (based off of the literature, etc.), and you can generate your model before you even have data!
 
-It's often helpful to sketch out your model beforehand, so grab a piece of paper (or find a whiteboard) for the homework, and use that to draw out your models! Remember that **circles** are used to describe **latent variables**, and **squares** for **observed variables**. Some predictor variables can be **exogenous**, meaning they are of "external origin" and their causes are not included in the model (i.e., no arrows are pointing towards it). The remaining variables are **endogenous** (e.g., a DV), meaning that they are the effects of other variables; in SEM, endogenous variables *can also predict other variables*!
+It's often helpful to sketch out your model beforehand, so grab a piece of paper (or find a whiteboard) and draw out your models! Remember that **circles** are used to describe **latent variables**, and **squares** for **observed variables**. Some predictor variables can be **exogenous**, meaning they are of "external origin" and their causes are not included in the model (i.e., no arrows are pointing towards it). The remaining variables are **endogenous** (e.g., a DV), meaning that they are the effects of other variables; in SEM, endogenous variables *can also predict other variables*!
 
 Here we have a model that we want to recreate:
 
 <img src="sem_model.png"/>
-<p>
 
-Notice in this path diagram, unlike the one shown above, there are no latent variables (i.e., no measurement model).  In this case we are only modeling the structural model (i.e., path analysis).  This is review from Week 3.
+Notice in this path diagram, unlike the one shown above, there are no latent variables (i.e., no measurement model). In this case we are only modeling the structural model (i.e., path analysis; see [Path Analysis Fundamentals](../03_path_models/path_analysis_fundamental.qmd)).
 
 ## Define the model
 
@@ -133,8 +132,6 @@ Similar to `lm()` and `lmer()`, etc., the model format has the DV on the left si
 - **Intercepts**
     - The intercept of X: `X ~ 1`
 
-For some practice generating the structural plot and equations, go [here](http://www.stanford.edu/class/psych253/section/section_8/example_lavaan.html)!
-
 ```{r}
 comt7.model1 = '
   Schizo ~ EarlyOn + GenxEnv + Psysym
@@ -146,10 +143,10 @@ comt7.model1 = '
 
 In this model, we want to specify the following:
 
-1. Schizo is predicted by: EarlyOn, GenxEnv, Psysym
-1. Psysym is predicted by: EarlyOn, Conduct, Schizo
-1. Conduct is predicted by: EarlyOn
-1. Chpsyp is predicted by: COMT
+1. `Schizo` is predicted by: `EarlyOn`, `GenxEnv`, `Psysym`
+1. `Psysym` is predicted by: `EarlyOn`, `Conduct`, `Schizo`
+1. `Conduct` is predicted by: `EarlyOn`
+1. `Chpsyq` is predicted by: `COMT`
 
 Note that this model doesn't include any definitions of latent variables, or explicit variances/covariances. However, the variances can still be estimated, and the covariances between exogenous variables can still be estimated, as we'll see in a second!
 
@@ -187,18 +184,18 @@ semPaths(comt7.fit1, what='std',
 
 Looking at the model output, we can see that this model is not doing very well, since the estimated covariance matrix is significantly different from the actual covariance matrix, $\chi^2$(10) = 33.578, p < 0.001.
 
-We can see, however, that we're also doing a pretty good job predicting things. As predicted from our original causal diagram, adolescent-onset use of cannabis (`EarlyOn`) significantly predicts whether or not a person is diagnozed w/schizophreniform disorder at age 26 (`Schizo`), z=2.3, p < 0.05. Schizo is also significantly predicted by GenxEnv and Psysym ($p$s < 0.05). So that's good! However, interpreting parameters in the context of a poorly fitting model is unadvisable.  So let's take a better look at where we're failing...
+We can see, however, that we're also doing a pretty good job predicting things. As predicted from our original causal diagram, adolescent-onset use of cannabis (`EarlyOn`) significantly predicts whether or not a person is diagnosed with schizophreniform disorder at age 26 (`Schizo`), $z = 2.3$, $p < 0.05$. `Schizo` is also significantly predicted by `GenxEnv` and `Psysym` ($p$s < 0.05). *(Note that this reciprocal `Schizo` $\leftrightarrows$ `Psysym` loop is nonrecursive—identified via `GenxEnv` and `Conduct` as instruments with uncorrelated disturbances—and treats binary `Schizo` linearly under ML.)* However, interpreting parameters in the context of a poorly fitting model is unadvisable. So let's take a better look at where we're failing...
 
 
 ## Assess where you're messing up!
 
-One way to do this is to plot the strength of the residuals.  Larger values (circles) suggest greater misfit (error) of our model .
+One way to do this is to examine correlation residuals (`type = "cor"`), which put discrepancies on a common correlation scale so high-variance variables like `Chpsyq` (`var = 25.65` vs. `Schizo = 0.035`) do not visually dominate the plot. Larger circles indicate greater local misfit:
 ```{r}
-plot_matrix(residuals(comt7.fit1)$cov)
-residuals(comt7.fit1)
+plot_matrix(residuals(comt7.fit1, type = "cor")$cov)
+residuals(comt7.fit1, type = "cor")
 ```
 
-We might want to add in some relationship between Psysym and Chpsyq, or between Schizo and Chpsyq, or between Conduct and Chpsyq.
+We see notable residual correlations involving `Chpsyq` with `Schizo`, `Conduct`, and `Psysym`.
 
 We can also evaluate misfit empirically by looking at modification indices, which tell us the amount of improvement in our model we would have if we were to estimate a given parameter.
 
@@ -210,7 +207,7 @@ head(mi[order(-mi$mi), ], 10)  #shows the unestimated parameters with the ten hi
 Here the "mi" column shows the decrease in the model chi-square that would occur if a given parameter was added.
 
 ## Update the model
-Let's add in Chpsyq predicting Schizo, and a covariance between Conduct and Chpsyq.
+Let's add in `Chpsyq` predicting `Schizo`, and a covariance between `Conduct` and `Chpsyq`. Importantly, we keep `fixed.x = F` to match `comt7.fit1` so the likelihoods, AIC, and BIC remain directly comparable in `anova()`:
 ```{r}
 comt7.model2 = '
   Schizo ~ EarlyOn + GenxEnv + Psysym + Chpsyq
@@ -220,7 +217,7 @@ comt7.model2 = '
   Conduct ~~ Chpsyq
 '
 
-comt7.fit2 = sem(comt7.model2, sample.cov = comt7.cov, sample.nobs = 803)
+comt7.fit2 = sem(comt7.model2, fixed.x = F, sample.cov = comt7.cov, sample.nobs = 803)
 summary(comt7.fit2)
 ```
 
@@ -235,8 +232,8 @@ This new model is doing significantly better than our first model! We have a low
 Holzinger and Swineford (1939) administered a battery of achievement tests to a sample of 145 grade-school-aged children in a Chicago school.  Nine of these tests include the following:
 
     1) Visual perception
-    2) Shape identification
-    3) Cube sorting
+    2) Cube sorting
+    3) Shape identification
     4) Paragraph completion
     5) Sentence completion
     6) Words in a minute
@@ -300,7 +297,7 @@ VERB=~para+sent+word
 SPEED=~add+count+cap
 '
 
-ach.cfa1b<-sem(ach.model1b,sample.cov=cor2B,sample.nobs=145,std.lv=F) #std.lv=F requires that the first indicator of each factor is fixed to 1 (UVI)
+ach.cfa1b<-sem(ach.model1b,sample.cov=cor2B,sample.nobs=145,std.lv=F) #std.lv=F requires that the first indicator of each factor is fixed to 1 (ULI)
 
 summary(ach.cfa1b)
 ```
@@ -363,8 +360,7 @@ ach.cfa3<-sem(ach.model3,sample.cov=cor2B,sample.nobs=145,std.lv=T)
 summary(ach.cfa3)
 semPaths(ach.cfa3)
 ```
-<p>
-Notice that our model has identical fit to the previous model.  Why is this?  Our model output suggests that the covariance between our endogenous variables SPEED and VIS has been estimated, despite us not including this explicitly in the model.  This is a result of the `sem()` function attempting to include all relevant covariances among latent factors in our model.  However, the consequence of this is that we (as before) have a "just identified" structural component to our model. We would prefer an overidentified structural component, as this would provide more parsimony.  Let's try forcing lavaan to remove the covariance between SPEED and VIS.  (However, we may be concerned about doing so, given that this parameter is highly significant in our output.)
+Notice that our model has identical fit to the previous model. Why is this? Our model output suggests that the covariance between our **exogenous** latent variables `SPEED` and `VIS` has been estimated, despite us not including this explicitly in the model. This is a result of the `sem()` function automatically estimating covariances among exogenous latent factors. However, the consequence of this is that we (as before) have a "just identified" structural component to our model. We would prefer an overidentified structural component, as this would provide more parsimony. Let's try forcing lavaan to remove the covariance between `SPEED` and `VIS`. (However, we may be concerned about doing so, given that this parameter is highly significant in our output.)
 
 
 ```{r}
@@ -422,13 +418,10 @@ This model provides good fit to the data, suggesting the potential general causa
 
 ## Wrench in the works
 
-It is worth noting (and complicates matters considerably) that based on the results of Model 3, we might also have hypothesized that processing speed contributes to visual information processing, which in turn contributes to verbal capacity (SPEED&rarr;VIS&rarr;VERB).  If we were to test this model, we would discover *identical* model fit.  This result points out the important caveat to SEM that there will always be at least one other testable model that provides statistically identical fit to a model of interest.  In this case, both a combination of theory and the real-life properties of the data (e.g., longitudinal data) are necessary in order to determine which model may be most appropriate.  However, you should always remember that another equally tenable process may be producing the data you have collected.
+It is worth noting (and complicates matters considerably) that based on the results of Model 3, we might also have hypothesized that processing speed contributes to visual information processing, which in turn contributes to verbal capacity (SPEED&rarr;VIS&rarr;VERB). If we test this alternative model below, we obtain *statistically identical* fit. This illustrates an important caveat in SEM: many models—especially those with saturated structural blocks or simple chains and forks—have one or more statistically equivalent models that reproduce the exact same implied covariance matrix. Both strong theory and research design (e.g., longitudinal data or experimental manipulation) are necessary to adjudicate among equivalent models.
 
 ```{r}
-#| include: false
-
 ach.model5b<-'
-
 #measurement model
 VIS=~vis+cub+shape+cap
 VERB=~para+sent+word
@@ -443,8 +436,11 @@ VERB~VIS
 
 ach.cfa5b<-sem(ach.model5b,sample.cov=cor2B,sample.nobs=145,std.lv=T)
 
-summary(ach.cfa5b)
-semPaths(ach.cfa5b)
+# Compare fit indices side by side: identical across both causal structures
+cbind(
+  `Model 5 (VIS -> VERB, SPEED)`  = fitMeasures(ach.cfa5,  c("chisq", "df", "pvalue", "cfi", "rmsea", "srmr", "aic")),
+  `Model 5b (SPEED -> VIS -> VERB)` = fitMeasures(ach.cfa5b, c("chisq", "df", "pvalue", "cfi", "rmsea", "srmr", "aic"))
+)
 ```
 
 
@@ -483,9 +479,9 @@ Notice that since these covariance units are *standardized* (i.e., correlation m
 
 ## Unconstrained paths
 
-Here, we have latent variables that are measured by observed variables. Specifically, female trait dominance (FTD) is measured by friends and self trait ratings (FTSR and FTFT). Similarly, female situational dominance (FSD) is measured by self, informant (partner), and observers' ratings. The same is true for males. Thus, we'll have to define these latent variables in the model, and then see how these latent variables are predicted by other latent variables!
+Here, we have latent variables that are measured by observed variables. Specifically, female trait dominance (`FTD`) is measured by friends' and self trait ratings (`FTFR` and `FTSR`). Similarly, female situational dominance (`FSD`) is measured by self, informant (partner), and observers' ratings. The same is true for males. Thus, we'll have to define these latent variables in the model, and then see how these latent variables are predicted by other latent variables!
 
-We want to estimate the paths A and B (the effect of the individuals' traits on their situational behavior) and C and D (the effects of individuals' situational behavior on each other). Let's first allow these paths to be unconstrained (i.e., we can get a different estimate for each path).
+We want to estimate the actor paths (each partner's trait dominance predicting their own situational behavior: `FSD ~ FTD` and `MSD ~ MTD`) and the reciprocal partner paths (each partner's situational dominance predicting the other's: `FSD ~ MSD` and `MSD ~ FSD`). Let's first allow these paths to be unconstrained (i.e., we can get a different estimate for each path).
 
 ```{r}
 dyad.model1 = '
@@ -556,10 +552,10 @@ semPaths(dyad.fit2, what='std',
 anova(dyad.fit1,dyad.fit2)
 ```
 
-This simpler model is definitely the better one! We have more dfs (fewer parameters estimated), a lower AIC, and then $\chi^2$ isn't significantly worse!
+This simpler model is definitely the better one! We have more dfs (fewer parameters estimated), a lower AIC, and the $\chi^2$ isn't significantly worse!
 
 ## Constrained paths
-Let's see if the effects of one's partner's situational dominance on one's own situational dominance doesn't differ depending on which partner you are.  We want to constrain the paths in which M's situational dominance (MSD) predicts F's situational dominance (FSD) and vice versa to be equal.  We have 1 less parameter to estimate if we constrain them to be the same, so it would be more parsimonious if we can have a constrained model!  Notice that the estimates of these parameters in the previous models we have run are nearly identical, given us confidence that this approach may be well-founded.
+Let's see if the effects of one's partner's situational dominance on one's own situational dominance differ depending on which partner you are. We want to constrain the paths in which M's situational dominance (`MSD`) predicts F's situational dominance (`FSD`) and vice versa to be equal. We have 1 fewer parameter to estimate if we constrain them to be the same, so it would be more parsimonious if we can retain the constrained model! Notice that the estimates of these parameters in the previous models we have run are nearly identical, giving us confidence that this approach may be well-founded.
 
 Using the `*` operator below "names" the regression coefficient. This is useful mainly because if we give two coefficients the same name, the function automatically constrains them to be the same.
 
@@ -582,14 +578,14 @@ dyad.model3 = '
     FSSR ~~ FTSR
 '
 
-dyad.fit3 = sem(dyad.model3, fixed.x = T, sample.cov = dom.cov, sample.nobs = 112)
+dyad.fit3 = sem(dyad.model3, fixed.x = F, sample.cov = dom.cov, sample.nobs = 112)
 summary(dyad.fit3)
 
 anova(dyad.fit1,dyad.fit2,dyad.fit3)
 
 ```
 
-It appears that constraining these parameters to be equal improved our model fit.  So they probably aren't actually different.
+Constraining these reciprocal paths to be equal did not significantly worsen model fit ($\Delta\chi^2(1) = 0.085, p = .771$), while gaining a degree of freedom and yielding lower AIC and BIC—supporting the hypothesis that partner effects do not differ across men and women.
 
 ## Wrapping up
 
@@ -600,11 +596,11 @@ semPaths(dyad.fit3, what='std',
          edge.label.cex=1.25, curvePivot = TRUE,
          fade=FALSE)
 ```
-<p>
-In the end, then, we see that trait dominance predicts situational dominance for both men and women, although this relationship appears stronger in women than men.
+
+In the end, then, we see that trait dominance predicts situational dominance for both men and women, with a larger unstandardized estimate in women than men (formally comparing those slopes across gender would require standardized estimates or a direct equality constraint).
 
 We also see that there is no significant association between men and women's *trait* dominance, but there is a small-to-moderate significant negative relationship between men and women's *situational* dominance, suggesting that when one partner is more dominant, the other acts less so (consistent with interpersonal theory of complementarity).
 
-Our model trimming approach suggests that men and women report on each others' level of situational dominance in *different* (uncorrelated) ways, suggesting that informant reports and self-reports of the same person's behavior may be unrelated in this context.
+Our model trimming approach removed the five cross-target residual covariances (`MTSR ~~ FSIR`, `MSSR ~~ FSIR`, `FTSR ~~ MSIR`, `FSSR ~~ MSIR`, and `MSOR ~~ FSOR`) without worsening fit. Note that self-reports (`FSSR`/`MSSR`) and partner informant reports (`FSIR`/`MSIR`) of the *same* person's behavior are still strongly related via the shared situational dominance factors (`FSD` and `MSD`); what trimming shows is no detectable *residual within-rater method bias* linking a person's ratings of themselves and their partner (or linking observer ratings across partners) beyond those latent factors.
 
-Finally, we have relaxed the local independence assumption in terms of self-reported trait and situational assessments of dominance, suggesting that beyond the effect of the latent dominance constructs themselves, these variables are related purely based on shared variance due to the self-report assessment method.
+Finally, we retained two within-person self-report residual covariances (`MSSR ~~ MTSR` and `FSSR ~~ FTSR`), relaxing local independence to account for shared self-report method variance between trait and situational self-ratings beyond the latent dominance constructs themselves.
