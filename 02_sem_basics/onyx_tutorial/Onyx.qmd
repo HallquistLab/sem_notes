@@ -94,7 +94,7 @@ Now, let's load the model we generated in Ωnyx (named differently from an earli
 
 ```{r}
 #| label: "lavaan-single-predictor"
-source("single_predictor_data.R")
+source("single_predictor_data.R", print.eval = TRUE)
 
 ###contains the lavaan script:
 #  model<-"
@@ -217,7 +217,7 @@ summary(result, fit.measures=TRUE);
    X3~1;
 ";
 result_free<-lavaan(model_free, data=cfa_dat, fixed.x=FALSE, missing="FIML");
-summary(result, fit.measures=TRUE);
+summary(result_free, fit.measures=TRUE);
 
 inspect(result_free, "std") #gives loadings (see standardized estimates on word doc)
 ```

@@ -231,19 +231,21 @@ $$
 
 Likewise, in lavaan, we can write out a model string that specifies all key equations that define a given SEM:
 
-```
+```r
 mstring <- '
-NA =~ Lone + Sad + Blue
-PA =~ Hap + Cheer + Excit
+NegAff =~ Lone + Sad + Blue
+PosAff =~ Hap + Cheer + Excit
 
-NA ~~ PA
-NA ~~ NA
-PA ~~ PA
+NegAff ~~ PosAff
+NegAff ~~ NegAff
+PosAff ~~ PosAff
 '
 ```
 
+*(Note: we use `NegAff` rather than `NA` because `NA` is a reserved missing-value keyword in R and cannot be used as a variable or factor name in `lavaan`.)*
+
 The model specification is now stored in a string variable, `mstring`. This string and the dataset to be fit can then be handed off to a `lavaan` function, usually `sem`, to fit the specified model to the data:
 
-```
+```r
 my_fitted_model <- sem(mstring, data=my_dataset)
 ```
