@@ -618,6 +618,10 @@ fm_icm    <- fitMeasures(fit_icm,    c("chisq", "df", "pvalue", "rmsea", "cfi", 
 fm_icm_mi <- fitMeasures(fit_icm_mi, c("chisq", "df", "pvalue", "rmsea", "cfi", "tli", "bic"))
 fm_esem   <- fitMeasures(fit_esem,   c("chisq", "df", "pvalue", "rmsea", "cfi", "tli", "bic"))
 
+npar_esem_nom  <- inspect(fit_esem, "npar")
+n_esem_rot     <- 3L * (3L - 1L) # m(m - 1) = 6 Geomin rotation constraints
+npar_esem_free <- npar_esem_nom - n_esem_rot
+
 bs_icm  <- m_b_icm$summaries
 bs_bsem <- m_bsem$summaries
 
@@ -632,7 +636,7 @@ fit_table <- tibble(
   `Nominal / Eff. Params` = c(
     sprintf("%d", inspect(fit_icm, "npar")),
     sprintf("%d", inspect(fit_icm_mi, "npar")),
-    sprintf("%d", inspect(fit_esem, "npar")),
+    sprintf("%d (%d free; −%d rot.)", npar_esem_nom, npar_esem_free, n_esem_rot),
     sprintf("%d (pD = %.1f)", bs_icm$Parameters, bs_icm$pD),
     sprintf("%d (pD = %.1f)", bs_bsem$Parameters, bs_bsem$pD)
   ),
@@ -993,9 +997,19 @@ sens_rows <- lapply(prior_grid, function(v0) {
 
 kable(
   sens_rows %>%
-    mutate(across(c(prior_95_limit, PPp, pD, DIC, x9_est, x9_sd, x9_lo, x9_hi, r_vis_spd), ~ round(.x, 3))),
-  col.names = c("Prior Var", "Prior 95% (±)", "PPp", "Eff. Params (pD)", "DIC",
-                "Visual=~x9 Est", "Post. SD", "2.5% CrI", "97.5% CrI", "r(Visual, Speed)"),
+    transmute(
+      `Prior Var`        = sprintf("%.3f", prior_var),
+      `Prior 95% (±)`    = sprintf("%.3f", prior_95_limit),
+      PPp                = sprintf("%.3f", PPp),
+      `Eff. Params (pD)` = sprintf("%.1f", pD),
+      DIC                = sprintf("%.1f", DIC),
+      `Visual=~x9 Est`   = sprintf("%.3f", x9_est),
+      `Post. SD`         = sprintf("%.3f", x9_sd),
+      `2.5% CrI`         = sprintf("%.3f", x9_lo),
+      `97.5% CrI`        = sprintf("%.3f", x9_hi),
+      `r(Visual, Speed)` = sprintf("%.3f", r_vis_spd)
+    ),
+  align = "rrrrrrrrrr",
   caption = "Prior Sensitivity Analysis Across Cross-Loading Prior Variances (Grant-White, N = 145)"
 )
 
@@ -1040,7 +1054,7 @@ Notice the classic **bias–variance / identification tradeoff** (Muthén & Aspa
 
 The same small-variance shrinkage strategy extends beyond cross-loadings to three other common SEM settings:
 
-1. **Residual covariances among items ($\boldsymbol{\Theta}_\varepsilon$):** Placing an informative Inverse-Wishart prior $\boldsymbol{\Theta}_\varepsilon \sim \mathcal{IW}(\mathbf{I}, k + 6)$ on the $k \times k$ residual covariance matrix allows minor item-wording or method covariances to depart slightly from zero (where $k$ is the number of indicators, written $p + 6$ in Muthén & Asparouhov's notation; e.g., `x1-x9 WITH x1-x9 ~ IW(0, 15);` for our $k = 9$ tests in Mplus; Muthén & Asparouhov, 2012, Study 2 on the Big Five). Because an Inverse-Wishart prior couples variances and correlations through a single degrees-of-freedom parameter, calibrate its scale carefully and avoid freeing all cross-loadings and all residual covariances simultaneously unless sample size and substantive theory support it.
+1. **Residual covariances among items ($\boldsymbol{\Theta}_\varepsilon$):** Placing an informative Inverse-Wishart prior $\boldsymbol{\Theta}_\varepsilon \sim \mathcal{IW}(\mathbf{I}, k + 6)$ on the $k \times k$ residual covariance matrix allows minor item-wording or method covariances to depart slightly from zero (where $k$ is the number of indicators, written $p + 6$ in Muthén & Asparouhov's notation; e.g., labeling residual variances `x1-x9 (v1-v9);` and covariances `x1-x9 WITH x1-x9 (c1-c36);` in `MODEL:`, then specifying `v1-v9 ~ IW(1, 15); c1-c36 ~ IW(0, 15);` in `MODEL PRIORS:` for our $k = 9$ tests in Mplus; Muthén & Asparouhov, 2012, Study 2 on the Big Five). Because an Inverse-Wishart prior couples variances and correlations through a single degrees-of-freedom parameter, calibrate its scale carefully and avoid freeing all cross-loadings and all residual covariances simultaneously unless sample size and substantive theory support it.
 2. **Structural regression paths:** Direct covariate effects hypothesized to be negligible can receive $\mathcal{N}(0, 0.01)$ priors rather than hard zero exclusions, testing structural mediation/exclusion assumptions in a single step (Muthén & Asparouhov, 2012, Fig. 3; Chen et al., 2024, Example 2).
 3. **Bayesian Approximate Measurement Invariance (BAMI):** Priors on cross-group loading and intercept differences allow modest item drift while linking the groups for latent mean comparisons (Muthén & Asparouhov, 2013; Chen et al., 2024, Example 3). The [worked example below](#worked-example-approximate-measurement-invariance-across-two-groups) develops this extension.
 :::
@@ -1309,8 +1323,12 @@ bami_comparison <- bind_rows(
                   sprintf("Approximate: prior variance = %.4f", bami_variances[k]))
   }))
 )
-kable(bami_comparison, digits = 3,
-      caption = "Group 2 minus Group 1 latent mean: true difference = 0.40")
+kable(
+  bami_comparison %>%
+    mutate(across(c(Median, Lower, Upper, PPp, `Final max PSR`), ~ sprintf("%.3f", .x))),
+  align = "lrrrrr",
+  caption = "Group 2 minus Group 1 latent mean: true difference = 0.40"
+)
 
 bami_differences <- bami_fit$parameters$unstandardized %>%
   filter(paramHeader == "New.Additional.Parameters") %>%
@@ -1330,7 +1348,7 @@ ggplot(bami_differences, aes(x = est, y = Item)) +
 
 Read the table as a **sensitivity analysis of the latent mean comparison**, not a contest to find a prior that produces the desired answer. Widening the prior allows more item drift and adds uncertainty about how much observed group difference reflects the factor. In this simulation, the mean comparison remains positive across the displayed choices, but its magnitude and uncertainty depend on the measurement assumptions. Intervals for item differences that include zero do not establish exact invariance, and good global fit alone does not establish that every item difference is negligible. Examine posterior differences against substantively meaningful tolerances as well as predictive fit before interpreting latent mean comparisons.
 
-The new models use two chains and fixed iteration budgets (20,000 for mediation; 30,000 for invariance), with the first half discarded as burn-in. The chain densities above and the final maximum PSR values are initial checks; use the fuller [diagnostic workflow](#diagnostics-and-responsible-interpretation) below before applying these models to substantive data.
+The new models use two chains with `BITERATIONS = (20000)` for mediation and `BITERATIONS = (30000)` for invariance — setting minimum iteration floors per chain (under Mplus's 50,000-iteration default maximum, stopping once Mplus's default PSR convergence criterion is met; all archived runs converged at the floor and discarded the first half as burn-in; use `FBITERATIONS` to enforce a strictly fixed iteration count). The chain densities above and the final maximum PSR values are initial checks; use the fuller [diagnostic workflow](#diagnostics-and-responsible-interpretation) below before applying these models to substantive data.
 
 ---
 
@@ -1395,7 +1413,7 @@ Rather than scaling exponentially as $\mathcal{O}(Q^d)$, adding another random s
 
 ## Archived timing illustration: Gaussian quadrature vs. Bayesian MCMC across $d = 1 \dots 5$
 
-To see this scaling contrast concretely, we simulate an EMA dataset of $J = 80$ participants observed across $T = 25$ prompts ($N = 2{,}000$ rows) with a binary daily symptom outcome (`y_bin`) generated under a probit link and up to 4 within-person triggers (`x1`–`x4`), creating $d = 1$ to $d = 5$ correlated random effects. Both estimators fit the **exact same probit random-effects likelihood**: Mplus `ESTIMATOR = MLR; LINK = PROBIT;` with standard 15-point Gauss–Hermite quadrature ($d = 1, 2, 3$, plus a $15^d$ scaling projection for $d = 4, 5$ so rendering this notebook doesn't take over an hour) alongside Mplus `ESTIMATOR = BAYES; LINK = PROBIT;` ($d = 1, 2, 3, 4, 5$, 5,000 MCMC iterations across 2 chains).
+To see this scaling contrast concretely, we simulate an EMA dataset of $J = 80$ participants observed across $T = 25$ prompts ($N = 2{,}000$ rows) with a binary daily symptom outcome (`y_bin`) generated under a probit link and up to 4 within-person triggers (`x1`–`x4`), creating $d = 1$ to $d = 5$ correlated random effects. Both estimators fit the **exact same probit random-effects likelihood**: Mplus `ESTIMATOR = MLR; LINK = PROBIT;` with standard 15-point Gauss–Hermite quadrature ($d = 1, 2, 3$, plus a $15^d$ scaling projection for $d = 4, 5$ so rendering this notebook doesn't take over an hour) alongside Mplus `ESTIMATOR = BAYES; LINK = PROBIT;` ($d = 1, 2, 3, 4, 5$, across 2 chains with `BITERATIONS = 5000 (2000)`, i.e., a minimum of 2,000 and maximum of 5,000 iterations per chain, stopping once Mplus's default PSR convergence criterion is met).
 
 ```{r quadrature-vs-bayes-benchmark}
 #| fig-width: 13.4
@@ -1521,7 +1539,12 @@ if (run_mplus) {
 kable(
   bench_list %>%
     transmute(
-      `Random Effects (d)` = paste0(d, " (", ifelse(d == 1, "Intercept only", paste0("Int + ", d - 1, " slope(s)")), ")"),
+      `Random Effects (d)` = paste0(
+        d, " (",
+        ifelse(d == 1, "Intercept only",
+               ifelse(d == 2, "Int + 1 slope", paste0("Int + ", d - 1, " slopes"))),
+        ")"
+      ),
       `Quadrature Grid (15^d / cluster)` = format(quad_points, big.mark = ","),
       `ML Quadrature Time` = ifelse(
         !is.na(ml_sec),
@@ -1529,7 +1552,7 @@ kable(
         ifelse(ml_plot_sec < 600, sprintf("~%.1f min (projected)", ml_plot_sec / 60),
                sprintf("~%.1f hrs (projected)", ml_plot_sec / 3600))
       ),
-      `Bayes MCMC Time (5,000 iter)` = sprintf("%.2f s (measured)", bayes_sec)
+      `Bayes MCMC Time (2,000–5,000 iter)` = sprintf("%.2f s (measured)", bayes_sec)
     ),
   caption = "Empirical Wall-Clock Scaling: 15-Point Gauss–Hermite Quadrature vs. Bayesian MCMC (J = 80, T = 25)"
 )
@@ -1571,12 +1594,12 @@ df_lines <- bind_rows(
   bench_list %>% filter(d >= 3) %>%
     transmute(d, sec = ml_plot_sec, method = "Frequentist ML (15-pt Quadrature)", status = "Projected (15^d scaling)"),
   bench_list %>%
-    transmute(d, sec = bayes_sec, method = "Bayesian MCMC (5,000 iterations)", status = measured_label)
+    transmute(d, sec = bayes_sec, method = "Bayesian MCMC (2,000–5,000 iter)", status = measured_label)
 )
 
 df_pts <- bind_rows(
   bench_list %>% transmute(d, sec = ml_plot_sec, method = "Frequentist ML (15-pt Quadrature)", status = ml_type),
-  bench_list %>% transmute(d, sec = bayes_sec,   method = "Bayesian MCMC (5,000 iterations)",  status = measured_label)
+  bench_list %>% transmute(d, sec = bayes_sec,   method = "Bayesian MCMC (2,000–5,000 iter)",  status = measured_label)
 )
 
 p_time <- ggplot() +
@@ -1588,7 +1611,7 @@ p_time <- ggplot() +
   ) +
   scale_x_continuous(breaks = 1:5, labels = c("1\n(15)", "2\n(225)", "3\n(3,375)", "4\n(50,625)", "5\n(759,375)")) +
   scale_color_manual(values = c("Frequentist ML (15-pt Quadrature)" = "#b2182b",
-                                "Bayesian MCMC (5,000 iterations)"  = "#2166ac"), name = NULL) +
+                                "Bayesian MCMC (2,000–5,000 iter)"  = "#2166ac"), name = NULL) +
   scale_linetype_manual(values = setNames(c("solid", "dashed"), c(measured_label, "Projected (15^d scaling)")), name = NULL) +
   scale_shape_manual(values = setNames(c(19, 1), c(measured_label, "Projected (15^d scaling)")), name = NULL) +
   labs(
@@ -1603,12 +1626,12 @@ p_time <- ggplot() +
 p_geom + p_time + plot_layout(widths = c(1, 1.48))
 ```
 
-Look at **Panel B**: on a logarithmic vertical axis, 15-point Gaussian quadrature climbs steeply from $`r sprintf("%.2f", bench_list$ml_sec[1])`\text{ s}$ ($d = 1$) to $`r sprintf("%.1f", bench_list$ml_sec[2])`\text{ s}$ ($d = 2$) and $`r sprintf("%.1f", bench_list$ml_sec[3])`\text{ s}$ ($d = 3$) in the archived Mplus runs; the dashed segment projects that $\times 15$-per-dimension grid scaling out to ~$`r sprintf("%.1f", bench_list$ml_plot_sec[4] / 60)`\text{ min}$ ($d = 4$) and ~$`r sprintf("%.1f", bench_list$ml_plot_sec[5] / 3600)`\text{ hr}$ ($d = 5$; those $d = 4, 5$ values are $15^d$ projections from $d = 3$, not measured runs). Meanwhile, **5,000 Bayesian MCMC iterations remain between $`r sprintf("%.1f", min(bench_list$bayes_sec))`\text{ s}$ and $`r sprintf("%.1f", max(bench_list$bayes_sec))`\text{ s}$ across all five models**.
+Look at **Panel B**: on a logarithmic vertical axis, 15-point Gaussian quadrature climbs steeply from $`r sprintf("%.2f", bench_list$ml_sec[1])`\text{ s}$ ($d = 1$) to $`r sprintf("%.1f", bench_list$ml_sec[2])`\text{ s}$ ($d = 2$) and $`r sprintf("%.1f", bench_list$ml_sec[3])`\text{ s}$ ($d = 3$) in the archived Mplus runs; the dashed segment projects that $\times 15$-per-dimension grid scaling out to ~$`r sprintf("%.1f", bench_list$ml_plot_sec[4] / 60)`\text{ min}$ ($d = 4$) and ~$`r sprintf("%.1f", bench_list$ml_plot_sec[5] / 3600)`\text{ hr}$ ($d = 5$; those $d = 4, 5$ values are $15^d$ projections from $d = 3$, not measured runs). Meanwhile, **Bayesian MCMC (`BITERATIONS = 5000 (2000)`, running 2,000–5,000 iterations per chain and stopping once Mplus's default PSR criterion is met) remains between $`r sprintf("%.1f", min(bench_list$bayes_sec))`\text{ s}$ and $`r sprintf("%.1f", max(bench_list$bayes_sec))`\text{ s}$ across all five models**.
 
 ::: {.callout-note}
 ## Methodological notes on this timing illustration
 
-Both `MLR` and `BAYES` fit the same probit random-effects model (`LINK = PROBIT;` matching the probit data-generating model; note that Mplus `MLR` otherwise defaults to `LINK = LOGIT` whereas `BAYES` defaults to `PROBIT`). Elapsed times include R-side file parsing under a fixed 5,000-iteration MCMC budget; in formal benchmarking studies, compare wall-clock time per *effective independent draw* ($\text{ESS}/\text{sec}$) at matched convergence criteria.
+Both `MLR` and `BAYES` fit the same probit random-effects model (`LINK = PROBIT;` matching the probit data-generating model; note that Mplus `MLR` otherwise defaults to `LINK = LOGIT` whereas `BAYES` defaults to `PROBIT`). Elapsed times include R-side wrapper overhead under `BITERATIONS = 5000 (2000)` (minimum 2,000 and maximum 5,000 iterations per chain with PSR auto-stopping; use `FBITERATIONS` in Mplus to enforce a strictly fixed iteration count without PSR stopping). In formal benchmarking studies, compare wall-clock time per *effective independent draw* ($\text{ESS}/\text{sec}$) at matched convergence criteria.
 :::
 
 ## Applied MSEM walkthrough: Latent within-person random slopes predicting distal burnout
@@ -1736,11 +1759,18 @@ bw_table <- m_ema$parameters$unstandardized %>%
       paramHeader == "Variances"  & param == "S_ST"    ~ 0.0625
     )
   ) %>%
-  select(Parameter = paramHeader, Term = param, `True Value` = True_Value,
-         `Post. Median` = est, `Post. SD` = posterior_sd,
-         `2.5% CrI` = lower_2.5ci, `97.5% CrI` = upper_2.5ci)
+  transmute(
+    Parameter = paramHeader,
+    Term = param,
+    `True Value` = ifelse(True_Value == 0.0625, "0.0625", sprintf("%.2f", True_Value)),
+    `Post. Median` = sprintf("%.3f", est),
+    `Post. SD` = sprintf("%.3f", posterior_sd),
+    `2.5% CrI` = sprintf("%.3f", lower_2.5ci),
+    `97.5% CrI` = sprintf("%.3f", upper_2.5ci)
+  )
 
-kable(bw_table, caption = "Level-2 Parameter Recovery: Bayesian MSEM with Two Latent Within-Person Random Slopes")
+kable(bw_table, align = "llrrrrr",
+      caption = "Level-2 Parameter Recovery: Bayesian MSEM with Two Latent Within-Person Random Slopes")
 ```
 
 Let's compare the **naive two-stage manifest OLS slopes** (regressing daily `exhaust` on manifest item composites $\bar{\text{na}}_{tj}$ and $\bar{\text{st}}_{tj}$ separately for each trainee) against **Bayesian MSEM's posterior slope summaries** (`S_NA.Median` and 95% credible intervals):

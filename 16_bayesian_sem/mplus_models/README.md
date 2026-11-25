@@ -20,9 +20,12 @@ November 16, 2026:
   free parameters use Mplus defaults; the examples isolate the difference
   priors and do not claim that those defaults suit every application.
 
-The new fits use two chains and fixed budgets: 20,000 iterations for mediation
-and 30,000 for invariance, discarding the first half as burn-in. Model inputs
-and outputs retain the prior specifications and TECH8 convergence histories.
+The new fits use two chains with minimum iteration floors via `BITERATIONS`:
+20,000 iterations for mediation and 30,000 for invariance (under Mplus's 50,000
+default maximum, auto-stopping once Mplus's default PSR criterion is met; all
+archived runs converged at the floor and discarded the first half as burn-in).
+Model inputs and outputs retain the prior specifications and TECH8 convergence
+histories.
 
 - `hs_*`: Grant-White subset of lavaan's Holzinger–Swineford data,
   standardized within the school; strict CFA and approximate-zero CFA.
