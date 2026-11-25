@@ -43,6 +43,7 @@ Furthermore, let's hypothesize that the proximity of a home to large highways (`
 The model syntax could be specified as:
 
 ```{r}
+#| warning: true
 #example dataset from mlbench package with home prices in Boston by census tract
 data(BostonHousing2)
 BostonSmall <- BostonHousing2 %>% dplyr::select(
@@ -88,12 +89,12 @@ varTable(mlav2)
 Looks like the scale of `nox` is *much* smaller than any other predictor, likely because it's in parts per 10 million! We can rescale variables in this case by multiplying by a constant. This has no effect on the fit or interpretation of the model -- we just have to recall what the new units represent. Also, you can always divide out the constant from the parameter estimate to recover the original units, if important.
 
 ```{r}
-BostonSmall <- BostonSmall %>% mutate(nox = nox*100) #not parts per 100,000 not 10 million
+BostonSmall <- BostonSmall %>% mutate(nox = nox*100) #now parts per 100,000, not 10 million
 mlav2 <- sem(lavaan_m2, data=BostonSmall)
 summary(mlav2)
 ```
 
-Note that our fit statistics do not change at all (because the model converged in the first place), and our parameter estimates only change by a factor of 100, which is because we rescaled `nox` by multiplying the value x100.
+Note that our fit statistics do not change at all (because the model converged in the first place), and the parameter estimates rescale predictably from multiplying `nox` by 100: `cmedv ~ nox` is divided by 100 (`-14.391` to `-0.144`), `nox ~ rad` is multiplied by 100 (`0.008` to `0.814`), `cmedv ~ log_crim` is unchanged (`-0.925`), and the residual variance of `nox` is multiplied by $100^2 = 10{,}000$ (`0.008` to `83.910`).
 
 # Estimators
 
@@ -103,9 +104,9 @@ Remember this:
 
 ![](estimating_sems-01.svg)
 
-In addition to 'ML' -- our trusty default maximum likelihood estimator -- there are many other estimators for SEMs. Here's the synopsis from the lavaan help (http://lavaan.ugent.be/tutorial/est.html):
+In addition to 'ML' -- our trusty default maximum likelihood estimator -- there are many other estimators for SEMs. Here's the synopsis from the [lavaan estimators tutorial](https://lavaan.ugent.be/tutorial/est.html):
 
-If all data is continuous, the default estimator in the lavaan package is maximum likelihood (estimator = "ML"). Alternative estimators available in lavaan are:
+If all data are continuous, the default estimator in the lavaan package is maximum likelihood (estimator = "ML"). Alternative estimators available in lavaan are:
 
 - "GLS": generalized least squares. For complete data only.
 - "WLS": weighted least squares (sometimes called ADF estimation). For complete data only.
@@ -125,13 +126,13 @@ For the DWLS and ULS estimators, lavaan also provides 'robust' variants: WLSM, W
 
 # Missing data
 
-By default, `lavaan` will usually apply listwise deletion such that people missing *any* variable are dropped. This is usually not a great idea, both because you can lose a ton of data and because it can give a biased view of the data (for details, see Schafer and Graham, 2002, *Psychological Methods*). Although the details are beyond this overview, it's usually best to use so-called full-information maximum likelihood (FIML) under an assumption that the data are missing at random (MAR) -- a technical term that missingness on a given variable can be related to other variables, but not to the variable itself. Using FIML, the estimation tries to estimate all parameters based on the cases that have available data. If you want to understand this better, read Craig Enders [great 2010 book](http://www.appliedmissingdata.com), *Applied Missing Data Analysis*.
+By default, `lavaan` will usually apply listwise deletion such that people missing *any* variable are dropped. This is usually not a great idea, both because you can lose a ton of data and because it can give a biased view of the data (for details, see Schafer and Graham, 2002, *Psychological Methods*). Although the details are beyond this overview, it's usually best to use so-called full-information maximum likelihood (FIML) under an assumption that the data are missing at random (MAR) -- formally, that missingness on a variable is conditionally independent of its unobserved values given the observed variables included in the model (missingness can still correlate marginally with the variable itself via those observed variables). Using FIML, the estimation uses all cases with available data. If you want to understand this better, read Craig Enders's [great book](https://www.appliedmissingdata.com), *Applied Missing Data Analysis*.
 
-In lavaan, add `missing='ml'` to the `cfa`, `sem`, or `lavaan` function calls in order to request that `lavaan` use all available data (not just complete data) in estimating model parameters. Importantly, assuming that the data are MAR, full information estimation should *improve* the accuracy of parameter estimates, likely making the estimates more similar to what we would obtain if we had no missing data at all. Said more formally, Under MAR or MCAR and a correctly specified likelihood, FIML provides consistent parameter estimates and asymptotically valid standard errors; finite-sample bias is still possible.
+In lavaan, add `missing='ml'` (or `missing='fiml'`) to `cfa`, `sem`, or `lavaan` calls so that `lavaan` uses all available data on endogenous variables rather than listwise deletion (and add `fixed.x = FALSE` or `missing = "fiml.x"` when exogenous observed predictors also contain missing values). Importantly, assuming that the data are MAR, full information estimation should *improve* the accuracy of parameter estimates, likely making the estimates more similar to what we would obtain if we had no missing data at all. Said more formally, under MAR or MCAR and a correctly specified likelihood, FIML provides consistent parameter estimates and asymptotically valid standard errors; finite-sample bias is still possible.
 
 ## Missing data mechanisms
 
-<h4>From Schafer and Graham, 2002, Psychological Methods</h4>
+*From Schafer and Graham (2002), Psychological Methods.*
 
 ![](schafer_2002_missing_mechanisms.png)
 
@@ -139,9 +140,9 @@ In lavaan, add `missing='ml'` to the `cfa`, `sem`, or `lavaan` function calls in
 
 Please note that the estimator used to fit a SEM is different from FIML or the idea of full information. Specifically, the estimator is the algorithm by which we estimate model parameters based on the data. Up to this point, we have focused on maximum likelihood (ML) as the primary estimation approach. Although ML is indeed very useful as a default *estimator*, full information maximum likelihood (FIML) is not a *variant* of ML estimation, but instead a *property* of it.
 
-At a basic level, the FIML approach changes the individual likelihood function -- that is, the likelihood of observing an *individual's* data given a model with a set of parameter estimates. More specifically, FIML does not require that every case have the same number of observed variables when estimating the individual likelihood. Rather, the individual likelihood is based on *all available data*, and the individual only contributes to parameter estimates for which he/she has relevant data. For example, if I lack a score on an item underlying a latent factor, my data will not contribute to the corresponding factor loading estimate.
+At a basic level, the FIML approach changes the individual likelihood function -- that is, the likelihood of observing an *individual's* data given a model with a set of parameter estimates. More specifically, FIML does not require that every case have the same number of observed variables when estimating the individual likelihood. Rather, each individual's log-likelihood is evaluated over their observed variables under the joint multivariate normal model implied by the parameters, so incomplete cases still contribute information indirectly across correlated variables and shared latent factors (without imputing single scores).
 
-As a final technical note, the model chi-square and corresponding fit statistics are a bit different under a FIML approach. Specifically, FIML always estimates two models, the H0 model and the H1 model. The H0 model is the user-specified model. The H1 model is the unrestricted (saturated) model. The difference between the two log-likelihoods is used to derive the chi-square under FIML, rather than just using the fit function from ML alone.
+As a final technical note, the model chi-square and corresponding fit statistics are computed slightly differently under FIML. Specifically, FIML always estimates two models: the H0 (user-specified) model and the H1 (unrestricted/saturated) model. Because sample moments cannot be plugged into the closed-form complete-data $F_{\text{ML}}$ formula directly when data are incomplete, $\ell_{H_1}$ is estimated iteratively (e.g., via EM), and the chi-square is computed from the likelihood-ratio statistic $-2(\ell_{H_0} - \ell_{H_1})$.
 
 Returning to 'full information,' any estimator that uses all available information to estimate every parameter in a model is a 'full information estimator.' For example, Bayesian estimators of SEMs (aka BSEM) also provide full information estimates of parameters.
 
@@ -191,10 +192,9 @@ curvePivot=FALSE,
 sizeMan=7, sizeLat=10)
 ```
 
-I'm going to 'miss out' a few data points for illustration
+I'm going to 'miss out' a few data points for illustration (here using an MCAR-like pattern across `x1` and `x6`):
 
 ```{r}
-#| echo: false
 HolzingerSwineford1939_miss <- HolzingerSwineford1939
 HolzingerSwineford1939_miss$x1[seq(1, 300, by=10)] <- NA
 HolzingerSwineford1939_miss$x6[seq(2, 300, by=10)] <- NA
@@ -229,7 +229,7 @@ And this is more reassuring:
   Number of missing patterns                         3
 ```
 
-Again, the theory and formal approach to missing data is beyond this tutorial, but I hope this gives a sense of how to handle missingness in `lavaan`. Note that WLS and WLSMV are complete case estimators, so doesn't allow for the FIML approach (it's not an ML estimator, after all). You can pass `missing='pairwise'` for the WLS family, which also estimates using parameters based on pairwise availability, though in a much less elegant way (I think).
+Again, the theory and formal approach to missing data are beyond this tutorial, but I hope this gives a sense of how to handle missingness in `lavaan`. Note that WLS and WLSMV are not ML estimators, so they don't allow for FIML. You can pass `missing='pairwise'` for the WLS family, which estimates parameters based on pairwise-available data—though note that pairwise deletion under WLSMV assumes MCAR (or covariate-dependent missingness when conditioning on exogenous predictors) rather than general MAR, so multiple imputation is often preferred when missingness is MAR under WLSMV.
 
 # Categorical data
 
@@ -248,17 +248,17 @@ df <- data.frame(x=c(rep(1, 50), rep(2, 25), rep(3, 15), rep(4, 10), rep(5, 3)))
 ggplot(df, aes(x=x)) + geom_bar() + ylab("Frequency (n)") + xlab("Response")
 ```
 
-In short, we often do not know whether the spacing between anchors is equal, a topic that is expanded on substantially in item response theory (IRT). Furthermore, ordinal data are often a poor approximation of a normal distribution, as in the figure above. This distribution is quite skewed and also 'chunky' in the sense that there are only interval-valued responses (e.g., no responses of 1.5 or 2.2). Altogether, treating such data as *normal* is often a tricky proposition.
+In short, we often do not know whether the spacing between anchors is equal, a topic that is expanded on substantially in item response theory (IRT). Furthermore, ordinal data are often a poor approximation of a normal distribution, as in the figure above. This distribution is quite skewed and also 'chunky' in the sense that there are only integer-valued (discrete) responses (e.g., no responses of 1.5 or 2.2). Altogether, treating such data as *normal* is often a tricky proposition.
 
 **Rule of thumb:** If we have 5+ anchors for an item, we can probably treat it as continuous without major missteps. If we have < 5 anchors, the assumption of normality can yield biased parameter estimates and fit statistics. See Rhemtulla et al., 2012, *Psychological Methods* for further details. If we assume normality, we should also examine the distribution of items to see whether they are approximately normal. If not, this may be a further nudge in favor of modeling them as ordinal, not continuous.
 
 ## Modeling categorical data with a formal threshold structure
 
-**What to do?** `lavaan` supports the formal treatment of endogenous categorical data using a threshold structure. This emerges from the view that the underlying distribution of an item is continuous (Gaussian), but our discretization (e.g., binary or polytomous) cuts this dimension at particular points. Here's an example from the Samejima graded threshold model with 4 anchors per item:
+**What to do?** `lavaan` supports the formal treatment of endogenous categorical data using a probit (normal-ogive) threshold structure. This emerges from the view that each observed ordinal item arises from discretizing a continuous underlying Gaussian response variable $y^*$ at cutpoints (thresholds), closely analogous to Samejima's graded response model in IRT (which typically uses a logistic link). Here's an example with 4 response categories:
 
 ```{r}
 df <- data.frame(x=c(-1.5, -0.5, 1.2), xend=c(-1.5, -0.5, 1.2), y=c(0, 0, 0), yend=c(0.45, 0.45, 0.45), label=c("tau[1]", "tau[2]", "tau[3]"))
-df_labs <- data.frame(x=c(-2.0, -1, .35, 1.7), y=c(0, 0, 0, 0), label=c("Pr(y=1)", "Pr(y=2)", "Pr(y=3)", "Pr(y=4)"))
+df_labs <- data.frame(x=c(-2.0, -1, .35, 1.7), y=c(0.04, 0.04, 0.04, 0.04), label=c("Pr(y=1)", "Pr(y=2)", "Pr(y=3)", "Pr(y=4)"))
 p1 <- ggplot(data = data.frame(x = c(-3, 3)), aes(x)) +
   stat_function(fun = dnorm, n = 500, args = list(mean = 0, sd = 1)) + ylab("Density") + xlab("Item distribution\n<---- Individual Differences ---->") +
   geom_segment(aes(x=x, xend=xend, y=y, yend=yend), data=df) +
@@ -271,27 +271,26 @@ We have 4 levels of the variable (1, 2, 3, 4), but only three thresholds -- each
 
 ## Demo of categorical data in CFA
 
-Typically, models with a threshold structure are estimated using a 'weighted least squares' (WLS) estimator, rather than maximum likelihood (ML; the typical estimator in SEM). Note that there are Bayesian and ML approaches to estimating a model with explicitly categorical data, but these are less common, especially in lavaan. The mean and covariance adjusted WLS (aka 'WLSMV') is usually the way to go because it can handle nonnormality of the multivariate distribution better than the typical WLS. See DiStefano and Morgan 2014, *Structural Equation Modeling*, for details.
+Typically, models with a threshold structure are estimated using a 'weighted least squares' (WLS) estimator, rather than maximum likelihood (ML; the typical estimator in SEM). Note that there are Bayesian and ML approaches to estimating a model with explicitly categorical data, but these are less common, especially in lavaan. The **mean- and variance-adjusted WLS** (aka `'WLSMV'`, which uses diagonally weighted least squares for parameter estimation and the full asymptotic weight matrix for robust SEs and test statistics) is usually the way to go because full WLS requires very large samples to invert the full 4th-order weight matrix reliably. See DiStefano and Morgan 2014, *Structural Equation Modeling*, for details.
 
-Here's a quick demo -- what if we had only trichotomous items for each of our intelligence test items?
+Here's a quick demo -- what if we had only trichotomous (3-category) items for each of our intelligence test items?
 
 ```{r}
-#| echo: false
-HSbinary <- as.data.frame( lapply(HolzingerSwineford1939 %>% dplyr::select(starts_with("x")), cut, 3, labels=FALSE) )
+HStrich <- as.data.frame(lapply(HolzingerSwineford1939 %>% dplyr::select(starts_with("x")), cut, 3, labels=FALSE))
 ```
 
 ```{r}
-lattice::histogram(HSbinary$x1, xlab="Discrete x1")
+lattice::histogram(HStrich$x1, xlab="Discrete x1")
 ```
 
-We tell `lavaan` which items are ordered categorical using the `ordered` argument.
+We tell `lavaan` which items are ordered categorical using the `ordered` argument (which automatically switches the estimator to `WLSMV` with `Delta` parameterization).
 
 ```{r}
 HS.model <- ' visual  =~ x1 + x2 + x3
               textual =~ x4 + x5 + x6
               speed   =~ x7 + x8 + x9
 '
-fit_cat <- cfa(HS.model, HSbinary, ordered=names(HSbinary))
+fit_cat <- cfa(HS.model, HStrich, ordered=names(HStrich))
 summary(fit_cat)
 
 ```
@@ -304,13 +303,13 @@ Categorical/ordinal data are one source of violations of multivariate normality.
 
 If we have continuous data that violate normality, typically our chi-square will be too large -- thus, we will tend to reject models more often than we should. But, violations of normality will result in standard errors that are too small -- thus, we will tend to interpret too many parameters as significant (a kind of Type I error).
 
-In SEM, there are separate workarounds for the model $\chi^2$ and standard error problems. But, these are often packaged together as 'robust' estimation approaches. Long story short, there is a corrected variant of the $\chi^2$ attributable to Satorra and Bentler, and later developed by Yuan and Bentler. This approach estimates a scaling correction factor that is based on estimates of multivariate kurtosis. The model chi-square is divided by the correction factor estimate a $\chi^2$ to yield a global test that is robust to non-normality in the data.
+In SEM, there are separate workarounds for the model $\chi^2$ and standard error problems. But, these are often packaged together as 'robust' estimation approaches. Long story short, there is a corrected variant of the $\chi^2$ attributable to Satorra and Bentler (implemented in `MLM` for complete data), and later extended by Yuan and Bentler (implemented in `MLR`, which also works with incomplete data under FIML). This approach estimates a scaling correction factor based on multivariate kurtosis, and divides the standard model $\chi^2$ by that scaling correction factor to yield a global test robust to non-normality.
 
-If the data are MVN, then the correction factor will be 1.0 -- and the robust and traditional $\chi^2$ statistics will be very similar. But if the data is highly non-normal, the correction factor will go above 1.0 (e.g., 1.1 or 1.6). In general, it's probably a good idea to use the Satorra-Bentler $\chi^2$ to guard against the problem of rejecting too many well-fitting SEMs of non-normal data.
+If the data are MVN, then the scaling correction factor will be close to 1.0 -- and the robust and traditional $\chi^2$ statistics will be very similar. When the data have heavy tails (positive excess kurtosis), the correction factor rises above 1.0 (e.g., 1.1 to 1.6), reducing an inflated $\chi^2$; conversely, light-tailed (platykurtic) data can yield a scaling factor slightly below 1.0 (as in the Holzinger–Swineford example below, where it is `0.979`). In general, using a scaled $\chi^2$ guards against rejecting too many well-fitting SEMs due to non-normal data.
 
-Correcting the standard errors for non-normality relies on what is called a Huber-White sandwich estimator. Completely skipping the details, the important point is that this estimator corrects for non-normality (as well as clustering/nesting of observations).
+Correcting the standard errors for non-normality relies on a Huber-White sandwich estimator. Completely skipping the details, this estimator provides robust standard errors under non-normality (and, when a `cluster =` variable is also specified, accounts for clustering/nesting of observations).
 
-Putting these things together -- Satorra-Bentler $\chi^2$ and Huber-White SEs -- we arrive at what has been called the 'MLR' estimator in Mplus and lavaan. In general, this is probably a good 'go to' as your default estimator because of its attractive properties with non-normal data.
+Putting these things together -- the **Yuan-Bentler** scaled $\chi^2$ and Huber-White sandwich SEs -- we arrive at the `'MLR'` estimator in Mplus and `lavaan` (whereas `'MLM'` pairs Huber-White SEs with the Satorra-Bentler scaled $\chi^2$ for complete data). In general, `MLR` is a strong default for continuous, potentially non-normal data—just remember that when comparing nested models estimated with `MLR` (or `WLSMV`), you cannot subtract scaled $\chi^2$ values directly and should instead use `anova()` / `lavTestLRT()`, which computes the appropriate scaled chi-square difference test.
 
 ## Estimate the CFA with the MLR approach
 
