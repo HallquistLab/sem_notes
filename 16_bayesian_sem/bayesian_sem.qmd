@@ -494,7 +494,15 @@ fit_icm <- cfa(mod_icm, data = hs_gw, std.lv = TRUE, meanstructure = TRUE)
 mi_top <- modindices(fit_icm, sort. = TRUE) %>%
   select(lhs, op, rhs, mi, epc, sepc.all) %>%
   head(5)
-kable(mi_top, caption = "Top 5 Frequentist Modification Indices from Strict ICM-CFA")
+kable(
+  mi_top,
+  format = if (knitr::is_html_output()) "html" else "pipe",
+  digits = 3,
+  row.names = FALSE,
+  col.names = c("LHS", "Op", "RHS", "MI", "EPC", "Std. EPC"),
+  table.attr = if (knitr::is_html_output()) 'class="matrix-table"' else "",
+  caption = "Top 5 Frequentist Modification Indices from Strict ICM-CFA"
+)
 
 # 2. Post-hoc ICM-CFA + Modification Index path (visual =~ x9)
 mod_icm_mi <- '

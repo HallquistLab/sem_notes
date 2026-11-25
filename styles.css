@@ -11,7 +11,15 @@ pre { font-size: 0.85rem; }
 .matrix-table {
   width: auto;
   margin: 1rem auto;
+  caption-side: top;
   font-variant-numeric: tabular-nums;
+}
+.matrix-table caption {
+  font-weight: 600;
+  color: var(--bs-emphasis-color);
+  text-align: left;
+  white-space: pre-line;
+  padding-bottom: 0.35rem;
 }
 .matrix-table th, .matrix-table td { padding: 0.4rem 0.75rem; white-space: nowrap; }
 .matrix-table thead { border-bottom: 2px solid var(--bs-border-color); }

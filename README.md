@@ -46,12 +46,15 @@ prevents deployment.
 - Run `make render` for source checks, R syntax validation, rendering, and rendered-link checks.
 
 R chapters include `/scripts/matrix-rendering.qmd` before their setup chunk.
-The shared renderer formats matrices, named lavaan matrix lists, ANOVA/model
-comparison results, and selected fit-measure vectors as tables. It preserves
-model-comparison test descriptions and leaves full model summaries unchanged.
-Numbers use three decimal places, with scientific notation for nonzero values
-that would otherwise round to zero. Table p-values below .001 display as
-`< .001`; missing values remain `NA`.
+The shared renderer formats matrices, named lavaan matrix lists (including
+`fitted()` and `resid()` outputs), lavaan parameter/modification tables,
+ANOVA/model comparison results, and selected fit-measure vectors as HTML tables.
+It preserves model-comparison test descriptions, renders integer indices and
+degrees of freedom without trailing decimals, escapes lavaan's `~~` operator
+so Pandoc does not treat it as subscript markup, and leaves full model summaries
+unchanged. Numbers use three decimal places, with scientific notation for
+nonzero values that would otherwise round to zero. Table p-values below .001
+display as `< .001`; missing values remain `NA`.
 
 Set `#| matrix.digits: 5` in a chunk to show more precision. End an expression
 with the object itself rather than `print(object)` so knitr can format it;

@@ -36,18 +36,18 @@ website:
           - 02_sem_basics/matrix_algebra_review.qmd
           - 02_sem_basics/onyx_tutorial/Onyx.qmd
           - 02_sem_basics/sem_notation.qmd
-          - 03_path_models/path_analysis_demo.qmd
           - 03_path_models/path_analysis_fundamental.qmd
+          - 03_path_models/path_analysis_demo.qmd
       - section: "Latent variables and measurement"
         contents:
           - 04_latent_variables_estimation/latent_variables.qmd
           - 04_latent_variables_estimation/maximum_likelihood.qmd
-          - 05_psychometrics/lv_sim.qmd
           - 05_psychometrics/psychometrics_overview.qmd
-          - 06_factor_models/bass_ackwards_demo.qmd
+          - 05_psychometrics/lv_sim.qmd
           - 06_factor_models/factor_models.qmd
-          - 07_full_sem/full_sem_demo.qmd
+          - 06_factor_models/bass_ackwards_demo.qmd
           - 07_full_sem/full_sem_specification.qmd
+          - 07_full_sem/full_sem_demo.qmd
       - section: "Model assessment"
         contents:
           - 08_fit/sem_fit_modification.qmd

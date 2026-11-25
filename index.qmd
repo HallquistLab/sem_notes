@@ -7,7 +7,7 @@ number-sections: false
 
 These notes introduce structural equation modeling (SEM) as a framework for testing hypotheses about measurement and relationships among observed and latent variables. They cover foundational methods and extensions including causality, longitudinal models, and multilevel SEM.
 
-The collection develops the statistical ideas alongside R examples, primarily using **lavaan**. Topics build from covariance and regression to measurement models, model assessment, multiple groups, mediation, growth curves, and multilevel models.
+The collection develops the statistical ideas alongside R examples, primarily using **lavaan**. Topics build from covariance and regression to measurement models, model assessment, multiple groups, mediation, growth curves, multilevel models, and Bayesian SEM.
 
 ## Start here
 

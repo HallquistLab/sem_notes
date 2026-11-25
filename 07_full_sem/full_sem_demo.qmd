@@ -394,7 +394,7 @@ Unfortunately, this has caused a significant reduction in our model fit, which w
 anova(ach.cfa3,ach.cfa4)
 ```
 
-In sum, this, in combination with the nonsignificant estimate of VERB regressed onto SPEED, suggests that our initial hypothesis is not supported by the data.  Perhaps we can examine an alternative model that may better represent our data.  We notice that in the output the VERB~VIS and VIS~~SPEED parameters are both significant.  It is possible that visual acuity is a necessary foundational capacity contributing to both processing speed and linguistic functioning.  This makes sense, given the need to visually encode information prior to higher-order executive functions that utilize visual input.  Let's test a model in which VIS is a cause of both SPEED and VERB.  However, to avoid a just-identified model, we also require the covariance between SPEED and VERB (after being regressed on VIS) to be zero.
+In sum, this, in combination with the nonsignificant estimate of VERB regressed onto SPEED, suggests that our initial hypothesis is not supported by the data.  Perhaps we can examine an alternative model that may better represent our data.  We notice that in the output the `VERB ~ VIS` and `VIS ~~ SPEED` parameters are both significant.  It is possible that visual acuity is a necessary foundational capacity contributing to both processing speed and linguistic functioning.  This makes sense, given the need to visually encode information prior to higher-order executive functions that utilize visual input.  Let's test a model in which VIS is a cause of both SPEED and VERB.  However, to avoid a just-identified model, we also require the covariance between SPEED and VERB (after being regressed on VIS) to be zero.
 
 ```{r}
 
