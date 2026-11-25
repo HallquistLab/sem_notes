@@ -4,9 +4,11 @@
 #| cache: false
 # Keep formatting helpers local: rendering never changes analysis objects.
 local({
-  format_numbers <- function(x, digits, p_value = FALSE) {
+  format_numbers <- function(x, digits, p_value = FALSE, integer_if_whole = FALSE) {
     out <- formatC(x, format = "f", digits = digits)
     out[is.na(x)] <- "NA"
+    whole <- integer_if_whole & is.finite(x) & x == trunc(x)
+    out[whole] <- formatC(x[whole], format = "f", digits = 0)
     if (p_value) {
       small <- is.finite(x) & x >= 0 & x < 0.001
       out[small] <- "< .001"
@@ -20,7 +22,7 @@ local({
 
   render_table <- function(x, options, caption = NULL, row_names = TRUE,
                            p_columns = character(),
-                           int_columns = c("Df", "Df diff", "df"),
+                           int_columns = c("Df", "Df diff", "df", "df.scaled"),
                            digits = NULL) {
     if (is.null(digits)) {
       digits <- options$matrix.digits
@@ -33,11 +35,9 @@ local({
     alignment <- vapply(x, function(col) if (is.numeric(col)) "r" else "l", "")
     for (name in names(x)) {
       if (is.numeric(x[[name]])) {
-        if (name %in% int_columns) {
-          x[[name]] <- format_numbers(x[[name]], 0)
-        } else {
-          x[[name]] <- format_numbers(x[[name]], digits, name %in% p_columns)
-        }
+        x[[name]] <- format_numbers(x[[name]], digits,
+                                    p_value = name %in% p_columns,
+                                    integer_if_whole = name %in% int_columns)
       }
     }
     html <- knitr::is_html_output()
@@ -169,7 +169,7 @@ local({
         int_cols <- intersect(
           names(x),
           c("id", "user", "block", "group", "level", "free", "exo",
-            "df", "Df", "Df diff")
+            "df", "df.scaled", "Df", "Df diff")
         )
         p_cols <- intersect(names(x), c("pvalue", "p.value"))
         return(knitr::asis_output(render_table(
@@ -192,9 +192,8 @@ local({
         known <- labels %in% names(fit_labels)
         labels[known] <- unname(fit_labels[labels[known]])
         digits <- if (is.null(options$matrix.digits)) 3L else options$matrix.digits
-        values <- format_numbers(unname(x), digits)
-        int_idx <- names(x) %in% fit_int_names
-        values[int_idx] <- format_numbers(unname(x[int_idx]), 0)
+        values <- format_numbers(unname(x), digits,
+                                 integer_if_whole = names(x) %in% fit_int_names)
         p <- grepl("pvalue", names(x), fixed = TRUE)
         values[p] <- format_numbers(unname(x[p]), digits, p_value = TRUE)
         return(knitr::asis_output(render_table(

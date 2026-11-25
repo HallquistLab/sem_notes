@@ -3,6 +3,14 @@
 .quarto-title-block .quarto-title-banner { padding-bottom: 1rem; }
 main img { max-width: 100%; height: auto; }
 .cell-output-display { overflow-x: auto; }
+/* Let a wide equation scroll within the text column. */
+main .math.display { display: block; max-width: 100%; overflow-x: auto; }
+@media (max-width: 767px) {
+  main { overflow-wrap: anywhere; }
+  main :not(pre) > code { white-space: normal; }
+  /* Keep prose columns readable as their table scrolls horizontally. */
+  main .table-responsive > table { min-width: 40rem; }
+}
 pre { font-size: 0.85rem; }
 .emph { font-weight: 600; }
 .pack, .func { font-family: var(--bs-font-monospace); }

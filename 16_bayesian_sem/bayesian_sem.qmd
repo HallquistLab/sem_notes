@@ -18,7 +18,7 @@ Throughout our work in structural equation modeling (SEM), we have treated **max
 In real psychological research, however, frequentist SEM routinely runs into **two major walls**:
 
 1. **The substantive rigidity wall ("exact zeros"):** While frequentist ML can estimate a handful of pre-specified secondary loadings or correlated residuals, standard independent-clusters CFA (ICM-CFA) fixes all remaining non-target cross-loadings and residual covariances to *exact zero* ($\lambda_{jr} = 0$, $\theta_{jj'} = 0$). In practice, psychological items almost never reflect a single construct with mathematical purity; minor secondary influences ($|\lambda| \approx .05\text{–}.18$) are the rule rather than the exception. Under ML, those tiny omitted paths accumulate into global $\chi^2$ rejection, distorted factor correlations, and a temptation to play "whack-a-mole" with sequential modification indices (MacCallum, Roznowski, & Necowitz, 1992) — or to abandon confirmatory structure altogether for exploratory factor rotation (EFA / ESEM).
-2. **The computational intractability wall ("Gaussian quadrature"):** Whenever latent variables or random effects cannot be integrated out of the likelihood in closed form — as happens in multilevel SEM (MSEM) with many person-specific random slopes, latent variable interactions, or categorical indicators — full-information ML must approximate a $d$-dimensional integral over the latent space. Standard Gauss–Hermite quadrature evaluates a tensor-product grid of $Q^d$ nodes per cluster at *every* optimization step, which grows exponentially with the number of random effects $d$ (and while alternatives like Laplace or Monte Carlo integration exist, they often trade off accuracy in small clusters or remain unavailable for general latent-variable SEM specifications).
+2. **The computational intractability wall ("quadrature grids"):** Whenever latent variables or random effects cannot be integrated out of the likelihood in closed form — as happens in multilevel SEM (MSEM) with many person-specific random slopes, latent variable interactions, or categorical indicators — full-information ML must approximate a $d$-dimensional integral over the latent space. Tensor-product quadrature evaluates a tensor-product grid of $Q^d$ nodes per cluster at *every* optimization step, which grows exponentially with the number of random effects $d$ (and while alternatives like Laplace or Monte Carlo integration exist, they often trade off accuracy in small clusters or remain unavailable for general latent-variable SEM specifications).
 
 **Bayesian structural equation modeling (BSEM)** offers tools for both challenges within a single coherent probability framework. Following Depaoli (2021) and Chen et al. (2024), it helps to view BSEM as serving two complementary roles:
 
@@ -32,7 +32,7 @@ These notes develop both core motivations for Bayesian SEM across five connected
 1. **Bayesian foundations for SEM:** How precision-weighted shrinkage combines prior expectations with the data likelihood, how priors are scaled in Mplus and `blavaan`, and how Posterior Predictive Checking ($\text{PP}p$) and Bayesian approximate fit indices (`BRMSEA`, `BCFI`, `BTLI`, `DIC`, `LOO`) evaluate model adequacy.
 2. **Approximate-zero cross-loading priors:** How placing zero-centered, small-variance priors ($\lambda_{\text{cross}} \sim \mathcal{N}(0, 0.01)$) on non-target loadings in Bayesian CFA captures realistic secondary item influences while preserving confirmatory simple structure — compared directly against strict ML ICM-CFA and exploratory Geomin ESEM on the Holzinger & Swineford (1939) tests, followed by a formal prior sensitivity sweep across $\sigma^2_0$.
 3. **Two further uses:** Worked posterior mediation and two-group approximate-invariance examples connect BSEM to earlier lectures, including sensitivity of latent mean comparisons to difference priors.
-4. **Random slopes and numerical integration:** Why models with multiple random slopes, non-Gaussian outcomes, or latent within-person predictors (`TYPE = TWOLEVEL RANDOM`, [extending our multilevel SEM notes](../15_multilevel/multilevel_sem.qmd)) run into the exponential $Q^d$ Gauss–Hermite quadrature bottleneck under frequentist ML, how MCMC data augmentation sidesteps that grid, and how Bayesian MSEM recovers person-specific latent reactivity slopes while accounting for measurement error and random-slope uncertainty jointly.
+4. **Random slopes and numerical integration:** Why models with multiple random slopes, non-Gaussian outcomes, or latent within-person predictors (`TYPE = TWOLEVEL RANDOM`, [extending our multilevel SEM notes](../15_multilevel/multilevel_sem.qmd)) run into the exponential $Q^d$ quadrature grid bottleneck under frequentist ML, how MCMC data augmentation sidesteps that grid, and how Bayesian MSEM recovers person-specific latent reactivity slopes while accounting for measurement error and random-slope uncertainty jointly.
 5. **Diagnostics and responsible interpretation:** Multi-chain convergence diagnostics ($\hat{R}$ / PSR, effective sample size), why you should never rely on Mplus's default `PSR < 1.05` auto-stop without an iteration floor, and substantive guardrails from the WAMBS workflow.
 
 Before starting, you may find it helpful to review [maximum likelihood](../04_latent_variables_estimation/maximum_likelihood.qmd), [factor models](../06_factor_models/factor_models.qmd), [model fit](../08_fit/sem_fit_modification.qmd), and [multilevel SEM](../15_multilevel/multilevel_sem.qmd).
@@ -44,7 +44,7 @@ After this lecture and working through the code, you should be able to:
 1. Distinguish an exact-zero constraint from an approximate-zero prior and explain how each changes the measurement model.
 2. Articulate how Bayesian CFA with zero-centered cross-loading priors relates to frequentist ESEM and sequential modification index searches.
 3. Implement a Bayesian CFA in Mplus (via `MplusAutomation`), inspect loading and residual correlation heatmaps, and conduct a formal prior sensitivity analysis.
-4. Explain mathematically and geometrically why Gaussian quadrature bogs down exponentially ($Q^d$) as the number of random slopes or non-Gaussian latent dimensions grows, and why MCMC avoids this bottleneck.
+4. Explain mathematically and geometrically why the size of a tensor-product quadrature grid grows exponentially ($Q^d$) as the number of random slopes or non-Gaussian latent dimensions grows, and why MCMC avoids this bottleneck.
 5. Compute indirect effects from joint posterior draws and distinguish exact from approximate measurement invariance.
 6. Diagnose MCMC chain convergence and model adequacy using traceplots, Potential Scale Reduction ($\hat{R}$/PSR), Posterior Predictive $p$-values ($\text{PP}p$), and Bayesian approximate fit indices (`BRMSEA`, `BCFI`, `BTLI`).
 
@@ -383,6 +383,7 @@ $$
 Because $\mathbf{T}$ has $m^2$ free elements ($3^2 = 9$ for three factors), fixing the $m = 3$ factor variances to $1.0$ on the diagonal of $\boldsymbol{\Psi}$ still leaves $m(m-1) = 6$ rotational degrees of freedom. EFA/ESEM resolves those $6$ degrees of freedom via an algorithmic rotation criterion (such as Geomin), whereas ICM-CFA fixes all $18$ off-target loadings to zero ($6$ identifying constraints + $12$ overidentifying substantive restrictions).
 :::
 
+::: {.table-responsive role="region" aria-label="Comparison of measurement assumptions" tabindex="0"}
 | Feature | Strict ICM-CFA (ML) | ESEM (ML + Rotation) | Bayesian CFA with Approximate Zeros (BSEM) |
 |---|---|---|---|
 | **Off-target cross-loadings ($\lambda_{\text{cross}}$)** | All $18$ fixed to $0$ ($6$ identifying + $12$ overidentifying zero restrictions) | All $18$ freely estimated subject to $m(m-1)=6$ mechanical rotation constraints (e.g., Geomin, Target) | All $18$ estimated with informative zero-centered priors, e.g., $\lambda_{\text{cross}} \sim \mathcal{N}(0, 0.01)$ ($p_D$ adds only $\sim 6.5$ effective parameters) |
@@ -390,6 +391,7 @@ Because $\mathbf{T}$ has $m^2$ free elements ($3^2 = 9$ for three factors), fixi
 | **Factor orientation in full SEM (with covariates/outcomes)** | Anchored directly by the hypothesized zero pattern | **Measurement-block rotation:** factors are rotated using $\boldsymbol{\Lambda}_y$ and $\boldsymbol{\Psi}$ alone, without reference to structural covariates or distal outcomes | **Joint full-model estimation:** factor orientation is informed simultaneously by indicators, covariates, and structural regressions (Muthén & Asparouhov, 2012, p. 331) |
 | **Consequence for factor correlations ($\boldsymbol{\Psi}$)** | Omitted positive cross-loadings are forced through $\boldsymbol{\Psi}$, often **inflating** factor correlations | Unshrunk noisy cross-loadings can absorb shared construct covariance, sometimes **attenuating** factor correlations | Shrinks noisy cross-loadings toward zero while letting genuine secondary loadings emerge, stabilizing $\boldsymbol{\Psi}$ |
 | **Model modification workflow** | Sequential Modification Index (`MI`) searches (freeing one path at a time risks capitalizing on chance; MacCallum et al., 1992) | Estimates all cross-loadings at once, but with wider standard errors due to rotational uncertainty | **Single-step joint screening:** flags which specific cross-loadings have 95% CrIs excluding zero in one coherent model |
+:::
 
 ::: {.callout-note}
 ## How approximate-zero priors anchor model identification
@@ -1380,17 +1382,19 @@ $$
 When $p(\mathbf{y}_{tj} \mid \mathbf{u}_j, \boldsymbol{\theta})$ is linear and Gaussian in $\mathbf{u}_j$, the product of two Gaussians integrates analytically to a multivariate normal density. Whenever $\mathbf{u}_j$ enters through a non-linear link function (logit/probit/Poisson) or multiplies another latent variable $\boldsymbol{\eta}_{tj}$ (whose product density involves a modified Bessel function of the second kind), no closed-form antiderivative exists and the optimizer must approximate the $d$-dimensional integral at every step.
 :::
 
-## The curse of dimensionality in Gauss–Hermite quadrature
+## Why quadrature grids grow exponentially {#the-curse-of-dimensionality-in-gausshermite-quadrature}
 
-How does frequentist ML (`ALGORITHM = INTEGRATION` in Mplus) approximate that $d$-dimensional integral? Using **Gauss–Hermite quadrature**: in 1 dimension, a smooth bell-shaped integrand is well approximated by a weighted sum at $Q$ fixed nodes (Mplus's default is $Q = 15$ quadrature points per dimension).
+For a model with a random intercept, each participant's likelihood averages over possible values of that intercept. **Quadrature** approximates the average by evaluating the likelihood at a finite set of points and taking a weighted sum. In the archived runs, Mplus used `INTEGRATION = STANDARD(15)`, its rectangular (trapezoidal) rule with 15 points per dimension. Adaptive quadrature was on, so Mplus could center and scale the grid for each participant. Mplus also offers Gauss–Hermite quadrature (`GAUSSHERMITE`), which uses a different choice of points and weights. [Mplus integration options](https://www.statmodel.com/HTML_UG/chapter16V8.htm)
 
-In $d$ dimensions, however, a tensor-product quadrature grid requires evaluating the likelihood at **$Q^d$ grid points per cluster, at every single EM / Newton iteration**:
+With a random intercept and one random slope, the likelihood depends on both quantities. Each of the 15 intercept points is paired with each of the 15 slope points, giving 225 evaluations per participant. With $d$ random effects and $Q$ points per dimension, the grid has $Q^d$ points. Writing $w_{jk}$ for the weight at grid point $\mathbf{u}_{jk}$ for participant $j$, the approximation is
 
 $$
-\int_{\mathbb{R}^d} g(\mathbf{u}_j)\,\phi_d(\mathbf{u}_j)\,d\mathbf{u}_j \;\approx\; \sum_{q_1=1}^Q \cdots \sum_{q_d=1}^Q w_{q_1}\cdots w_{q_d} \, g(z_{q_1}, \dots, z_{q_d}) \qquad \Longrightarrow \qquad \mathcal{O}\!\left(J \cdot T \cdot Q^d\right) \text{ operations/step.}
+\int_{\mathbb{R}^d} g_j(\mathbf{u})\,\phi_d(\mathbf{u}\mid\mathbf{0},\boldsymbol{\Sigma}_u)\,d\mathbf{u}
+\;\approx\; \sum_{k=1}^{Q^d} w_{jk}\,g_j(\mathbf{u}_{jk}).
 $$
 
-Look at the combinatorics for $Q = 15$ nodes per dimension:
+Here $g_j$ is the likelihood of the participant's observed responses at a given value of the random effects. With $J$ participants and $T$ responses each, one evaluation of the model likelihood takes roughly $J T Q^d$ response-level calculations. The optimizer repeats this work as it updates the model parameters. For $Q = 15$, the grid sizes are
+
 - $d = 1$ (random intercept only): $15^1 = \mathbf{15}$ nodes/person
 - $d = 2$ (intercept + 1 random slope): $15^2 = \mathbf{225}$ nodes/person
 - $d = 3$ (intercept + 2 random slopes): $15^3 = \mathbf{3{,}375}$ nodes/person
@@ -1398,7 +1402,7 @@ Look at the combinatorics for $Q = 15$ nodes per dimension:
 - $d = 5$ (intercept + 4 random slopes): $15^5 = \mathbf{759{,}375}$ nodes/person
 - $d = 6$ (intercept + 5 random slopes): $15^6 = \mathbf{11{,}390{,}625}$ nodes/person.
 
-Geometrically, as dimension $d$ grows, an increasing fraction of a rectangular $Q^d$ tensor-product grid falls in low-density tail regions of the multivariate normal random-effect distribution (especially when random intercepts and slopes correlate). Adaptive quadrature, Laplace approximations (`lme4::glmer()`'s `nAGQ = 1`), and Monte Carlo integration can mitigate this cost, though Laplace approximations can downward-bias random-effect variances for binary outcomes in small clusters and `lme4` does not support `nAGQ > 1` with random slopes.
+Adapting the grid places points where they contribute more to each participant's integral. At a fixed $Q$, each additional random effect still multiplies the number of points by $Q$. Other approaches, such as Laplace approximation and Monte Carlo integration, use different approximations with different accuracy and runtime tradeoffs.
 
 ## How Bayesian MCMC breaks the $Q^d$ barrier: Data augmentation
 
@@ -1411,13 +1415,16 @@ In Mplus (`GIBBS` / Metropolis-within-Gibbs; Asparouhov & Muthén, 2010b), this 
 
 Rather than scaling exponentially as $\mathcal{O}(Q^d)$, adding another random slope increases per-iteration matrix algebra only polynomially ($\sim \mathcal{O}(d^2\text{–}d^3)$) while concentrating draws inside the high-probability region ("typical set") of the posterior. Of course, higher-dimensional random-effect covariance matrices still exhibit stronger posterior autocorrelation and require more iterations to achieve a target Effective Sample Size (ESS), so we always evaluate computational efficiency **per effective independent draw** rather than per raw iteration.
 
-## Archived timing illustration: Gaussian quadrature vs. Bayesian MCMC across $d = 1 \dots 5$
+## Timing adaptive standard quadrature and Bayesian MCMC {#archived-timing-illustration-gaussian-quadrature-vs.-bayesian-mcmc-across-d-1-dots-5}
 
-To see this scaling contrast concretely, we simulate an EMA dataset of $J = 80$ participants observed across $T = 25$ prompts ($N = 2{,}000$ rows) with a binary daily symptom outcome (`y_bin`) generated under a probit link and up to 4 within-person triggers (`x1`–`x4`), creating $d = 1$ to $d = 5$ correlated random effects. Both estimators fit the **exact same probit random-effects likelihood**: Mplus `ESTIMATOR = MLR; LINK = PROBIT;` with standard 15-point Gauss–Hermite quadrature ($d = 1, 2, 3$, plus a $15^d$ scaling projection for $d = 4, 5$ so rendering this notebook doesn't take over an hour) alongside Mplus `ESTIMATOR = BAYES; LINK = PROBIT;` ($d = 1, 2, 3, 4, 5$, across 2 chains with `BITERATIONS = 5000 (2000)`, i.e., a minimum of 2,000 and maximum of 5,000 iterations per chain, stopping once Mplus's default PSR convergence criterion is met).
+The simulated dataset contains 25 binary symptom reports from each of 80 participants. Both estimators use a probit link. The first model has a random intercept. Each successive model adds one random slope, up to five correlated random effects.
+
+The archive contains measured ML times for $d=1,2,3$ using 15-point adaptive standard quadrature. For $d=4,5$, the table projects the time by multiplying the measured $d=3$ time by 15 for each added dimension. That projection assumes the runtime grows in proportion to the grid size. The Bayesian times were measured for all five models. Each of two chains ran for at least 2,000 iterations and could continue to 5,000 depending on the convergence check (`BITERATIONS = 5000 (2000)`).
 
 ```{r quadrature-vs-bayes-benchmark}
 #| fig-width: 13.4
 #| fig-height: 5.8
+#| fig-alt: "A 15 by 15 grid pairs random intercepts with random slopes. The timing plot shows measured ML times rising across one to three random effects, projected ML times for four and five, and measured Bayesian times across all five."
 
 bench_cache_file <- file.path(mplus_dir, "quad_vs_bayes_bench_r6.rds")
 
@@ -1477,7 +1484,7 @@ if (run_mplus) {
       invisible(capture.output(m_by$run(replaceOutfile = "always", logFile = NULL)))
     })["elapsed"]
 
-    # Run ML 15-pt Gaussian quadrature (probit link) for d = 1..3 via mplusModel()
+    # Run ML with 15-point adaptive standard quadrature (probit link) for d = 1..3 via mplusModel()
     t_ml <- NA_real_
     if (d <= 3) {
       syn_ml <- paste(
@@ -1554,23 +1561,24 @@ kable(
       ),
       `Bayes MCMC Time (2,000–5,000 iter)` = sprintf("%.2f s (measured)", bayes_sec)
     ),
-  caption = "Empirical Wall-Clock Scaling: 15-Point Gauss–Hermite Quadrature vs. Bayesian MCMC (J = 80, T = 25)"
+  caption = "Elapsed time for 15-point adaptive standard quadrature and Bayesian MCMC (80 participants, 25 reports each)"
 )
 
-# Panel A: Why tensor-product quadrature wastes evaluations vs MCMC sampling the typical set
-set.seed(99)
+# Panel A: Use the same population ellipse for the outline and the grid-point colors.
 Sigma_2d <- matrix(c(1, 0.72, 0.72, 1), 2, 2)
-mcmc_pts <- as.data.frame(MASS::mvrnorm(225, mu = c(0, 0), Sigma = Sigma_2d))
-colnames(mcmc_pts) <- c("u0", "s1")
+cutoff_95 <- qchisq(0.95, df = 2)
+angle <- seq(0, 2 * pi, length.out = 201)
+ellipse <- as.data.frame(sqrt(cutoff_95) * cbind(cos(angle), sin(angle)) %*% chol(Sigma_2d))
+names(ellipse) <- c("u0", "s1")
 
-gh_1d <- seq(-3.2, 3.2, length.out = 15)
-quad_pts <- expand.grid(u0 = gh_1d, s1 = gh_1d)
+grid_1d <- seq(-3.2, 3.2, length.out = 15)
+quad_pts <- expand.grid(u0 = grid_1d, s1 = grid_1d)
 quad_pts$mahal <- mahalanobis(quad_pts, center = c(0, 0), cov = Sigma_2d)
-quad_pts$in_mass <- quad_pts$mahal <= qchisq(0.95, df = 2)
+quad_pts$in_mass <- quad_pts$mahal <= cutoff_95
 
 p_geom <- ggplot() +
-  stat_ellipse(data = mcmc_pts, aes(x = u0, y = s1), level = 0.95,
-               color = "gray30", linetype = "dashed", linewidth = 0.8) +
+  geom_path(data = ellipse, aes(x = u0, y = s1),
+            color = "gray30", linetype = "dashed", linewidth = 0.8) +
   geom_point(data = quad_pts, aes(x = u0, y = s1, color = in_mass), size = 1.6, shape = 3) +
   scale_color_manual(
     values = c(`FALSE` = "#b2182b", `TRUE` = "#2166ac"),
@@ -1579,7 +1587,7 @@ p_geom <- ggplot() +
   ) +
   labs(
     title = "A. Schematic integration grid (15 × 15)",
-    subtitle = "Equally spaced points illustrate geometry;\nthese are not Gauss–Hermite nodes or weights",
+    subtitle = "Each intercept point is paired with each slope point.\nThe ellipse encloses 95% of the random-effect distribution.",
     x = expression("Random intercept (" * u["0," * j] * ")"),
     y = expression("Random slope (" * s["1," * j] * ")")
   ) +
@@ -1590,15 +1598,15 @@ p_geom <- ggplot() +
 # Panel B: Log-scale runtime comparison (connecting d = 3 seamlessly into projected d = 3..5 segment)
 df_lines <- bind_rows(
   bench_list %>% filter(d <= 3) %>%
-    transmute(d, sec = ml_plot_sec, method = "Frequentist ML (15-pt Quadrature)", status = measured_label),
+    transmute(d, sec = ml_plot_sec, method = "ML (15-pt adaptive standard)", status = measured_label),
   bench_list %>% filter(d >= 3) %>%
-    transmute(d, sec = ml_plot_sec, method = "Frequentist ML (15-pt Quadrature)", status = "Projected (15^d scaling)"),
+    transmute(d, sec = ml_plot_sec, method = "ML (15-pt adaptive standard)", status = "Projected (15^d scaling)"),
   bench_list %>%
     transmute(d, sec = bayes_sec, method = "Bayesian MCMC (2,000–5,000 iter)", status = measured_label)
 )
 
 df_pts <- bind_rows(
-  bench_list %>% transmute(d, sec = ml_plot_sec, method = "Frequentist ML (15-pt Quadrature)", status = ml_type),
+  bench_list %>% transmute(d, sec = ml_plot_sec, method = "ML (15-pt adaptive standard)", status = ml_type),
   bench_list %>% transmute(d, sec = bayes_sec,   method = "Bayesian MCMC (2,000–5,000 iter)",  status = measured_label)
 )
 
@@ -1610,7 +1618,7 @@ p_time <- ggplot() +
     labels = c("0.1 s", "1 s", "10 s", "1 min", "10 min", "1 hr")
   ) +
   scale_x_continuous(breaks = 1:5, labels = c("1\n(15)", "2\n(225)", "3\n(3,375)", "4\n(50,625)", "5\n(759,375)")) +
-  scale_color_manual(values = c("Frequentist ML (15-pt Quadrature)" = "#b2182b",
+  scale_color_manual(values = c("ML (15-pt adaptive standard)" = "#b2182b",
                                 "Bayesian MCMC (2,000–5,000 iter)"  = "#2166ac"), name = NULL) +
   scale_linetype_manual(values = setNames(c("solid", "dashed"), c(measured_label, "Projected (15^d scaling)")), name = NULL) +
   scale_shape_manual(values = setNames(c(19, 1), c(measured_label, "Projected (15^d scaling)")), name = NULL) +
@@ -1626,12 +1634,12 @@ p_time <- ggplot() +
 p_geom + p_time + plot_layout(widths = c(1, 1.48))
 ```
 
-Look at **Panel B**: on a logarithmic vertical axis, 15-point Gaussian quadrature climbs steeply from $`r sprintf("%.2f", bench_list$ml_sec[1])`\text{ s}$ ($d = 1$) to $`r sprintf("%.1f", bench_list$ml_sec[2])`\text{ s}$ ($d = 2$) and $`r sprintf("%.1f", bench_list$ml_sec[3])`\text{ s}$ ($d = 3$) in the archived Mplus runs; the dashed segment projects that $\times 15$-per-dimension grid scaling out to ~$`r sprintf("%.1f", bench_list$ml_plot_sec[4] / 60)`\text{ min}$ ($d = 4$) and ~$`r sprintf("%.1f", bench_list$ml_plot_sec[5] / 3600)`\text{ hr}$ ($d = 5$; those $d = 4, 5$ values are $15^d$ projections from $d = 3$, not measured runs). Meanwhile, **Bayesian MCMC (`BITERATIONS = 5000 (2000)`, running 2,000–5,000 iterations per chain and stopping once Mplus's default PSR criterion is met) remains between $`r sprintf("%.1f", min(bench_list$bayes_sec))`\text{ s}$ and $`r sprintf("%.1f", max(bench_list$bayes_sec))`\text{ s}$ across all five models**.
+In **Panel B**, the measured ML time rises from $`r sprintf("%.2f", bench_list$ml_sec[1])`\text{ s}$ for the random intercept to $`r sprintf("%.1f", bench_list$ml_sec[2])`\text{ s}$ with one slope and $`r sprintf("%.1f", bench_list$ml_sec[3])`\text{ s}$ with two slopes. The dashed line extends the grid-size projection to about $`r sprintf("%.1f", bench_list$ml_plot_sec[4] / 60)`\text{ min}$ and $`r sprintf("%.1f", bench_list$ml_plot_sec[5] / 3600)`\text{ hr}$ for three and four slopes. Across all five models, the measured Bayesian runs took $`r sprintf("%.1f", min(bench_list$bayes_sec))`\text{ s}$ to $`r sprintf("%.1f", max(bench_list$bayes_sec))`\text{ s}$.
 
 ::: {.callout-note}
 ## Methodological notes on this timing illustration
 
-Both `MLR` and `BAYES` fit the same probit random-effects model (`LINK = PROBIT;` matching the probit data-generating model; note that Mplus `MLR` otherwise defaults to `LINK = LOGIT` whereas `BAYES` defaults to `PROBIT`). Elapsed times include R-side wrapper overhead under `BITERATIONS = 5000 (2000)` (minimum 2,000 and maximum 5,000 iterations per chain with PSR auto-stopping; use `FBITERATIONS` in Mplus to enforce a strictly fixed iteration count without PSR stopping). In formal benchmarking studies, compare wall-clock time per *effective independent draw* ($\text{ESS}/\text{sec}$) at matched convergence criteria.
+These wall-clock times include the R wrapper overhead. To compare MCMC runs, report **effective draws per second** (ESS divided by elapsed seconds) for a parameter of interest after checking convergence. To compare ML and Bayesian estimation, choose a quantity both methods estimate, such as a predicted symptom probability, and compare the runtime needed to achieve a specified accuracy against a known simulation target.
 :::
 
 ## Applied MSEM walkthrough: Latent within-person random slopes predicting distal burnout
@@ -1983,11 +1991,13 @@ Muthén & Asparouhov (2012, p. 332) and MacCallum, Edwards, & Cai (2012) raise a
 
 ## Software & syntax quick reference
 
+::: {.table-responsive role="region" aria-label="Bayesian SEM software reference" tabindex="0"}
 | Ecosystem | Strengths | Key BSEM / Random-Slope Syntax | Prior Parameterization |
 |---|---|---|---|
 | **Mplus + `MplusAutomation`** | Fast Gibbs/PX1 sampling for CFA cross-loadings, `IW` residual priors, and `TWOLEVEL RANDOM` latent slopes; clean R6 `mplusModel()` workflow | `m <- mplusModel(syntax, data, dir, file_stem)`<br>`m$run(replaceOutfile = "always")`<br>`MODEL PRIORS: cl1-cl18 ~ N(0, 0.01);` | Normal uses **variance**: `N(mean, var)` |
 | **`blavaan` (R + Stan)** | Free, open-source `lavaan` syntax; state-of-the-art Hamiltonian Monte Carlo (NUTS); approximate `LOO` / `WAIC` & `blavFitIndices()` | `bcfa(model, data, std.lv = TRUE)`<br>`prior("normal(0, 0.1)")*x9` | Normal uses **SD**: `normal(mean, sd)` |
 | **`brms` / `cmdstanr` (R + Stan)** | Gold-standard HMC for complex multilevel GLMMs, non-Gaussian links, custom distributional/location-scale random-slope models | `brm(bf(y ~ x1 + x2 + (1 + x1 + x2 | id)), family = bernoulli(), prior = ...)` | Normal uses **SD**: `normal(mean, sd)` |
+:::
 
 ::: {.callout-tip}
 ## A reporting workflow
