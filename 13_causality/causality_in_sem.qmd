@@ -282,7 +282,7 @@ $$
 
 That is, fever and fatigue are unrelated to each other after accounting for the flu. This is certainly an oversimplification in that other common causes (e.g., Lyme disease) could also cause fever and fatigue to co-occur. In that case, we might think of conditioning the association of fever and fatigue on multiple causes.
 
-Note that this is identical to the notation for a chain because it makes the same statement about the conditional independence relationships. This is an equivalent model! But it is conceptually distinct in terms of the causal hypothesis. In a fork, there is a 'back-door path' between Flu and Fever such that the variables at either end of the common cause (here, Fever and Fatigue) may have a spurious association, but not a causal relationship. Fever does not cause Fatigue, but they may be associated because of Flu.
+Note that this is identical to the notation for a chain because it makes the same statement about the conditional independence relationships. This is an equivalent model! But it is conceptually distinct in terms of the causal hypothesis. In a fork, there is a 'back-door path' between Fever and Fatigue (via Flu) such that the variables at either end of the common cause (here, Fever and Fatigue) may have a spurious association, but not a causal relationship. Fever does not cause Fatigue, but they may be associated because of Flu.
 
 What is another equivalent DAG for these three variables?
 
@@ -290,7 +290,7 @@ In conventional statistical terms, forks correspond to confounding. In our examp
 
 ### What to do about this?
 
-Broadly speaking, if we wish to understand the causal relationship between A and B, but the relationship may be confounded by a set of variables, $C_1 , C_2, ..., C_n$, the conventional advice would be be to condition the association between A and B on $\textbf{C}$. In so doing, the true causal relationship can be identified.
+Broadly speaking, if we wish to understand the causal relationship between A and B, but the relationship may be confounded by a set of variables, $C_1 , C_2, ..., C_n$, the conventional advice would be to condition the association between A and B on $\textbf{C}$. In so doing, the true causal relationship can be identified.
 
 ## Inverted fork (common outcome)
 
@@ -323,7 +323,7 @@ $$
 
 That is, Flu and Lyme are independent of each other when we do not condition on other variables (incl. Fever). They are separate diseases with different pathophysiology. But if we condition on the common outcome (Fever, which is the collider), then we expect that Flu and Lyme are *not* conditionally independent. As Kline says, "Controlling for a common outcome of two unrelated measures induces a spurious association between them" (p. 168).
 
-Let's test it out by simulating data in which Flu and Lyme are independent, but both predict Lyme.
+Let's test it out by simulating data in which Flu and Lyme are independent, but both predict Fever.
 
 ```{r}
 sim_syn <- '
@@ -479,15 +479,15 @@ plot(g)
 impliedConditionalIndependencies(g, "missing.edge")
 ```
 
-So, if X and Y are *causally* related, the testable prediction is that they should be conditionally independent after we account for either $A$, $B$, or *both*.
+So, under this specific unmediated chain ($X \rightarrow A \rightarrow B \rightarrow Y$, with no direct $X \rightarrow Y$ edge), the testable prediction is that $X$ and $Y$ should be conditionally independent after we account for either $A$, $B$, or *both*.
 
 # Identifying causal effects
 
 The broad objective of examining causality in DAGs is to examine whether a causal relationship is supported in our data. The possibility of unmeasured confounders often limits our confidence in causal conclusions, but this should not discourage us from pursuing the objective. Rather, ruling out unmeasured confounders is a kind of causal assumption (Robins & Wasserman, 1999).
 
-Examining *d*-separation in a SEM context can be useful because it allows us to examine the testable causal implications of our model. If our model asserts that two variables should be conditionally independent (i.e., a path that is omitted, and therefore zero), but the modification indices suggests a substantial effect, this may contradict part of our theory of causation.
+Examining *d*-separation in a SEM context can be useful because it allows us to examine the testable causal implications of our model. If our model asserts that two variables should be conditionally independent (i.e., a path that is omitted, and therefore zero), but the modification indices suggest a substantial effect, this may contradict part of our theory of causation.
 
-More generally, to make a causal claim, two variables must be *d*-separated. That is, conditioning their association on some set of other variables should render the target pair *conditionally independent*. If this is not possible, then the DAG does not have a strong basis for testing causal hypotheses. Moreover, each conditional independence in a DAG represents a testable hypothesis in the SEM.
+More generally, *d*-separation plays two distinct roles in causal analysis. First, to **identify** the causal effect of $X$ on $Y$ by covariate adjustment, all **non-causal (back-door) paths** between $X$ and $Y$ must be *d*-separated (blocked) by our conditioning set while leaving directed causal paths open (note that if $X$ has a direct causal effect on $Y$, $X$ and $Y$ themselves can *never* be *d*-separated). Second, to **test** a DAG against data, each missing edge implies a conditional independence (*d*-separation) that represents a falsifiable hypothesis in the SEM; a DAG with no missing edges imposes no testable conditional independencies.
 
 ## Weak contradiction
 
@@ -507,19 +507,20 @@ A strong causal assumption indicates that one assumes a specific value for a par
 
 If we wish to identify the causal relationship between X and Y, we must first remove any part of the association that could be spurious. In DAGs, this is called *identification by covariate adjustment*. That is, controlling for a *sufficient set* of covariates is one method for identifying a specific causal effect. This control procedure removes all spurious components (back-door paths).
 
-More specifically, a sufficient set blocks all non-causal paths between a cause (often called 'exposure') and effect (often called 'outcome'), but leaves open all causal paths (front-door paths). A path between two variables (regardless of the number of links between them) is blocked (*d*-separated) by a set of covariates $Z$ if at least one of the following is true:
+More specifically, a sufficient set blocks all non-causal paths between a cause (often called 'exposure') and effect (often called 'outcome'), contains no descendants of the exposure, and leaves open all directed (causal) paths. A path between two variables (regardless of the number of links between them) is blocked (*d*-separated) by a set of covariates $Z$ if at least one of the following is true:
 
 1.  The path $p$ contains a chain $x \rightarrow m \rightarrow y$ or a fork $x \leftarrow m \rightarrow y$ such that $m$ is in $Z$.
-2.  The path $p$ contains a collider $x \rightarrow m \leftarrow y$ such that $c$ is *not* in $Z$ and $Z$ does not contain any descendant of $c$.
+2.  The path $p$ contains a collider $x \rightarrow m \leftarrow y$ such that $m$ is *not* in $Z$ and $Z$ does not contain any descendant of $m$.
 
-A *minimal sufficient adjustment set* is a set of covariates that renders a path conditionally independent and no subset of the set is itself sufficient (i.e., irreducible).
+A *minimal sufficient adjustment set* is a set of covariates that blocks all non-causal (back-door) paths between the exposure and outcome (without conditioning on descendants of the exposure) such that no proper subset of the set is itself sufficient (i.e., irreducible).
 
 The dangers of conditioning on the wrong set of covariates include:
 
 1.  We fail to remove all confounding biases.
-2.  We introduce new biases through overcontrol.
+2.  We introduce new biases through overcontrol (conditioning on a mediator or descendant of the exposure).
+3.  We introduce collider (endogenous selection) bias by conditioning on a common outcome or its descendant.
 
-The `dagitty` package can help us determine the sufficient covariate sets for a DAG. But one important point is that if we have a cause $C$ and effect $E$, then noncausal paths the terminate on the cause, such as $X \rightarrow C$, are the primary paths that must be blocked. These are called backdoor paths.
+The `dagitty` package can help us determine the sufficient covariate sets for a DAG. In particular, if we have a cause $C$ and effect $E$, any non-causal path that starts with an arrow pointing into the cause (such as $C \leftarrow X \rightarrow E$) is called a *back-door path* and must be blocked to identify the causal effect.
 
 ## Instrumental variables
 
@@ -528,12 +529,12 @@ One way to identify direct causal effects is to introduce instrumental variables
 1.  They are correlated with the cause, $C$.
 2.  They are uncorrelated with the error term of the effect, $E$.
 
-More formally, an variable, $I$, is an instrument if:
+More formally, a variable, $I$, is an instrument if:
 
-1.  $I$ is *d*-separated from $E$ in a modified DAG in which the $C \rightarrow E$ path is removed; and
+1.  $I$ is *d*-separated from $E$ in a modified DAG in which the $C \rightarrow E$ path is removed (possibly conditional on measured covariates); and
 2.  $I$ is not *d*-separated from $C$ in the modified graph.
 
-Thus, instruments cannot be associated with any causal determinants of the outcome variable $E$. Consider Kline's Figure 8.4c:
+Thus, an instrument affects $E$ only through $C$ (the *exclusion restriction*) and shares no unblocked non-causal paths with $E$ (possibly after conditioning on measured covariates). Consider Kline's Figure 8.4c:
 
 ```{r}
 #| fig-height: 1.5
@@ -543,7 +544,7 @@ g <- dagitty('dag {
     B [pos="1,0"]
     X [pos="1,1"]
     Y [pos="2,1"]
-    U1 [pos="2,3"]
+    U1 [latent, pos="2,3"]
 
     A -> B -> Y
     X -> Y
@@ -553,19 +554,21 @@ g <- dagitty('dag {
 plot(g)
 ```
 
-Here causal direct effect of X on Y is not identified. One way to visualize this is to delete the $X \rightarrow Y$ path. There are still two unblocked paths:
+Here, the causal direct effect of X on Y is not identified by covariate adjustment. One way to visualize this is to delete the $X \rightarrow Y$ path. There are still two unblocked back-door paths:
 
 $$
-X \leftarrow A \rightarrow B \rightarrow Y \\
-X \leftarrow U1 \rightarrow Y
+\begin{aligned}
+X &\leftarrow A \rightarrow B \rightarrow Y \\
+X &\leftarrow U_1 \rightarrow Y
+\end{aligned}
 $$
 
-The second of these is not closed by conditioning the $X-Y$ relationship on $U1$. Thus, covariate adjustment does not solve this problem.
+Because $U_1$ is **unmeasured (latent)**, we cannot condition the $X\text{–}Y$ relationship on $U_1$ to close the second path. Thus, covariate adjustment alone does not solve this problem.
 
-Is there an instrumental variable that helps? Yes, $A$ has that potential... But at the moment, it is connected with $Y$ even if we delete the $X \rightarrow Y$ path because of the path $A \rightarrow B \rightarrow Y$. But if we condition A on B (think regress A on B), then $A | B$ is *d*-separated from $Y$.
+Is there an instrumental variable that helps? Yes, $A$ is a *conditional* instrument. Unconditionally, $A$ is still connected with $Y$ even after deleting $X \rightarrow Y$ because of the path $A \rightarrow B \rightarrow Y$. Once we condition on $B$, however, $A$ is *d*-separated from $Y$ in the modified graph $G_{\underline{X}}$ (with $X \rightarrow Y$ removed):
 
 $$
-(A | B) \perp\!\!\!\perp Y
+A \perp\!\!\!\perp Y \mid B \quad \text{(in } G_{\underline{X}}\text{)}
 $$
 
 # Causal mediation

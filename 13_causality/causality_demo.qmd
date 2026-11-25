@@ -201,15 +201,15 @@ dummy <- lapply(eqdags, plot)
 
 Here, there are only 3 equivalent models, though they are quite conceptually distinct from a causality standpoint. The first is our candidate, the second is a fork arrangement in which identity disturbance is a common cause. The third reverses the direction of the mediated effects.
 
-Are there covariate adjustment sets that we could use to render the IV and DV conditionally independent?
+What covariate adjustment sets are needed to identify the **total causal effect** of `Aff_Ins` on `Impul` assuming `g1` is the true DAG? (Recall that `adjustmentSets()` identifies sets that block all non-causal *back-door* paths while leaving causal paths open—not sets that make exposure and outcome conditionally independent.)
 
 ```{r}
 adjustmentSets(g1, exposure='Aff_Ins', outcome = 'Impul', type="all")
 ```
 
-Nope...
+Notice the output `{}` — the **empty set** ($\emptyset$). In `dagitty`, `{}` means **yes, no covariate adjustment is needed**: under `g1`, there are no confounding back-door paths between `Aff_Ins` and `Impul`, so their unadjusted association identifies the total causal effect (whereas conditioning on the mediator `Ident` would block the mediated path and isolate the direct effect, which is `0` under `g1`; if *no* valid adjustment set existed due to unmeasured confounding, `dagitty` would print nothing at all).
 
-The general point is that causality is hard to corroborate in small models.
+Even though `g1` needs no covariates if it is the true graph, the three Markov-equivalent DAGs above show that observational data alone cannot distinguish `g1` from the fork or the reversed chain. The general point is that causality is hard to corroborate in small models.
 
 Here's an example of when this can help:
 
