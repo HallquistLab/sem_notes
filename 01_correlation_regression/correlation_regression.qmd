@@ -394,7 +394,7 @@ summary(m3)
 
 We can, however, still recover the correlation based on the unstandardized regression coefficient and the standard deviations of the variables:
 
-$$r_{\textrm{Price,log2(Crime)}} = B_1 \frac{s_{\textrm{log2(Crime)}}}{s_{\textrm{Price}}}$$
+$$r_{\textrm{Price,log2(Crime)}} = B_1 \frac{s_{\textrm{Price}}}{s_{\textrm{log2(Crime)}}}$$
 
 ```{r}
 (coef(m3)["cmedv"] * sd(BostonSmall$cmedv)) / sd(BostonSmall$log_crim)
@@ -494,13 +494,13 @@ cor(fitted(m5), BostonSmall$cmedv)^2
 
 To extend standardized parameter estimates to the multiple regression context, we have to account for the shared variance among predictors.
 
-$$ \beta_\textrm{Nox} = \frac{r_\textrm{Nox,Price} - r_\textrm{Crime,Price} r_\textrm{Nox,Crime}}{1 - r_\textrm{Nox,Crime}^2} $$
+$$ \beta_\textrm{Nox} = \frac{r_\textrm{Nox,Price} - r_{\textrm{log}_2(\textrm{Crime}),\textrm{Price}} r_{\textrm{Nox},\textrm{log}_2(\textrm{Crime})}}{1 - r_{\textrm{Nox},\textrm{log}_2(\textrm{Crime})}^2} $$
 
-So, we adjust the association Nox with Price by the product of the correlations of Crime with Price (other predictor with criterion) and the correlation of Nox and Crime (predictor correlation). The magnitude of the standardized partial coefficient is reduced by adjusting for the correlation among predictors in the denominator. In the case of orthogonal (uncorrelated) predictors, note that the standardized beta simplifies to the bivariate correlation, as in single-predictor regression:
+So, we adjust the association of Nox with Price in the numerator by subtracting the product of the correlation of $\textrm{log}_2(\textrm{Crime})$ with Price (other predictor with criterion) and the correlation of Nox with $\textrm{log}_2(\textrm{Crime})$ (predictor correlation). Dividing by $1 - r_{\textrm{Nox},\textrm{log}_2(\textrm{Crime})}^2$ in the denominator scales up (inflates) the magnitude of the standardized partial coefficient to account for the variance shared between predictors (even though the numerator subtraction often shrinks the net effect when predictors share variance with the criterion). In the case of orthogonal (uncorrelated) predictors, note that the standardized beta simplifies to the bivariate correlation, as in single-predictor regression:
 
 $$
 \begin{aligned}
-r_\textrm{Nox,Crime} :&= 0 \\
+r_{\textrm{Nox},\textrm{log}_2(\textrm{Crime})} :&= 0 \\
 \beta_\textrm{Nox} & = r_\textrm{Nox,Price}
 \end{aligned}
 $$
