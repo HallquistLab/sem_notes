@@ -78,9 +78,7 @@ Up to this point, the number of elements in the covariance matrix (aka 'observat
 With mean structure, the number of observations in the model is amended:
 
 $$
-\begin{equation}
 p = \frac{k(k+3)}{2}
-\end{equation}
 $$
 
 For example if we analyze a 5x5 covariance matrix along with corresponding means, then we have: 10 covariances ($k[k-1]/2$), 5 variances ($k$), and 5 means ($k$) for a total of 20 observations (unique pieces of information about the data structure).
@@ -112,7 +110,7 @@ digraph sexdiff {
 }")
 ```
 
-In other words, does $a$ equal $b$? From a parameter estimation standpoint, if $a$ and $b$ are free, we are estimating two parameters. If we enforce equality, then we are estimating only one: $a := b$. Therefore, in general, models with equality constraints are *nested* within models that lack such constraints. This holds true because a free model can capture the case when $a$ and $b$ are equal, even if both are free parameters.
+In other words, does $a$ equal $b$? From a parameter estimation standpoint, if $a$ and $b$ are free, we are estimating two parameters. If we enforce equality, then we are estimating only one: $a = b$. Therefore, in general, models with equality constraints are *nested* within models that lack such constraints. This holds true because a free model can capture the case when $a$ and $b$ are equal, even if both are free parameters.
 
 ## Is the relationship of "I worry a lot" with a neuroticism factor similar in the US, Canada, and Mexico?
 
@@ -122,7 +120,7 @@ This is a multiple-group analysis in which we have a covariance matrix for each 
 
 ## Is the correlation between Anger and Sadness equal to the correlation between Happiness and Wellbeing?
 
-In a four-factor model, we might be interested in whether the association of Anger and Sadness is equal in magnitude to the association of Happiness and Wellbeing? Remember that we constrain *unstandardized* estimates, so for interpretability, we might apply a unit variance identification (UVI) strategy so that the variances of each factor are on the same scale. Therefore, the covariances would also scale similarly.
+In a four-factor model, we might be interested in whether the association of Anger and Sadness is equal in magnitude to the association of Happiness and Wellbeing. Remember that we constrain *unstandardized* estimates, so for interpretability, we might apply a unit variance identification (UVI) strategy so that the variances of each factor are on the same scale. Therefore, the covariances would also scale similarly.
 
 ![](factor_corr_equiv.svg)
 
@@ -146,7 +144,7 @@ Unlike the Wald W statistic, which is usually used to examine how model fit *wor
 
 Modification indices are based on the Lagrange multiplier test (LMT), which (in this context) is a test of whether a candidate omitted parameter is equal to zero. Remember that if we don't specify a parameter in the model (e.g., a cross-loading), it is assumed to be zero. Although the LMT is usually computed on individual parameters (e.g., the table of modification indices), one can compute an LMT on a set of tests such as the hypothesis that all five potential cross-loadings are zero. See `lavTestScore` for details.
 
-If you're curious about the relationships among these parameter equivalence testing approaches, see this: https://stats.idre.ucla.edu/other/mult-pkg/faq/general/faqhow-are-the-likelihood-ratio-wald-and-lagrange-multiplier-score-tests-different-andor-similar/.
+If you're curious about the relationships among these parameter equivalence testing approaches, see the [UCLA OARC FAQ on likelihood ratio, Wald, and Lagrange multiplier (score) tests](https://stats.oarc.ucla.edu/other/mult-pkg/faq/general/faqhow-are-the-likelihood-ratio-wald-and-lagrange-multiplier-score-tests-different-andor-similar/).
 
 ## How to test constraints in lavaan
 
@@ -269,7 +267,7 @@ anova(msem, msem_eq)
 
 We see the same effect for the LRT as the Wald test (no surprise there), suggesting worse fit under constrained loadings.
 
-Altogether, note that we achieved two hypothesis tests using different means. In the `lavTestScore` approach, we compute the *decrease* in fit (as indicated by higher $\chi^2$) when we constrain FoGWar factor loadings to be equal based on a model in which the loadings are freely estimated. In the conventional LRT or $\chi^2$ difference test, we fit both the free and constrained models and test the difference in fit based on difference in likelihoods.
+Altogether, note that we achieved two hypothesis tests using different means. In the `lavTestWald` approach, we compute the expected *decrease* in fit (as indicated by higher $\chi^2$) when we constrain FoGWar factor loadings to be equal based on a model in which the loadings are freely estimated. In the conventional LRT or $\chi^2$ difference test, we fit both the free and constrained models and test the difference in fit based on the difference in likelihoods.
 
 # Constraints in measurement models: congeneric, tau equivalent, and parallel specifications
 
@@ -292,7 +290,7 @@ The congeneric model is not guaranteed. For example, if we have 'complex indicat
 
 ## Tau equivalent
 
-Congeneric models already have certain constraints on structure, namely that certain items load onto certain factors according to our hypotheses. Unlike EFA, where all items technically load onto all factors, we typically fix many elements in $\lambda$ to zero to enforce a hypothesis about latent structure. If the congeneric model fails, we would not usually move on to test more restrictive measurement models. But if the congeneric model fits well, we might consider additional measurement tests.
+Congeneric models already have certain constraints on structure, namely that certain items load onto certain factors according to our hypotheses. Unlike EFA, where all items technically load onto all factors, we typically fix many elements in $\boldsymbol{\Lambda}$ to zero to enforce a hypothesis about latent structure. If the congeneric model fails, we would not usually move on to test more restrictive measurement models. But if the congeneric model fits well, we might consider additional measurement tests.
 
 First, we will consider what's called tau-equivalence, defined as:
 
@@ -312,7 +310,7 @@ If we meet the assumptions of a tau-equivalent model, we might consider a furthe
 1.  Loadings on a given factor are equal
 2.  Error variances for indicators of a factor are equal
 
-The additional requirement of equal error variances (disturbances) tests a model where each indicator has the same level of precision. This structure has two major implications. First, the amount of item variation attributable to the true score (in a CTT sense) is equal for all items. Second, the expected value of each of the items is the same -- i.e., the items are fungible. A parallel indicators model relates in part to the practice of developing parallel forms of a test where we wish to use a subsets of items from a broader pool to assess the same construct. To be confident that we are indeed measuring the same construct, we need to satisfy the parallel constraint step. That is, the model with parallel indicators should not fit worse than a tau-equivalent model, which should not fit worse than the congeneric model.
+The additional requirement of equal error variances (disturbances) tests a model where each indicator has the same level of precision. This structure has two major implications. First, the amount of item variation attributable to the true score (in a CTT sense) is equal for all items. Second, each item has equal reliability and measurement precision (and if item intercepts are also equated, the items have equal expected values and are fully fungible). A parallel indicators model relates in part to the practice of developing parallel forms of a test where we wish to use a subset of items from a broader pool to assess the same construct. To be confident that we are indeed measuring the same construct, we need to satisfy the parallel constraint step. That is, the model with parallel indicators should not fit worse than a tau-equivalent model, which should not fit worse than the congeneric model.
 
 ## Testing these constraints in practice
 
@@ -324,17 +322,20 @@ Though we didn't use the nomenclature, our initial two-factor CFA model with fre
 
 ```{r}
 summary(msem, standardized=TRUE)
+fogwar_loads <- parameterEstimates(msem) %>%
+  filter(lhs == "l_FoGWar", op == "=~") %>%
+  pull(est)
 ```
 
 Here, we have labeled the factor loadings for FoGWar, but we have not constrained them to be equal.
 
-Note that the loadings for FoGWar are similar, but perhaps not equivalent. They range from .64 to .82. The question of tau equivalence is whether the loadings can be constrained to equality without reducing fit substantially. As we saw above, by using the same parameter loading for a set of indicators, `lavaan` will enforce an equality constraint.
+Note that the loadings for FoGWar are similar, but perhaps not equivalent. They range from `r sprintf("%.2f", min(fogwar_loads))` to `r sprintf("%.2f", max(fogwar_loads))`. The question of tau equivalence is whether the loadings can be constrained to equality without reducing fit substantially. As we saw above, by using the same parameter label for a set of indicators, `lavaan` will enforce an equality constraint.
 
 ### Tau equivalent
 
 Above, we tested a model in which we equated FoGWar loadings. This is the tau equivalent model (for FoGWar, anyhow). As a reminder, the syntax looks like this:
 
-```
+```r
 msem_eq.syntax <- '
   #equate loadings by using the same parameter label
   l_FoGWar =~ NA*FoGWar1 + f1*FoGWar1 + f1*FoGWar2 + f1*FoGWar3 + f1*FoGWar4
@@ -368,8 +369,8 @@ The tests above suggest that tau equivalence does not hold for FoGWar, but perha
 
 ```{r}
 msem_tau_coawe.syntax <- '
-l_FoGWar =~ NA*FoGWar1 + FoGWar2 + FoGWar3 + FoGWar4  #equate loadings by using the same parameter label
-l_CoAWe =~ NA*CoAWe5 + f1*CoAWe5 + f1*CoAWe6 + f1*CoAWe7 + f1*CoAWe8
+l_FoGWar =~ NA*FoGWar1 + FoGWar2 + FoGWar3 + FoGWar4
+l_CoAWe =~ NA*CoAWe5 + f1*CoAWe5 + f1*CoAWe6 + f1*CoAWe7 + f1*CoAWe8 #equate CoAWe loadings by using the same parameter label
 
 l_FoGWar ~~ 1*l_FoGWar
 l_CoAWe ~~ 1*l_CoAWe
@@ -378,8 +379,8 @@ l_FoGWar ~~ l_CoAWe
 
 #ULI approach -- same model
 # msem_tau_coawe.syntax <- '
-# l_FoGWar =~ FoGWar1 + FoGWar2 + FoGWar3 + FoGWar4  #equate loadings by using the same parameter label
-# l_CoAWe =~ f1*CoAWe5 + f1*CoAWe6 + f1*CoAWe7 + f1*CoAWe8
+# l_FoGWar =~ FoGWar1 + FoGWar2 + FoGWar3 + FoGWar4
+# l_CoAWe =~ f1*CoAWe5 + f1*CoAWe6 + f1*CoAWe7 + f1*CoAWe8 #equate CoAWe loadings
 #
 # l_FoGWar ~~ l_CoAWe
 # '
@@ -391,27 +392,30 @@ summary(msem_tau_coawe, fit.measures=TRUE, standardized=TRUE)
 Let's compare to the congeneric model using an LRT. The tau equivalent model is nested in the congeneric.
 
 ```{r}
-anova(msem, msem_tau_coawe)
+anova_tau_coawe <- anova(msem, msem_tau_coawe)
+anova_tau_coawe
 ```
 
-The LRT suggests that the tau equivalent model is barely worse ($p = .04$) than the congeneric.
+The LRT suggests that the tau-equivalent model is right on the borderline of fitting worse than the congeneric model ($\Delta\chi^2(`r anova_tau_coawe[["Df diff"]][2]`) = `r sprintf("%.2f", anova_tau_coawe[["Chisq diff"]][2])`, p = `r sprintf("%.3f", anova_tau_coawe[["Pr(>Chisq)"]][2])`$).
 
 ```{r}
-aictab(list(congeneric=msem, tau=msem_tau_coawe))
+aic_tau_coawe <- aictab(list(congeneric=msem, tau=msem_tau_coawe))
+aic_tau_coawe
 fitMeasures(msem_tau_coawe)[c("chisq", "df", "pvalue", "rmsea", "srmr", "cfi")]
 ```
 
-With the relative evidence approach, we see something perhaps less definitive: the LRT is barely significant (in our sample of 500), suggesting a failure of tau equivalence, but the AICc indicates that the tau equivalent model is nearly as good (difference of 1.7 points), and it is more parsimonious. We also find that the global fit measures are all acceptable.
+With the relative evidence approach, we see something less definitive: the LRT is borderline (in our sample of 500), whereas AICc indicates that the tau-equivalent model is nearly as good ($\Delta\text{AIC}_c = `r sprintf("%.2f", aic_tau_coawe$Delta_AICc[aic_tau_coawe$Modnames == "tau"])`$), and it is more parsimonious. We also find that the global fit measures are all acceptable.
 
 This highlights the problem with relying on null hypothesis significance testing (NHST) alone to judge constrained models. One should make an informed judgment based on a) LRT, b) changes in global fit measures (esp. change in CFI), c) change in residuals under the constrained solution, and d) interpretability.
 
-With regard to change in residuals, we can examine this in a few ways. I suggest looking at the absolute change in the residuals in correlational units. This captures the absolute difference between the congeneric and tau equivalent models (for CoAWe) in terms of fitting each cell of the covariance matrix. Note that the FoGWar residual differences should be zero because the models being compared are the same for this factor -- they only differ in CoAWe.
+With regard to change in residuals, we can examine this in a few ways. I suggest looking at the absolute change in the residuals in correlational units. This captures the absolute difference between the congeneric and tau-equivalent models (for CoAWe) in terms of fitting each cell of the covariance matrix. Note that the FoGWar residual differences are near zero because the models only differ in CoAWe (tiny non-zero values reflect joint ML estimation with correlated factors).
 
 ```{r}
-abs(resid(msem, type="cor")$cov - resid(msem_tau_coawe, type="cor")$cov)
+res_diff_tau <- abs(resid(msem, type="cor")$cov - resid(msem_tau_coawe, type="cor")$cov)
+res_diff_tau
 ```
 
-The reduction in fit for bivariate correlations falls in the .03 range for most indicators.
+The change in fit for bivariate correlations among CoAWe indicators is very small (at most `r sprintf("%.3f", max(res_diff_tau[5:8, 5:8]))`).
 
 In this case, I would at least consider the parallel model.
 
@@ -421,8 +425,8 @@ In the parallel model, we add constraints on disturbances for the indicators (er
 
 ```{r}
 msem_parallel_coawe.syntax <- '
-l_FoGWar =~ NA*FoGWar1 + FoGWar2 + FoGWar3 + FoGWar4  #equate loadings by using the same parameter label
-l_CoAWe =~ NA*CoAWe5 + f1*CoAWe5 + f1*CoAWe6 + f1*CoAWe7 + f1*CoAWe8
+l_FoGWar =~ NA*FoGWar1 + FoGWar2 + FoGWar3 + FoGWar4
+l_CoAWe =~ NA*CoAWe5 + f1*CoAWe5 + f1*CoAWe6 + f1*CoAWe7 + f1*CoAWe8 #equate CoAWe loadings by using the same parameter label
 
 l_FoGWar ~~ 1*l_FoGWar
 l_CoAWe ~~ 1*l_CoAWe
@@ -445,21 +449,24 @@ The `f1` parameter label equates CoAWe factor loadings, whereas the `rv1` parame
 Let's compare the congeneric, tau-equivalent, and parallel models using LRT:
 
 ```{r}
-anova(msem, msem_tau_coawe, msem_parallel_coawe)
+anova_par_coawe <- anova(msem, msem_tau_coawe, msem_parallel_coawe)
+anova_par_coawe
 ```
 
-The parallel model does not fit significantly worse than the tau-equivalent model despite having three fewer parameters.
+Here, the parallel model fits significantly worse than the tau-equivalent model ($\Delta\chi^2(`r anova_par_coawe[["Df diff"]][3]`) = `r sprintf("%.2f", anova_par_coawe[["Chisq diff"]][3])`, p = `r sprintf("%.3f", anova_par_coawe[["Pr(>Chisq)"]][3])`$), consistent with the data-generating process where `CoAWe5` and `CoAWe6` have unequal error variances (`0.4375` vs. `0.2775`).
 
 And now AICc and global fit:
 
 ```{r}
-aictab(list(congeneric=msem, tau=msem_tau_coawe, parallel=msem_parallel_coawe))
-fitMeasures(msem_parallel_coawe)[c("chisq", "df", "pvalue", "rmsea", "srmr", "cfi")]
+aic_par_coawe <- aictab(list(congeneric=msem, tau=msem_tau_coawe, parallel=msem_parallel_coawe))
+aic_par_coawe
+fm_par_coawe <- fitMeasures(msem_parallel_coawe)[c("chisq", "df", "pvalue", "rmsea", "srmr", "cfi")]
+fm_par_coawe
 ```
 
-AIC also suggests that the models all fit the data similarly. The parallel model is actually quite close to the congeneric case in the fit:parsimony tradeoff that AICc represents (remember its 'efficiency' property).
+AICc likewise shows noticeably weaker support for the parallel model ($\Delta\text{AIC}_c = `r sprintf("%.2f", aic_par_coawe$Delta_AICc[aic_par_coawe$Modnames == "parallel"])`$, weight $= `r sprintf("%.3f", aic_par_coawe$AICcWt[aic_par_coawe$Modnames == "parallel"])`$) relative to the congeneric and tau-equivalent specifications, even though its absolute global fit indices remain strong ($\text{CFI} = `r sprintf("%.3f", fm_par_coawe["cfi"])`$, $\text{RMSEA} = `r sprintf("%.3f", fm_par_coawe["rmsea"])`$, $\text{SRMR} = `r sprintf("%.3f", fm_par_coawe["srmr"])`$).
 
-Altogether, this is a judgment call (as often happens in practice). I would err on the side of parsimony, potentially preferring the parallel model where the loadings and residual variances are equated. But I would want to make sure that I'm not missing any key covariance patterns that the congeneric model captures.
+Altogether, this illustrates a common judgment call in practice: when comparing nested measurement constraints, weigh the LRT and AICc evidence (which here favor stopping at the congeneric or tau-equivalent model rather than enforcing equal residual variances) alongside absolute fit and whether any key covariance patterns are lost.
 
 # Multiple groups
 
@@ -467,7 +474,7 @@ So far, we have primarily considered constraints in the context of a single samp
 
 In the simplest case, we could simply run the SEM in each sample and compare the results qualitatively. An equivalent approach is to fit both groups simultaneously in a multiple-groups model, but allow *every* parameter to be free between groups.
 
-Let's consider the example from the `lavaan` tutorial: http://lavaan.ugent.be/tutorial/groups.html. Here, we have data from intelligence tests conducted in two separate schools, Pasteur and Grant-White:
+Let's consider the example from the [`lavaan` multiple-groups tutorial](https://lavaan.ugent.be/tutorial/groups.html). Here, we have data from intelligence tests conducted in two separate schools, Pasteur and Grant-White:
 
 ```{r}
 data(HolzingerSwineford1939)
@@ -511,7 +518,7 @@ summary(fit_grantwhite)
 
 ## Fitting groups together
 
-We can fit the groups in a single model in which both contribute to the sample likelihood. Recall that the sample likelihood reflect the probability of the observed data given the model and parameters. If we consider all free parameters for one group as a vector, $\boldsymbol{\theta}_1$ and free parameters for the other group as a vector, $\boldsymbol{\theta}_2$, then the total number of free parameters, $q$ is simply $\boldsymbol{\theta}_1 + \boldsymbol{\theta}_2$. In this way, each sample contributes independently to the sample likelihood function insofar as the parameters are completely separated by group.
+We can fit the groups in a single model in which both contribute to the sample likelihood. Recall that the sample likelihood reflects the probability of the observed data given the model and parameters. If we consider all free parameters for one group as a vector $\boldsymbol{\theta}_1$ (with $q_1$ free parameters) and free parameters for the other group as a vector $\boldsymbol{\theta}_2$ (with $q_2$ free parameters), then the total number of free parameters is $q = q_1 + q_2$. In this way, each sample contributes independently to the sample likelihood function insofar as the parameters are completely separated by group.
 
 We can fit multiple groups in SEM using the `group` argument in `lavaan`. Let's add a grouping structure to the intelligence testing example:
 
@@ -537,7 +544,7 @@ inspect(fit_combined)
 #semPaths_default(fit_combined)
 ```
 
-Thus, we can apply the same general idea of applying equality constraints *between* groups as we did in the single sample case above. For multiple group analyses, lavaan uses a vector of parameter loadings to indicate what equality constraints to apply in each group. In the two-school example, what if we wish to equate factor loadings on the `visual` factor across groups? We can add a two-element parameter label vector in front of each loading (e.g., `c(f1, f1)*x1`).
+Thus, we can apply the same general idea of applying equality constraints *between* groups as we did in the single sample case above. For multiple group analyses, lavaan uses a vector of parameter labels to indicate what equality constraints to apply in each group. In the two-school example, what if we wish to equate factor loadings on the `visual` factor across groups? We can add a two-element parameter label vector in front of each loading (e.g., `c(f1, f1)*x1`).
 
 ```{r}
 HS.model_floadings_vis <- '  visual =~ c(f1,f1)*x1 + c(f2,f2)*x2 + c(f3,f3)*x3
@@ -550,22 +557,22 @@ summary(floadings_vis)
 
 # Measurement invariance
 
-For a good summary of how to present measurement invariance tests, see: http://www.lesahoffman.com/CLP948/CLP948_Example07a_CFA_MG_Invariance.pdf
+For a good summary of how to present measurement invariance tests, see [Lesa Hoffman's multiple-group CFA invariance handout](http://www.lesahoffman.com/CLP948/CLP948_Example07a_CFA_MG_Invariance.pdf).
 
 The code is in Mplus, but the description is general.
 
 The `measEq.syntax` function from the `semTools` package provides a convenient way to obtain syntax that tests different steps of measurement invariance, ranging from configural through strict invariance. It applies the appropriate constraints for measurement invariance tests:
 
--  Configural: factor patterns are the same among groups (i.e., estimate free parameters in $\lambda$). Factor means at 0.
+-  Configural: factor patterns are the same among groups (i.e., estimate free parameters in $\boldsymbol{\Lambda}$). Factor means at 0.
 -  Weak (aka metric): factor loadings equated among groups. Factor means at 0.
 -  Strong (aka scalar): factor loadings and item intercepts equated among groups. Factor mean at 0 in one group (reference), freely estimated in others.
 -  Strict: factor loadings, item intercepts, and residual variances equated among groups. Factor mean at 0 in one group (reference), freely estimated in others.
 
-Integrating (blurring?) over a huge swath of literature, I would recommend satisfying at least *strong* invariance if you want to compare groups on factor means, variance, or covariances. There is less general support for requiring strict invariance, since that essentially forces the uniqueness of each item (i.e., variance not attributable to the factor) to be the same across groups. This also implies equal reliability across groups, assuming equal factor variances. There is not a huge conceptual gain in demonstrating strict MI for most applications, in my opinion.
+Integrating (blurring?) over a huge swath of literature, **weak (metric) invariance** is generally sufficient to compare latent variances, covariances, and structural slopes across groups, whereas **strong (scalar) invariance** is required to compare groups on **factor means**. There is less general support for requiring strict invariance, since that essentially forces the uniqueness of each item (i.e., variance not attributable to the factor) to be the same across groups. This also implies equal reliability across groups, assuming equal factor variances. There is not a huge conceptual gain in demonstrating strict MI for most applications, in my opinion.
 
 Increasingly, change in CFI, not LRT significance, is seen as a sensitive test of measurement noninvariance (i.e., that the measure functions differently in some way by group). Cheung and Rensvold, 2002, *Structural Equation Modeling* suggest that a decrease in CFI of .01 between a more constrained model (e.g., strong invariance) and a less constrained model (e.g., weak invariance) may indicate measurement *noninvariance*. Meade, Johnson, and Braddy (2008) found that CFI changes as little as .002 may be indicative of a problem with invariance.
 
-Here, we will initially stick to LRT. We will use the `compareFit` function from `semTools`. This provides a broader set of summary statistics when comparing the global fit of multiple models. To use it, we must pass in a named list of fitted lavaan models. Also note the use of the `nested` argument. If `TRUE`, `compareFit` will conduct LRTs on our behalf to test chi-square differences.
+Here, we will initially stick to LRT. We will use the `compareFit` function from `semTools` (and call `summary()` on the resulting `FitDiff` object to display the full comparison table). This provides a broader set of summary statistics when comparing the global fit of multiple models. Also note the use of the `nested` argument: if `TRUE`, `compareFit` conducts LRTs on our behalf to test chi-square differences.
 
 ```{r}
 to_constrain <- c("configural", "loadings", "intercepts", "residuals", "means")
@@ -575,8 +582,8 @@ for (i in 1:length(to_constrain)) {
   mlist[[ to_constrain[i] ]] <- measEq.syntax(configural.model=HS.model, data = HolzingerSwineford1939, ID.fac="UV",
                          group = "school", return.fit=TRUE, group.equal=geq)
 }
-fit_summary <- compareFit(mlist, nested=TRUE)
-fit_summary
+fit_summary <- do.call(compareFit, c(mlist, list(nested = TRUE)))
+summary(fit_summary)
 
 #deprecated, handy, function that generates equivalent results
 #mlist <- measurementInvariance(model=HS.model, data = HolzingerSwineford1939, strict=TRUE, std.lv=TRUE, group = "school")
@@ -594,12 +601,12 @@ For the weak invariance model, we would use `group.equal="loadings"`. Note that 
     +  1c.  Factor variances free in all groups.
 2.  Unit variance identification (UVI)
     +  2a.  No reference indicator.
-    +  2b.  All loadings equated equated across groups.
+    +  2b.  All loadings equated across groups.
     +  2c.  Factor variances set to 1.0 in one group and free in the others.
 
-Note that passing `std.lv=TRUE` to `sem` will setup the UVI properly in a single-group analysis. But under multiple groups, at present it will set factor variances to 1 in all groups, which does not satisfy 2c above. Thus, I would suggest not using `std.lv=TRUE` and not taking the UVI approach. Instead, the ULI (reference indicators) is easy to setup. I include syntax below for UVI but you'll see it is a bit tricky.
+Note that passing `std.lv=TRUE` to `sem` will set up the UVI properly in a single-group analysis. But under multiple groups, at present it will set factor variances to 1 in all groups, which does not satisfy 2c above. Thus, I would suggest not using `std.lv=TRUE` and not taking the UVI approach manually. Instead, the ULI (reference indicators) is easy to set up. I include syntax below for UVI but you'll see it is a bit tricky.
 
-Small sidebar: the `measEq.syntax` function above *does* handle the UVI/ULI challenge in invariance testing internally, so you can use `TRUE` or `FALSE` above and get equivalent results (as you should).
+Small sidebar: the `measEq.syntax` function above *does* handle the UVI/ULI challenge in invariance testing internally, so you can pass `ID.fac = "UV"` or `ID.fac = "UL"` above and get equivalent fit results (as you should).
 
 ```{r}
 mconfigural <- sem(HS.model, data = HolzingerSwineford1939, std.lv=FALSE, group = "school")
@@ -613,12 +620,11 @@ mmod_uvi <-'
   textual =~ NA*x4 + x5 + x6
   speed   =~ NA*x7 + x8 + x9
 
-#at present, lavaan does not allow parameter labels to be combined with constraints, such as c(1, v1)
+#explicitly label group factor variances and fix Group 1 variances to 1.0
 visual ~~ c(v1, v2)*visual
 textual ~~ c(t1, t2)*textual
 speed ~~ c(s1, s2)*speed
 
-#thus, use constraints to enforce the structure of fixing variances to 1.0 in one group, free in others
 v1==1
 t1==1
 s1==1
@@ -668,18 +674,18 @@ Consistent with the above output of `measEq.syntax`, the LRT indicates that cons
 
 But if the strong invariance model is worse than the weak MI model, it implies that the expected value of at least one indicator at a given level of the factor differs between groups. In other words, the average level of an indicator is higher or lower in one group even after accounting for the part explained by the factor.
 
-When mean structure is considered in the common factor model, the predicted values for a given indicator, $\textbf{y}_i$, are:
+When mean structure is considered in the common factor model, the observed indicator vector $\mathbf{y}_{ig}$ for individual $i$ in group $g$ is:
 
 $$
-\textbf{y}_i = \boldsymbol{\nu}_i + \boldsymbol{\Lambda}_y \boldsymbol{\eta}_i + \boldsymbol{\varepsilon}_i
+\mathbf{y}_{ig} = \boldsymbol{\nu}_g + \boldsymbol{\Lambda}_g \boldsymbol{\eta}_{ig} + \boldsymbol{\varepsilon}_{ig}
 $$
 
-Note that we don't have an any covariates predicting factor scores or indicators. These would be require an extension of the model. And more matrices!
+Note that we don't have any covariates predicting factor scores or indicators. These would require an extension of the model (such as a MIMIC model) and more matrices!
 
-But the main idea here is that we now have an intercept $\boldsymbol{\nu}_i$ for the item $\textbf{y}_i$. We often add mean structure to a SEM for two reasons:
+The main idea here is that we now have a vector of item intercepts $\boldsymbol{\nu}_g$ for the indicators in group $g$. We commonly add mean structure to a SEM when:
 
--  we wish to compare groups on factor means (e.g., does group A have higher neuroticism scores than group B)
--  items have a nonlinear relationship to the factor (more common in variants of IRT)
+-  we wish to compare groups on latent factor means (e.g., does group A have higher neuroticism scores than group B?)
+-  we model longitudinal mean change (e.g., latent growth curves) or handle missing data via FIML
 
 Circling back to our failure to corroborate strong invariance, we might wish to look at which constraints on the intercepts are leading to the greatest reduction in fit. Whereas the `modificationIndices` in `lavaan` gives information on change in model $\chi^2$ if we add additional parameters, we need to use the `lavTestScore` function to examine how model $\chi^2$ would improve if we freed (removed) these constraints. Note that this function is still based on the Lagrange multiplier test, as in standard modification indices.
 
@@ -695,15 +701,15 @@ The `epc=TRUE` argument requests that lavaan compute the "expected parameter cha
 parTable(mstrong)
 ```
 
-Examining the output of `lavTestScore`, we see that two constraints are associated with the lion's share of decrement in fit -- 34 of 51 points. These are:
+Examining the output of `lavTestScore` (overall multivariate score test $\chi^2 = 47.0$), we see that two univariate constraints stand out as the largest contributors to misfit (note that univariate score tests are evaluated one constraint at a time and are not strictly additive):
 
-`.p27. == .p63.` $\chi^2$ = 19.24
+`.p27. == .p63.` $\chi^2 = 19.19$
 
-`.p31. == .p67.` $\chi^2$ = 15.01
+`.p31. == .p67.` $\chi^2 = 15.02$
 
-From the output, we see that `p27` and `p63` represent intercept equality for `x3`, whereas `p31` and `p67` represent intercept equality for `x7`. Freeing these between groups would result in partial strong invariance in which 7 of 9 indicators have equal loadings and intercepts. This yields a model with one item having differential item functioning (DIF) for the `visual` and `speed` factor. Partial invariance is often seen as acceptable (in the sense of permitting group comparisons on factor means and variances/covariances) if only a handful of equality constraints are not satisfied. Here, because we have only three indicators per factor, noninvariance of one indicator may make comparing factor means/variances more dubious than if we had 10 indicators per factor.
+From the output, we see that `p27` and `p63` represent intercept equality for `x3`, whereas `p31` and `p67` represent intercept equality for `x7`. Freeing these between groups would result in partial strong invariance in which 7 of 9 indicators have equal loadings and intercepts. This yields a model with one item having differential item functioning (DIF) for the `visual` and `speed` factors. Partial invariance is often seen as acceptable (in the sense of permitting group comparisons on factor means and variances/covariances) if only a handful of equality constraints are not satisfied. Here, because we have only three indicators per factor, noninvariance of one indicator may make comparing factor means/variances more dubious than if we had 10 indicators per factor.
 
-Setting aside this complexity, if we wished to allow the intercepts for `x1` and `x3` to vary by group, while otherwise enforcing strong invariance, we could use the `group.partial` argument, which frees selected parameters while equating the remainder:
+Setting aside this complexity, if we wished to allow the intercepts for `x3` and `x7` to vary by group, while otherwise enforcing strong invariance, we could use the `group.partial` argument, which frees selected parameters while equating the remainder:
 
 ```{r}
 mpartial_strong <- sem(HS.model, data = HolzingerSwineford1939, std.lv=FALSE, group = "school", group.equal=c("loadings", "intercepts"), group.partial=c("x3~1", "x7~1"), meanstructure=TRUE)
@@ -711,10 +717,10 @@ mpartial_strong <- sem(HS.model, data = HolzingerSwineford1939, std.lv=FALSE, gr
 summary(mpartial_strong)
 
 anova(mweak, mpartial_strong)
-compareFit(list(weak=mweak, strong_partial=mpartial_strong))
+summary(compareFit(weak = mweak, strong_partial = mpartial_strong))
 ```
 
-We now see that our partial strong invariance model does not fit worse than the weak model. Examining the parameter estimates, we also see that the mean of `x3` and `x7` is higher in the Pasteur school compared to Grant-White. One might then infer that there are school-specific differences in these cognitive test scores that are not attributable to differences in the corresponding latent factors, visual and speed, respectively.
+We now see that our partial strong invariance model does not fit worse than the weak model. Examining the parameter estimates, we also see that the intercepts of `x3` and `x7` are higher in the Pasteur school compared to Grant-White. One might then infer that there are school-specific differences in these cognitive test scores that are not attributable to differences in the corresponding latent factors, visual and speed, respectively.
 
 ## Strict invariance
 
@@ -739,7 +745,7 @@ We do not see a substantial decrement in fit for adding strict invariance: the L
 
 In all of these models, variance and covariances among latent variables are freely estimated among groups. One can also consider *structural invariance* in which variances, covariances, and/or structural regressions among variables can be equated among groups. For example, one might wish to know whether the association between neuroticism and extraversion is similar in college students compared to Wall Street executives.
 
-Structural invariance is more about testing a substantively interesting hypothesis than verifying that we can compare the latent variables in the first place. Thus, measurement invariance is about examining potential problems in the comparability of the factors across groups. If we satisfy at least *strong MI* we could look at structural invariance. But if structural invariance fails, it doesn't mean anything bad in a psychometric sense, more than the groups are legitimately different in their mean/covariance structure at the factor level.
+Structural invariance is more about testing a substantively interesting hypothesis than verifying that we can compare the latent variables in the first place. Thus, measurement invariance is about examining potential problems in the comparability of the factors across groups. If we satisfy at least *strong MI* we could look at structural invariance. But if structural invariance fails, it doesn't mean anything bad in a psychometric sense—rather, it indicates that the groups are legitimately different in their mean/covariance structure at the factor level.
 
 If we want to equate factor covariances in a model that *at least* satisfied strong measurement invariance, we can add `group.equal="lv.covariances"`. Although lavaan will implement this for us, note models that equate both *variances* and *covariances* between groups are likely to be more interpretable. What does it mean to have identical factor covariance across groups when the variances are different? Thus, I would advocate also adding `"lv.variances"` in general.
 
@@ -747,8 +753,7 @@ If we want to equate factor covariances in a model that *at least* satisfied str
 mstructural <- cfa(HS.model, data = HolzingerSwineford1939, std.lv=FALSE, group = "school", group.equal=c("loadings", "intercepts", "residuals", "lv.variances", "lv.covariances"), group.partial=c("x3~1", "x7~1"))
 
 summary(mstructural, standardized=TRUE)
-#anova(mstrict, mstructural)
-compareFit(list(strict=mstrict, structural=mstructural))
+summary(compareFit(strict = mstrict, structural = mstructural))
 ```
 
 Here, we see no reduction in fit for the structurally invariant model. Given that this model also satisfies at least partial strong MI, this bolsters our confidence that the factor covariance structure among cognitive tests is essentially equivalent between schools.
@@ -762,7 +767,7 @@ summary(mmeandiff, standardized=TRUE)
 anova(mstructural, mmeandiff)
 ```
 
-It does not appear that we can equate the means between groups: significant LRT and drop in AIC of 23 points. Rather, examining the structurally invariant model with equal factor variances/covariances, we see that the mean of the textual factor in the Grant-White school is higher about .6 SD shift, whereas the other factors (visual and speed) are similar between schools.
+It does not appear that we can equate the means between groups: the LRT is significant and AIC increases (worsens) by 22.7 points. Rather, examining the structurally invariant model with equal factor variances/covariances, we see that the mean of the textual factor in the Grant-White school is higher by about a 0.6 SD shift, whereas the other factors (visual and speed) are similar between schools.
 
 ## Longitudinal invariance
 
@@ -772,7 +777,7 @@ For a useful reference, see [Widaman et al., 2010](https://www.ncbi.nlm.nih.gov/
 
 Also, see the `measEq.syntax`, as above, focusing on the `longFacNames`, `longIndNames`, `long.equal`, and `long.partial` arguments. For example, from the documentation, here is a model that tests threshold equality (categorical data), both across multiple groups and multiple waves:
 
-```
+```r
  mod.cat <- ' FU1 =~ u1 + u2 + u3 + u4
               FU2 =~ u5 + u6 + u7 + u8 '
  ## the 2 factors are actually the same factor (FU) measured twice
