@@ -46,7 +46,7 @@ The common factor model builds on the mechanics of linear regression, where we v
 ## Single item form
 
 $$
-\textbf{y}_i = \lambda_{i1} \boldsymbol{\eta}_1 + \lambda_{i2} \boldsymbol{\eta_2} + ... + \lambda_{im} \boldsymbol{\eta}_m + \boldsymbol{\varepsilon}_i
+\textbf{y}_i = \lambda_{i1} \boldsymbol{\eta}_1 + \lambda_{i2} \boldsymbol{\eta}_2 + \dots + \lambda_{im} \boldsymbol{\eta}_m + \boldsymbol{\varepsilon}_i
 $$
 where $\lambda_{im}$ reflects the strength of the association between factor $m$ and indicator $i$. For example, if we estimated 3 factors and had 8 indicators, the factor loadings would be:
 
@@ -69,7 +69,7 @@ In EFA, this is often accomplished by rotating the factor solution, a procedure 
 
 ## Expansion of equations for each indicator
 
-Here is the notation for a simple case in which there are 5 indicators and represented by two factors:
+Here is the notation for a simple case in which there are 5 indicators represented by two factors:
 
 $$
 \begin{align*}
@@ -99,74 +99,78 @@ Nice and simple! :-)
 
 The common factor model has several key assumptions:
 
-1.  Unique variances (disturbances) have a mean of zero: $E(\varepsilon_{i}) = 0$
-2.  Latent factors have mean zero, $E(\eta_{i}) = 0$.
-3.  Latent factors have a variance of one, $\textrm{var}(\eta_i) = 1$. (Standardized solution)
-4.  Unique variances are uncorrelated with each other: $\textrm{cov}(\varepsilon_{i},\boldsymbol{\varepsilon}_{\backslash i}) = 0$. (Conditional independence)
-5.  Latent factors are independent of each other: $\textrm{cov}(\eta_{i},\boldsymbol{\eta}_{\backslash i}) = 0$
-6.  Latent factors are uncorrelated with unique variances: $\textrm{cov}(\boldsymbol{\varepsilon} ,\boldsymbol{\eta}) = 0$
+1.  Unique factors (disturbances) have a mean of zero: $E(\varepsilon_{i}) = 0$.
+2.  Latent factors have mean zero: $E(\eta_{j}) = 0$.
+3.  Latent factors have a variance of one: $\textrm{var}(\eta_j) = 1$ (standardized factor scale).
+4.  Unique factors are uncorrelated with each other: $\textrm{cov}(\varepsilon_{i},\boldsymbol{\varepsilon}_{\backslash i}) = 0$ (conditional independence).
+5.  In an *orthogonal* factor model, latent factors are uncorrelated with each other: $\textrm{cov}(\eta_{j},\boldsymbol{\eta}_{\backslash j}) = 0$ (relaxed in oblique EFA and correlated-factor CFA, where $\boldsymbol{\Psi}$ is freely estimated).
+6.  Latent factors are uncorrelated with unique factors: $\textrm{cov}(\boldsymbol{\varepsilon} ,\boldsymbol{\eta}) = 0$.
 
-These assumptions are necessary to obtain unique solutions to the model parameters (i.e., identification).
+These constraints establish the scale and error structure of the model (though in EFA with $m \ge 2$ factors, additional rotational constraints are still needed for a unique solution, as detailed under [Identification constraints](#identification-constraints) below).
 
-Together, assumptions 1 and 2 yield the appropriate expectation that the mean of the *i*th indicator is the zero when we solve the equation:
-
-$$
-y_i = \lambda_{i1} \eta_1 + \lambda_{i2} \eta_2 + ... + \lambda_{ij} \eta_j + \boldsymbol{\varepsilon}_i
-$$
-
-In this scenario, all terms become zero, yielding a zero estimate of the indicator $y_i$. If it had a non-zero mean, we would need to include mean structure in the model by adding intercepts to the equations (as in multiple regression):
+Together, assumptions 1 and 2 yield the expectation that the mean of the $i$th indicator is zero when we solve the equation:
 
 $$
-y_i = \tau_i + \lambda_{i1} \eta_1 + \lambda_{i2} \eta_2 + ... + \lambda_{ij} \eta_j + \boldsymbol{\varepsilon}_i
+y_i = \lambda_{i1} \eta_1 + \lambda_{i2} \eta_2 + \dots + \lambda_{im} \eta_m + \varepsilon_i
+$$
+
+In this scenario, all terms have expectation zero, yielding a zero expected mean for the indicator $y_i$. If indicators have non-zero means, we include mean structure in the model by adding intercepts to the equations (as in multiple regression):
+
+$$
+y_i = \nu_i + \lambda_{i1} \eta_1 + \lambda_{i2} \eta_2 + \dots + \lambda_{im} \eta_m + \varepsilon_i
 $$
 
 # Partitioning variance in the common factor model
 
-As we discussed last week, the variance explained in a given indicator *i* by a factor in the model (e.g., $\psi_1$), is given by squaring its (standardized) factor loading. This comes from the equivalency of factor loadings and correlations in the common factor model, assuming uncorrelated factors (otherwise it gets more complicated).
+As we discussed earlier, the variance explained in a given indicator $i$ by a single factor in a standardized model ($\psi_{11} = 1$) is given by squaring its standardized factor loading. This comes from the equivalence of factor loadings and item–factor correlations when factors are uncorrelated (otherwise factor correlations must also be accounted for).
 
-More generally, we can decompose the variance of any indicator in to the part explained by the factor model (i.e., its communality) and residual, unexplained variation (i.e., its uniqueness):
+More generally, for a single-factor model we can decompose the variance of any indicator into the part explained by the factor (its communality) and residual, unexplained variation (its uniqueness, $\theta_{ii} = \textrm{var}(\varepsilon_i)$):
 
 $$
-\textrm{var}(y_i) = \lambda_{i1} \psi_{11} + e_i
+\textrm{var}(y_i) = \lambda_{i1}^2 \psi_{11} + \theta_{ii}
 $$
 
-where $\psi_{11} = 1.0$ (i.e., the requirement that factor variances are unity). Consequently, if we want to estimate the proportion of variance explained in a variable $y_i$ by the *m*th factor, it is:
+where $\psi_{11} = \textrm{var}(\eta_1) = 1.0$ (unit factor variance). Consequently, for a standardized indicator ($\textrm{var}(y_i) = 1$) loading on a single factor $m$, the proportion of variance explained is:
 
 $$
 h^2_i = r^2_i = \lambda_{im}^2
 $$
-And proportion of unexplained variance is:
+And the proportion of unexplained variance (uniqueness) is:
 
 $$
-u^2_i = \varepsilon_i = 1 - \lambda_{im}^2
+u^2_i = \theta_{ii} = 1 - \lambda_{im}^2
 $$
 
 ## Communality
 
-These equations only hold if item *i* loads only onto a single factor. In multiple-factor EFA, this is not the case. Thus, the total explained variance for item *i* is the sum of squared loadings for *all* factors multiplied by the corresponding factor scores:
+The single-factor equations above hold when item $i$ loads onto only one factor. In multiple-factor EFA, an item loads on all $m$ factors. When the factors are **orthogonal** (uncorrelated, $\boldsymbol{\Psi} = \mathbf{I}$), the total explained variance (communality) for standardized item $i$ is the sum of its squared loadings multiplied by the corresponding factor *variances* ($\psi_{jj} = 1.0$):
 
 $$
-h^2_i = r^2_i = \sum_{j=1}^{m}\lambda_{ij}^2
+h^2_i = r^2_i = \sum_{j=1}^{m}\lambda_{ij}^2 \psi_{jj} = \sum_{j=1}^{m}\lambda_{ij}^2
 $$
+
+*(When factors are **oblique/correlated**, cross-product terms involving factor correlations also contribute: $h^2_i = \boldsymbol{\lambda}_i' \boldsymbol{\Psi} \boldsymbol{\lambda}_i = \sum_{j=1}^{m}\lambda_{ij}^2 + 2\sum_{j<k}\lambda_{ij}\lambda_{ik}\psi_{jk}$.)*
 
 ## Uniqueness
 
+For orthogonal standardized factors:
+
 $$
-u^2_i = \varepsilon_i = 1 - \sum_{j=1}^{m}\lambda_{ij}^2
+u^2_i = \theta_{ii} = 1 - \sum_{j=1}^{m}\lambda_{ij}^2
 $$
-Again, the $\eta$ (factor scores) term drops out because it is 1.0 for all factors.
+Again, the factor variances $\psi_{jj} = \textrm{var}(\eta_j)$ drop out because $\psi_{jj} = 1.0$ for all factors.
 
 ## Covariance
 
-In the case of a single-factor model or a lambda matrix in which two indicators load *only* on one factor (e.g., a simple structure CFA model), their covariance can be obtained via:
+In the case of a single-factor model or a loading matrix in which two indicators load *only* on one factor (e.g., a simple-structure CFA model), their model-implied covariance is:
 
 $$
-\textrm{cov}(y_1, y_2) = \sigma_{12} = \lambda_{11} \eta_{11} \lambda_{21}
+\textrm{cov}(y_1, y_2) = \sigma_{12} = \lambda_{11} \psi_{11} \lambda_{21}
 $$
 
 # A quick example of the common factor model in EFA
 
-Consider a (simulated) dataset in which 300 students rated their affinity for different topics of study: biology, geology, chemistry, algebra, calculus, and statistics. Items were rated on a 1-5 scale from 'strongly dislike' to 'strongly like'. Dataset courtesy of John Quick: http://rtutorialseries.blogspot.com/2011/10/r-tutorial-series-exploratory-factor.html.
+Consider a (simulated) dataset in which 300 students rated their affinity for different topics of study: biology, geology, chemistry, algebra, calculus, and statistics. Items were rated on a 1–5 scale from 'strongly dislike' to 'strongly like' (dataset courtesy of [John Quick's R EFA tutorial](http://rtutorialseries.blogspot.com/2011/10/r-tutorial-series-exploratory-factor.html)).
 
 First, let's take a look at the descriptive statistics, including correlations among items:
 
@@ -193,7 +197,7 @@ f2 <- fa(data, nfactors=2, fm="ml", rotate="oblimin")
 print(f2)
 ```
 
-Here, we see that a two-factor solution provides a reasonably parsimonious account of the data, with a factor representing 'science' (`BIO`, `GEO`, and `CHEM`) and a factor representing 'math' (`ALG`, `CALC`, and `STAT`). By default, psych applies an *oblimin* rotation to the factor loadings to improve their interpretability -- especially to shift the solution toward simple structure. This is an oblique transformation; in this case, the factors correlate at $r = .21$. Note that the two-factor solution explains 66% of the total variation in the data, with each the 'science' factor accounting for slightly more variance that than 'math.'
+Here, we see that a two-factor solution provides a reasonably parsimonious account of the data, with a factor representing 'science' (`BIO`, `GEO`, and `CHEM`) and a factor representing 'math' (`ALG`, `CALC`, and `STAT`). By default, `psych` applies an *oblimin* rotation to the factor loadings to improve their interpretability -- especially to shift the solution toward simple structure. This is an oblique transformation; in this case, the factors correlate at $r = .21$. Note that the two-factor solution explains 66% of the total variation in the data, with the 'science' factor accounting for slightly more variance than 'math.'
 
 We could also attempt a 3-factor solution:
 
@@ -202,7 +206,7 @@ f3 <- fa(data, nfactors=3, fm="ml")
 print(f3)
 ```
 
-Note that the third factor appears to capture `CALC` specifically and that the correlation between the 2nd and 3rd factors is $r = 0.8$. Thus, this model does not appear to be interpretable or parsimonious. It also explains little more variation than the 2-factor model (66% versus 72%).
+Note that the third factor (`ML2`) essentially captures a single item—`ALG` (loading = `0.98`, $h^2 = 1.00$, $u^2 = 0.005$, a Heywood/boundary case)—and correlates strongly ($r = 0.77$) with the other math factor (`ML1`, capturing `CALC` and `STAT`). Moreover, a 3-factor EFA on 6 items has $df = 0$ (saturated, which is why `TLI = -Inf` and no $\chi^2$ $p$-value is defined). Thus, this 3-factor model is overfactored, uninterpretable, and unparsimonious.
 
 ## Looking under the hood of the FA model
 
@@ -224,7 +228,7 @@ The factor loadings. Note that by default, `fa` applies the 'oblimin' rotation, 
 f2$loadings
 ```
 
-Note that loadings below 0.1 are suppressed by default. You can change this using `print(f2$loadings, cut=0.3)` to suppress anything below 0.3, for example.
+When printed in the R console via `print(f2$loadings)`, loadings below 0.1 are suppressed by default (and you can raise the cutoff with `print(f2$loadings, cut = 0.3)`, for example); the full table above displays all loadings.
 
 If an oblique rotation is performed, the `Phi` matrix contains the correlations among factors:
 
@@ -232,7 +236,7 @@ If an oblique rotation is performed, the `Phi` matrix contains the correlations 
 f2$Phi
 ```
 
-When an oblique rotation is applied, we may nevertheless be interested in assessing the correlation then the correlation between indicators and factors is not equal to the summed squared factor loadings because the *factors* correlate. One must take this into account to understand the relationship between indicators and factors. We can obtain the correlation between a factor and an indicator by multiplying the factor *loadings* $\boldsymbol{\Lambda}_y$ by the factor correlation matrix $\boldsymbol{\Psi}$. This is called the factor *structure*  matrix and is stored in the `$Str` element of an `fa` object:
+When an oblique rotation is applied, the zero-order correlation between an indicator and a factor is no longer equal to its pattern loading $\lambda_{ij}$ because the *factors* correlate. We can obtain the full matrix of item–factor correlations—the factor *structure* matrix $\mathbf{S} = \boldsymbol{\Lambda}_y \boldsymbol{\Psi}$—by multiplying the factor pattern loadings $\boldsymbol{\Lambda}_y$ by the factor correlation matrix $\boldsymbol{\Psi}$. This is stored in the `$Str` element of an `fa` object:
 
 ```{r}
 f2$Str
@@ -282,7 +286,7 @@ We can plot the factor loadings to get a sense of how items relate to factors.
 plot(f2)
 ```
 
-Note that more extreme points along each factor axis are a *good* thing because they reflect a stronger association between the indicator and the factor. Thus, we are not looking for dispersion along the axes per se, but evidence of separability
+Note that more extreme points along each factor axis are a *good* thing because they reflect a stronger association between the indicator and the factor. Thus, we are not looking for dispersion along the axes per se, but evidence of separability.
 
 For reference, things get a bit more complex as we plot 3+ factors, but we can still get some mileage from this:
 ```{r}
@@ -309,22 +313,22 @@ Of course, once one has a set of outputs from EFAs with different dimensionality
 
 ## Estimation methods in EFA
 
-Because this is primarily an SEM class, we won't spend much time on this but there are two particularly popular methods for estimating: maximum likelihood and principal axis factoring.
+Because this is primarily an SEM class, we won't spend much time on this, but there are two particularly popular methods for estimation: maximum likelihood and principal axis factoring.
 
 Maximum likelihood follows the same approach as in typical SEM, trying to reproduce the observed covariance matrix $\textbf{S}_{XX}$ on the basis of the model-implied covariance: $\boldsymbol{\Sigma}(\hat{\boldsymbol{\theta}})$. This is achieved by choosing parameter values (e.g., factor loadings) that maximize the sample likelihood function. One advantage of ML for EFA is that the fit (log-likelihood) is on the same basis (i.e., sample likelihood) as other latent variable models (esp. CFA) of the same data (also fit using ML). Furthermore, fit statistics from SEM (e.g., model $\chi^2$) can be computed to understand and diagnose misfit. ML assumes that the indicators are distributed as multivariate normal, just like typical SEM. ML is also limited in the number of factors it can extract (see free parameters below) relative to other methods.
 
-Principal axis factoring (PAF) does not assume that the data follow a particular distribution and is less prone to invalid solutions than ML. There is also a much higher limit on the number of factors that can be extracted compared to ML: $p - 1$ where $p$ is the number of indicators. PAF is based on iteratively solving for the eigenvalues and eigenvectors underlying the *reduced* correlation matrix by updating the factor loadings. That is, we try to maximize the *communality* estimates of the data by updating the factor loadings until no further increase in communalities can be achieved. In this way, we begin with an estimate of communality (usually the squared multiple correlation among items) and try to increase it according to the factor model. Unlike ML, PAF does not provide estimates of parameter uncertainty (e.g., SEs of factor loadings)
+Principal axis factoring (PAF) does not assume that the data follow a particular distribution and is less prone to invalid solutions than ML. There is also a much higher limit on the number of factors that can be extracted compared to ML: $p - 1$ where $p$ is the number of indicators. PAF is based on iteratively solving for the eigenvalues and eigenvectors underlying the *reduced* correlation matrix by updating the factor loadings. That is, we try to maximize the *communality* estimates of the data by updating the factor loadings until no further increase in communalities can be achieved. In this way, we begin with an estimate of communality (usually the squared multiple correlation among items) and try to increase it according to the factor model. Unlike ML, PAF does not provide estimates of parameter uncertainty (e.g., SEs of factor loadings).
 
 # Selecting an appropriate number of factors in EFA
 
-Interpretation is king: factors should make sense from a conceptual perspective. Moreover, if only two or three items load onto a factor, you may have a) overfactored, or b) the items are not a coherent part of the larger test.
+Interpretation is king: factors should make sense from a conceptual perspective. Moreover, if only one or two items load onto a factor, you may have a) overfactored, or b) items that are not a coherent part of the larger test.
 
 ## Kaiser's rule: eigenvalues > 1.0
 
 The Kaiser-Guttman rule for factor extraction is that all factors should have eigenvalues greater than 1.0. This rule of thumb reflects the intuition that a factor (latent direction through the shared correlational structure)
 should account for the variance of at least *one* indicator. Recall that because EFA is run on a correlation matrix, the variances of indicators are all 1.0, and thus the eigenvalues sum to the number of indicators.
 
-Although Kaiser's rule is nice because of its simplicity, it should not be used in isolation because of the risk of being too dogmatic. For example, if the eigenvalues are $\boldsymbol{\lambda} = [10, 5, 4, 1.01, 1.01, 0.99, ... \lambda_p ]$, the fourth, fifth, and sixth factors all explain similar variance, but the sixth would be excluded. Likewise, these later factor explain much less variance than the first three, suggesting they may be relatively trivial. Finally, we would need to examine the factor loading matrix to determine the interpretability of the factors, which is a key aspect of factor models.
+Although Kaiser's rule is nice because of its simplicity, it should not be used in isolation because of the risk of being too dogmatic. For example, if the eigenvalues are $\boldsymbol{\lambda} = [10, 5, 4, 1.01, 1.01, 0.99, ... \lambda_p ]$, the fourth, fifth, and sixth factors all explain similar variance, but the sixth would be excluded. Likewise, these later factors explain much less variance than the first three, suggesting they may be relatively trivial. Finally, we would need to examine the factor loading matrix to determine the interpretability of the factors, which is a key aspect of factor models.
 
 ## Scree test
 
@@ -336,7 +340,7 @@ ggplot(df, aes(x=factor_number, y=ev, group=1)) + geom_point() + geom_line() + t
   xlab("Factor number") + ylab("Eigenvalue")
 ```
 
-As this example, illustrates, identifying the elbow in the scree plot is often an interpretative exercise. Here, there is clearly a strong change in slope between 3 and 4 factors, suggesting that we may wish to stop at 3 factors. However, there is a less pronounced slope change between 2 and 3 factors, so a scree test might lead us to consider 2- *or* 3-factor solutions. Like most factor extraction rubrics, one must examine the factor loadings to decide which solution aligns with theory and is most interpretable.
+As this example illustrates, identifying the elbow in the scree plot is often an interpretative exercise. Here, there is clearly a strong change in slope between 3 and 4 factors, suggesting that we may wish to stop at 3 factors. However, there is a less pronounced slope change between 2 and 3 factors, so a scree test might lead us to consider 2- *or* 3-factor solutions. Like most factor extraction rubrics, one must examine the factor loadings to decide which solution aligns with theory and is most interpretable.
 
 ## Parallel analysis
 
@@ -383,7 +387,7 @@ Thus, parallel analysis suggests that 3 factors may best account for these data.
 
 # Rotation in EFA
 
-As mentioned above, even though EFA identifies latent directions in the data, there is no guarantee that these directions are inherently interpretable. Thus, we may wish to rotate the axes of the factor
+As mentioned above, even though EFA identifies latent directions in the data, there is no guarantee that these directions are inherently interpretable. Thus, we may wish to rotate the factor axes to achieve a cleaner, more interpretable simple structure.
 
 Note that rotation does not change the fit or the amount of variance explained.
 
@@ -415,7 +419,7 @@ PCA tries to find composites of observed variables that explain the total variat
 
 EFA provides a structural model of *shared* variation based on an assumption that common latent factors underlie the data.
 
-A more detailed comparison of these methods is here: https://support.sas.com/resources/papers/proceedings/proceedings/sugi30/203-30.pdf.
+For a more detailed comparison of these methods, see [Suhr (2005), *Principal Component Analysis vs. Exploratory Factor Analysis* (SUGI 30)](https://support.sas.com/resources/papers/proceedings/proceedings/sugi30/203-30.pdf).
 
 PCA is best for creating composites of variables without necessarily assuming interpretability of latent cause (more like formative measurement), whereas EFA is better for identifying potentially interpretable factors (more like reflective measurement).
 
@@ -459,11 +463,15 @@ $$
 
 ```{r}
 f3_toy <- fa(abc, nfactors = 1)
-cat("\nThe item uniquenesses are:", paste(round(f3_toy$uniquenesses, 2), collapse=", "), "\n")
-cat("\nThus, the correlation matrix used for EFA is:\n")
-f3_toy$model
-cat("\nAnd the eigenvalues of the factor solution are: ", paste(round(f3_toy$values, 2), collapse=", "), "\n")
+cat("\nThe item uniquenesses are:", paste(round(f3_toy$uniquenesses, 3), collapse=", "), "\n")
+c_adj <- cor(abc)
+diag(c_adj) <- 1 - f3_toy$uniquenesses
+cat("\nThus, the reduced correlation matrix (C_adj) used for EFA is:\n")
+c_adj
+cat("\nAnd the eigenvalues of the reduced correlation matrix are:", paste(round(f3_toy$values, 2), collapse=", "), "\n")
 ```
+
+*(Note that in this toy example, $r_{AB} r_{BC} / r_{AC} = (0.5)(0.6)/0.3 = 1.00$, so item `B` hits a near-Heywood boundary with uniqueness $u^2_B \approx 0.004$.)*
 
 
 # Free parameters in EFA
@@ -505,11 +513,16 @@ $$
 $$
 
 
-Under the assumption of conditional independence in the factor model, the residual correlations indicators are assumed to be zero. In SEM, we can free off-diagonal elements of this matrix, but this is not a typical part of EFA.
+Under the assumption of conditional independence in the factor model, the residual correlations among indicators are assumed to be zero. In SEM, we can free off-diagonal elements of this matrix, but this is not a typical part of EFA.
 
 ## Identification constraints
 
-Why is $- m^2$ the last term in the number of parameters to be estimated? In essence, to identify a factor model and obtain an interpretable estimates, there must be some constraint on the solution. In standard EFA, variances are fixed to 1, so we save *m* parameters. We also fix factor covariances to zero: $m(m-1)/2$. Other restrictions include fixing the loading of an anchor item onto each factor and fixing anchor loadings to 0 on other factors. There are actually many ways to impose these identifications constraints, as we'll get to in SEM proper.
+Why is $- m^2$ the last term in the number of parameters to be estimated? In essence, to identify a factor model and obtain interpretable estimates, we must resolve both **scale indeterminacy** and **rotational indeterminacy** (because $\boldsymbol{\Lambda}\boldsymbol{\Psi}\boldsymbol{\Lambda}' = (\boldsymbol{\Lambda}\mathbf{T})(\mathbf{T}^{-1}\boldsymbol{\Psi}\mathbf{T}'^{-1})(\boldsymbol{\Lambda}\mathbf{T})'$ for any invertible $m \times m$ transformation matrix $\mathbf{T}$):
+
+- In **orthogonal EFA**, we fix the $m$ factor variances to 1 ($m$ constraints), fix the $m(m-1)/2$ factor covariances to 0 ($m(m-1)/2$ constraints), and impose $m(m-1)/2$ additional constraints to fix the orthogonal rotation — totaling $m + \frac{m(m-1)}{2} + \frac{m(m-1)}{2} = m^2$ constraints.
+- In **oblique EFA**, factor covariances are free, so we impose $m$ unit-variance constraints plus $m(m-1)$ rotational constraints — again totaling $m + m(m-1) = m^2$ constraints.
+
+In CFA/SEM proper, identification constraints are instead imposed directly via marker loadings or unit factor variances combined with zero cross-loadings in $\boldsymbol{\Lambda}_y$.
 
 # Confirmatory factor analysis (CFA)
 
@@ -560,7 +573,7 @@ msyn <- '
 math =~ 1*CALC + ALG + STAT #putting the 1* here for clarity, but it is the lavaan default
 sci =~ 1*BIO + GEO + CHEM
 math ~~ 0*sci #force orthogonal (uncorrelated) factors
-math ~~ math #explicitly indicate that lavaan should estimate a free parameters for factor variances
+math ~~ math #explicitly indicate that lavaan should estimate free parameters for factor variances
 sci ~~ sci
 '
 
@@ -577,8 +590,8 @@ How does model fit change if we allow the factors to correlate? This is accompli
 msyn_corr <- '
 math =~ 1*CALC + ALG + STAT #putting the 1* here for clarity, but it is the lavaan default
 sci =~ 1*BIO + GEO + CHEM
-math ~~ sci #estimate correlation between factors
-math ~~ math #explicitly indicate that lavaan should estimate a free parameters for factor variances
+math ~~ sci #estimate covariance between factors (correlation appears under Std.lv / Std.all)
+math ~~ math #explicitly indicate that lavaan should estimate free parameters for factor variances
 sci ~~ sci
 '
 
