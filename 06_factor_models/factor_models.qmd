@@ -99,12 +99,12 @@ Nice and simple! :-)
 
 The common factor model has several key assumptions:
 
-1.  Unique factors (disturbances) have a mean of zero: $E(\varepsilon_{i}) = 0$.
+1.  Unique error terms (disturbances) have a mean of zero: $E(\varepsilon_{i}) = 0$.
 2.  Latent factors have mean zero: $E(\eta_{j}) = 0$.
 3.  Latent factors have a variance of one: $\textrm{var}(\eta_j) = 1$ (standardized factor scale).
-4.  Unique factors are uncorrelated with each other: $\textrm{cov}(\varepsilon_{i},\boldsymbol{\varepsilon}_{\backslash i}) = 0$ (conditional independence).
+4.  Unique error terms are uncorrelated with each other: $\textrm{cov}(\varepsilon_{i},\boldsymbol{\varepsilon}_{\backslash i}) = 0$ (conditional independence).
 5.  In an *orthogonal* factor model, latent factors are uncorrelated with each other: $\textrm{cov}(\eta_{j},\boldsymbol{\eta}_{\backslash j}) = 0$ (relaxed in oblique EFA and correlated-factor CFA, where $\boldsymbol{\Psi}$ is freely estimated).
-6.  Latent factors are uncorrelated with unique factors: $\textrm{cov}(\boldsymbol{\varepsilon} ,\boldsymbol{\eta}) = 0$.
+6.  Latent factors are uncorrelated with unique error terms: $\textrm{cov}(\boldsymbol{\varepsilon} ,\boldsymbol{\eta}) = 0$.
 
 These constraints establish the scale and error structure of the model (though in EFA with $m \ge 2$ factors, additional rotational constraints are still needed for a unique solution, as detailed under [Identification constraints](#identification-constraints) below).
 

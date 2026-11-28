@@ -23,8 +23,11 @@ set.seed(15092)
 ```
 
 # Simulate data
+
+We begin by simulating $N = 1{,}000$ observations from a multivariate normal distribution for three standardized variables ($A$, $B$, and $C$) with exact sample correlations $r_{AB} = 0.2$, $r_{BC} = 0.7$, and $r_{AC} = 0.3$.
+
 ```{r}
-mu <- rep(0,3)
+mu <- rep(0, 3)
 Sigma <- tribble(
   ~a, ~b, ~c,
   1, 0.2, 0.3,
@@ -32,13 +35,15 @@ Sigma <- tribble(
   0.3, 0.7, 1
 )
 
-abc = data.frame(MASS::mvrnorm(1000, mu=mu, Sigma=Sigma, empirical=TRUE))
-colnames(abc) = LETTERS[1:3]
-psych::describe(abc)
+abc <- data.frame(MASS::mvrnorm(1000, mu = mu, Sigma = Sigma, empirical = TRUE))
+colnames(abc) <- LETTERS[1:3]
+psych::describe(abc)[, c("n", "mean", "sd", "skew", "kurtosis")]
 cov(abc)
 ```
 
 # Simple model
+
+Next, we fit a simple mediation chain ($A \rightarrow B \rightarrow C$) that omits a direct path between $A$ and $C$.
 
 ```{r}
 syntax <- '
@@ -46,26 +51,32 @@ B ~ A
 C ~ B
 '
 
-m <- sem(syntax, data=abc, meanstructure=FALSE)
+m <- sem(syntax, data = abc, meanstructure = FALSE)
 summary(m)
-semPaths_default(m, what="std", edge.label.cex=1.5)
+semPaths_default(m, what = "std", edge.label.cex = 1.5)
 ```
 
-Note that the residual variance estimates are also estimates of $1 - R^2$ because we have standardized variables.
+Note that the residual variance estimates (`.B = 0.959`, `.C = 0.509`) approximate $1 - R^2$ because the variables are standardized ($1 - 0.2^2 = 0.96$ and $1 - 0.7^2 = 0.51$). They differ slightly from those values—and the model-implied variances below equal `0.999` rather than `1.000`—because maximum likelihood estimation divides sums of squares by $N$ rather than $N - 1$.
+
+Also note how `lavaan` counts degrees of freedom under its default `fixed.x = TRUE`: the $3 \times 3$ covariance matrix has $3(4)/2 = 6$ unique sample moments, but the exogenous variance of `A` is treated as fixed rather than modeled ($6 - 1 = 5$ modeled moments). Estimating $4$ free parameters (`B ~ A`, `C ~ B`, `B ~~ B`, `C ~~ C`) leaves $df = 5 - 4 = 1$.
 
 # Under the hood: parameter table
 
+We can inspect `parTable(m)` to see how `lavaan` internally tracks every free and fixed parameter in the model:
+
 ```{r}
-parTable(m)
+parTable(m)[, c("id", "lhs", "op", "rhs", "user", "free", "exo", "est", "se")]
 ```
 
 # Parameter estimates
 
+For a cleaner summary of parameter estimates, standard errors, and 95% confidence intervals, use `parameterEstimates()`:
+
 ```{r}
-parameterestimates(m)
+parameterEstimates(m)
 ```
 
-Note that the variance of A is exogenous, but estimated. More specifically, it will be set at the sample estimate, meaning that the variance of A is not part of the likelihood function and does not contribute to any fit statistics.
+Note that the variance of `A` is exogenous and **fixed** to its sample estimate (`free = 0`, `se = 0` under `lavaan`'s default `fixed.x = TRUE`), meaning that the variance of `A` is not part of the likelihood function and does not contribute to the model degrees of freedom or fit statistics.
 
 # Model-implied covariance
 
@@ -75,7 +86,7 @@ Use `fitted()` to obtain the model-implied covariance matrix, $\boldsymbol{\Sigm
 fitted(m)
 ```
 
-Notice how low the covariance is between A and C compared to our ground truth value of 0.7. That is, the association between A and C is not fully explained by the indirect association of A with C via B. Also note that the matrix order is not necessarily the same as the sample covariance matrix. This is just a trivial rearrangement of the row/column order, not something meaningful.
+Notice how low the model-implied covariance between `A` and `C` (`0.140`) is compared to our ground truth value of `0.300` (whereas `0.700` is the covariance between `B` and `C`). That is, the association between `A` and `C` is not fully explained by the indirect association of `A` with `C` via `B`. Also note that the row/column order in `fitted(m)` does not necessarily match the sample covariance matrix; `lavaan` lists endogenous variables first and exogenous variables last, which is just a trivial rearrangement rather than a substantive difference.
 
 # Sample covariance
 
@@ -87,9 +98,9 @@ cov(abc)
 
 # Model modification
 
-We know from our simulation that there is a relationship between A and C that is not entirely attributable to the indirect effect of A on C via B. Thus, we have an *omitted path* problem in which a key covariance term is not captured by our model.
+We know from our simulation that there is a relationship between `A` and `C` that is not entirely attributable to the indirect effect of `A` on `C` via `B`. Thus, we have an *omitted path* problem in which a key covariance term is not captured by our model.
 
-We will cover modification indices in more detail soon, but for now, know that the `modificationIndices` function in `lavaan` provides estimates of how much the model fit ($\chi^2$) would fit if a specific parameter were added to the model.
+We will cover modification indices in more detail soon, but for now, know that the `modificationIndices` function in `lavaan` provides estimates of how much the model $\chi^2$ would improve (decrease) if a specific parameter were added to the model.
 
 ```{r}
 modificationIndices(m)
@@ -97,27 +108,42 @@ modificationIndices(m)
 
 ## Equivalent models
 
-We will return to the issue of models that fit the data equally well, but it's important to note that in this case, there is only one degree of freedom, and four equally good possibilities for capturing the relationship between A and C. This highlights the importance of having clear theoretical predictions about which variables are correlated versus which are likely to be (weak) causes or effects. As in regression, one can reverse predictor versus criterion with minimal change in syntax, but the choice to do so should be *theoretically* motivated. Likewise, in SEM, if one does not have clear predictions about the relationship between two variables, sometimes an undirected covariance between them is the appropriately weak parameterization.
+We will return to the issue of models that fit the data equally well, but notice that all four modification indices above are identical (`mi = 52.3`). Because our model has only $1$ degree of freedom, adding *any* omitted parameter saturates the model ($df = 0$, $\chi^2 = 0$), so global fit alone cannot distinguish between them. Note also that two of those rows (`B ~~ C` and `B ~ C`) actually link `B` and `C` into a nonrecursive feedback/correlated-error structure rather than adding a direct link between `A` and `C`.
+
+This highlights the importance of having clear theoretical predictions about causal direction. Even among *recursive* (acyclic) models, adding a direct path `C ~ A` (`syn2`) and reversing the causal ordering altogether (`syn3`: `C` predicts `B`, and both predict `A`) yield just-identified models with identical global fit and identical model-implied covariance matrices, despite very different structural interpretations:
 
 ```{r}
 syn2 <- '
 B ~ A
-C ~ B
-A ~ C
+C ~ B + A
 '
 
-m2 <- sem(syn2, abc, meanstructure=FALSE)
-summary(m2)
+syn3 <- '
+B ~ C
+A ~ B + C
+'
+
+m2 <- sem(syn2, data = abc, meanstructure = FALSE)
+m3 <- sem(syn3, data = abc, meanstructure = FALSE)
+
+fit_cmp <- rbind(
+  "Direct path (A -> B -> C, A -> C)" = fitMeasures(m2, c("npar", "chisq", "df", "cfi", "rmsea", "srmr")),
+  "Reversed chain (C -> B -> A, C -> A)" = fitMeasures(m3, c("npar", "chisq", "df", "cfi", "rmsea", "srmr"))
+)
+knitr::kable(as.data.frame(fit_cmp), digits = c(0, 3, 0, 3, 3, 3))
+
+parameterEstimates(m2)
+parameterEstimates(m3)
 ```
 
-Note that we now have a just-identified model (0 degrees of freedom) because we have 3 variances and 3 covariances in $\mathbf{S_{XX}}$ and we have 6 free parameters estimated here.
+Both models are **just-identified** ($df = 0$): of the $6$ unique moments in $\mathbf{S_{XX}}$ (3 variances and 3 covariances), $1$ exogenous variance is fixed to its sample value (`A ~~ A` in `m2`; `C ~~ C` in `m3`) and $5$ parameters are freely estimated, leaving $5 - 5 = 0$ degrees of freedom. Both reproduce the sample covariance matrix exactly, so statistical fit cannot adjudicate between them. Likewise, when one lacks strong theoretical grounds for a directed path between two variables, an undirected covariance can be a more appropriately conservative parameterization.
 
 ## Making the remaining covariance trivial
 
-We could also conceive of a situation in which the model that lacks an $A-C$ relationship is nevertheless reasonably good.
+We could also conceive of a situation in which the model that lacks an $A\text{--}C$ relationship is nevertheless reasonably good—for example, if the true correlation $r_{AC} = 0.16$ is close to the indirect product $r_{AB} \cdot r_{BC} = 0.2 \times 0.7 = 0.14$.
 
 ```{r}
-mu <- rep(0,3)
+mu <- rep(0, 3)
 Sigma <- tribble(
   ~a, ~b, ~c,
   1, 0.2, 0.16,
@@ -125,9 +151,8 @@ Sigma <- tribble(
   0.16, 0.7, 1
 )
 
-abc = data.frame(MASS::mvrnorm(1000, mu=mu, Sigma=Sigma, empirical=TRUE))
-colnames(abc) = LETTERS[1:3]
-psych::describe(abc)
+abc <- data.frame(MASS::mvrnorm(1000, mu = mu, Sigma = Sigma, empirical = TRUE))
+colnames(abc) <- LETTERS[1:3]
 cov(abc)
 
 syntax <- '
@@ -135,22 +160,33 @@ B ~ A
 C ~ B
 '
 
-m <- sem(syntax, data=abc, meanstructure=FALSE)
-summary(m)
-#semPaths(m)
+m <- sem(syntax, data = abc, meanstructure = FALSE)
+fitMeasures(m, c("chisq", "df", "pvalue", "cfi", "rmsea", "srmr"))
 fitted(m)
 ```
 
-We can see that the A-C relationship is 0.14 in the output and 0.16 in the ground truth. Thus, we are capturing their association by modeling the indirect effect alone.
+We can see that the model-implied $A\text{--}C$ covariance is `0.140` versus `0.160` in the ground truth, yielding a non-significant $\chi^2$ and excellent approximate fit. Thus, the indirect path alone accounts for nearly all of their association.
 
 # Ill conditioning
+
+Numerical optimizers in SEM can run into difficulty when variables are measured on wildly different scales (for example, annual income in dollars alongside a 1--5 Likert scale). When the ratio of the largest to smallest variable variance exceeds roughly $1{,}000$, the covariance matrix becomes *ill-conditioned*. We can demonstrate this by rescaling our correlation matrix with standard deviations of `1`, `10`, and `100` (giving variances of `1`, `100`, and `10,000`—a $10{,}000\times$ ratio):
+
 ```{r}
+#| warning: true
 sds <- c(1, 10, 100)
-abc_rescale <- cor2cov(cov(abc), sds)
-print(abc_rescale)
+abc_rescale <- lav_cor2cov(cor(abc), sds)
+abc_rescale
+
+abc_scaled <- data.frame(scale(abc, center = FALSE, scale = 1 / sds))
+m_ill <- sem(syntax, data = abc_scaled, meanstructure = FALSE, fixed.x = FALSE)
 ```
 
+Notice the warning from `lavaan` flagging the extreme variance ratio once all three variable variances are in the model (`fixed.x = FALSE`). Rescaling variables by simple constants (e.g., dividing income by $10{,}000$) eliminates this numerical issue without altering model fit or standardized parameter estimates.
+
 # Indirect effects
+
+In `lavaan`, we can compute custom functions of parameters—such as the indirect effect $b_1 \cdot b_2$—by labeling paths and defining a new parameter with `:=`. By default, `lavaan` computes standard errors for defined parameters using the **delta method** (equivalent to the Sobel test for a simple product). Because products of regression coefficients typically have skewed sampling distributions, bootstrapping (`se = "bootstrap"`) is generally preferred for formal inference on indirect effects (which we revisit in the mediation chapter).
+
 ```{r}
 syntax <- '
 B ~ b1*A
@@ -158,22 +194,23 @@ C ~ b2*B
 med := b1*b2
 '
 
-m_ind <- sem(syntax, data=abc, meanstructure=FALSE)
-summary(m_ind)
-#semPaths(m_ind)
+m_ind <- sem(syntax, data = abc, meanstructure = FALSE)
+parameterEstimates(m_ind)
 ```
 
 ## parTable for indirect effects
 
+Inspecting the parameter table shows how defined parameters (`op == ":="`) are represented internally:
+
 ```{r}
-parTable(m_ind)
+parTable(m_ind)[, c("id", "lhs", "op", "rhs", "user", "free", "exo", "label", "est", "se")]
 ```
 
-Notice how there is an additional parameter estimated, but it is not *free* because it is a simple product of `b1` and `b2`.
+Notice that `med` is estimated alongside the model parameters, but its `free` index is `0` because it is not an additional free parameter—it is a deterministic function of `b1` and `b2` and does not consume a degree of freedom.
 
 ## Full details for the model with indirect effects
 
-Use `inspect()`
+Finally, `inspect()` (which defaults to `what = "free"`) displays `lavaan`'s underlying LISREL all-y matrices with integer parameter indices (`0` = fixed, `1`--`4` = freely estimated). In an observed-variable path model with no latent factors, `lambda` is fixed to an identity matrix and `theta` is fixed to zero—so both display all `0`s here (no free measurement parameters)—while the free structural slopes appear in `beta` (`1`, `2`) and the free residual variances appear in `psi` (`3`, `4`):
 
 ```{r}
 inspect(m_ind)
